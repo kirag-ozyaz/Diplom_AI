@@ -66,21 +66,29 @@ async def convert_file(
 
 
 async def main() -> None:
+    # Тестовые значения для использования при запуске без аргументов
+    raw_file_dir = r"X:\Учеба_УИИ\Итоговы_Проект\data\raw\Нормативная база\ПУЭ\DOCX"
+    output_file_dir = r"X:\Учеба_УИИ\Итоговы_Проект\data\extracted"
+    
+    # Проверяем, были ли переданы аргументы через командную строку
+    has_input_arg = "-i" in sys.argv or "--input" in sys.argv
+    has_output_arg = "-o" in sys.argv or "--output" in sys.argv
+    
     parser = argparse.ArgumentParser(
         description="Асинхронная конвертация DOCX → Markdown",
         epilog="Пример: python generate.py -i ./docs -o ./md -j 6"
     )
     parser.add_argument(
         "-i", "--input",
-        default=".",
+        default=None,
         type=Path,
-        help="Входная папка с DOCX-файлами (по умолчанию: текущая директория)"
+        help="Входная папка с DOCX-файлами"
     )
     parser.add_argument(
         "-o", "--output",
         default=None,
         type=Path,
-        help="Выходная папка для Markdown (по умолчанию: ./output рядом со скриптом)"
+        help="Выходная папка для Markdown"
     )
     parser.add_argument(
         "-j", "--jobs",
@@ -95,14 +103,28 @@ async def main() -> None:
     )
     args = parser.parse_args()
 
-    input_dir = args.input.resolve()
-    
-    # Если output не указан, создаём рядом со скриптом
-    if args.output is None:
-        script_dir = Path(__file__).parent.resolve()
-        output_dir = script_dir / "output"
+    # Если аргументы не переданы, используем тестовые значения
+    if not has_input_arg:
+        input_dir = Path(raw_file_dir).resolve()
+        print(f"📁 Используются тестовые значения:")
+        print(f"   Входная папка: {input_dir}")
     else:
-        output_dir = args.output.resolve()
+        if args.input is None:
+            input_dir = Path(".").resolve()
+        else:
+            input_dir = args.input.resolve()
+    
+    # Если output не указан, используем тестовое значение или создаём рядом со скриптом
+    if not has_output_arg:
+        output_dir = Path(output_file_dir).resolve()
+        if not has_input_arg:
+            print(f"   Выходная папка: {output_dir}")
+    else:
+        if args.output is None:
+            script_dir = Path(__file__).parent.resolve()
+            output_dir = script_dir / "output"
+        else:
+            output_dir = args.output.resolve()
 
     if not input_dir.is_dir():
         sys.exit(f"Ошибка: входная папка не существует: {input_dir}")

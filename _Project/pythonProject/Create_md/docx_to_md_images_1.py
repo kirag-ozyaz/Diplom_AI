@@ -1,3 +1,7 @@
+# docx_to_md_images_1.py
+# Конвертация DOCX в Markdown с извлечением изображений
+# Изображения вставляются в виде ссылок ![alt](path), а не base64
+# Нормально выгружает image файлы и вставляются в md файл
 # import os
 import sys
 import base64
@@ -418,23 +422,38 @@ file_docx = r"X:\Учеба_УИИ\Итоговы_Проект\data\raw\Норм
 output_file_dir = r"X:\Учеба_УИИ\Итоговы_Проект\data\extracted"
 if __name__ == "__main__":
     sys_argv = None
+    output_dir_arg = None
     try:
-        # Рабочая версия: проверяем наличие аргумента командной строки
+        # Рабочая версия: проверяем наличие аргументов командной строки
         if len(sys.argv) == 2 and sys.argv[1].strip():
             sys_argv = sys.argv[1]
+        elif len(sys.argv) == 3 and sys.argv[1].strip() and sys.argv[2].strip():
+            sys_argv = sys.argv[1]
+            output_dir_arg = sys.argv[2]
         else:
             # Для тестов: используем file_docx
             sys_argv = file_docx
+            output_dir_arg = output_file_dir
         
         # Проверяем существование файла
         docx_path = Path(sys_argv)
         if not docx_path.exists():
             raise FileNotFoundError(f"Файл не найден: {sys_argv}")
         
-        output_dir = docx_path.parent
+        # Определяем output_dir
+        if output_dir_arg:
+            output_dir = Path(output_dir_arg)
+            # Проверяем существование директории
+            if not output_dir.exists():
+                raise FileNotFoundError(f"Директория не найдена: {output_dir_arg}")
+            if not output_dir.is_dir():
+                raise NotADirectoryError(f"Указанный путь не является директорией: {output_dir_arg}")
+        else:
+            output_dir = docx_path.parent
+        
         md_path = output_dir / f"{docx_path.stem}.md"
 
-        markdown_content = docx_to_md_with_images(sys_argv)
+        markdown_content = docx_to_md_with_images(sys_argv, output_dir)
 
         with open(md_path, 'w', encoding='utf-8') as f:
             f.write(markdown_content)
@@ -442,9 +461,13 @@ if __name__ == "__main__":
         print(f"📄 Markdown: {md_path}")
     except FileNotFoundError as e:
         print(f"❌ Ошибка: {e}")
-        print("Использование: python docx_to_md_with_images.py <файл.docx>")
+        print("Использование: python docx_to_md_with_images.py <файл.docx> [output_dir]")
+        sys.exit(1)
+    except NotADirectoryError as e:
+        print(f"❌ Ошибка: {e}")
+        print("Использование: python docx_to_md_with_images.py <файл.docx> [output_dir]")
         sys.exit(1)
     except Exception as e:
         print(f"❌ Ошибка: {e}")
-        print("Использование: python docx_to_md_with_images.py <файл.docx>")
+        print("Использование: python docx_to_md_with_images.py <файл.docx> [output_dir]")
         sys.exit(1)

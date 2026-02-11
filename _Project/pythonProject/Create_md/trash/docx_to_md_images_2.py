@@ -1,3 +1,7 @@
+# docx_to_md_images_2.py
+# Конвертация DOCX в Markdown с извлечением изображений
+# Изображения вставляются в виде ссылок ![alt](path), а не base64
+# Нормально выгружает image файлы и вставляются в md файл
 import sys
 import re
 from pathlib import Path
