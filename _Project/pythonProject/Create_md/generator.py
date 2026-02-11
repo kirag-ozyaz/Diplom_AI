@@ -64,11 +64,12 @@ async def convert_file(
                 file=sys.stderr
             )
 
+# Тестовые значения для использования при запуске без аргументов
+raw_file_dir = r"X:\Учеба_УИИ\Итоговы_Проект\data\raw\Нормативная база\ПУЭ\DOCX"
+output_file_dir = r"X:\Учеба_УИИ\Итоговы_Проект\data\extracted_raw"
 
 async def main() -> None:
-    # Тестовые значения для использования при запуске без аргументов
-    raw_file_dir = r"X:\Учеба_УИИ\Итоговы_Проект\data\raw\Нормативная база\ПУЭ\DOCX"
-    output_file_dir = r"X:\Учеба_УИИ\Итоговы_Проект\data\extracted"
+
     
     # Проверяем, были ли переданы аргументы через командную строку
     has_input_arg = "-i" in sys.argv or "--input" in sys.argv
