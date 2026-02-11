@@ -413,7 +413,9 @@ def docx_to_md_with_images(docx_path, output_dir=None):
     
     return markdown_content
 
-file_docx = r"X:\Учеба_УИИ\Итоговы_Проект\Этап №2.  AI_ML  Сбор базы\Нормативная база\ПУЭ\DOCX\2.5.docx"
+# file_docx = r"X:\Учеба_УИИ\Итоговы_Проект\Этап №2.  AI_ML  Сбор базы\Нормативная база\ПУЭ\DOCX\2.5.docx"
+file_docx = r"X:\Учеба_УИИ\Итоговы_Проект\data\raw\Нормативная база\ПУЭ\DOCX\2.5.docx"
+output_file_dir = r"X:\Учеба_УИИ\Итоговы_Проект\data\extracted"
 if __name__ == "__main__":
     sys_argv = None
     try:
