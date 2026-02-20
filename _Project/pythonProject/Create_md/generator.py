@@ -66,7 +66,7 @@ async def convert_file(
 
 # Тестовые значения для использования при запуске без аргументов
 raw_file_dir = r"X:\Учеба_УИИ\Итоговы_Проект\data\raw\Нормативная база\ПУЭ\DOCX"
-output_file_dir = r"X:\Учеба_УИИ\Итоговы_Проект\data\extracted_raw"
+output_file_dir = r"X:\Учеба_УИИ\Итоговы_Проект\data\extracted"
 
 async def main() -> None:
 
