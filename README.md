@@ -50,6 +50,8 @@ https://markdown.com.cn/
 https://marketplace.visualstudio.com/items?itemName=goessner.mdmath
 
 Markdown+Math
+
+https://code.visualstudio.com/docs/languages/python
 ==============================================================================
 Архитектура системы:
 ```
