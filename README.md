@@ -93,7 +93,7 @@ Markdown+Math
        │
 ┌──────────────┐
 │ embeddings/  │  ←  ./embeddings/
-│ (Chroma DB)  │      • chroma.sqlite3
+│ (Chroma DB)  │      • chroma.sqlite3, Milvus, Qdrant
 └──────┬───────┘      • index/
        │
        ▼  [RAG-запрос]
@@ -101,4 +101,35 @@ Markdown+Math
 │ Telegram-бот │  ←  Поиск → Релевантные чанки → LLM (Llama 3.1 8B)
 │  (Ollama)    │      → Структурированный ответ с ссылками на ПУЭ/ПТЭЭП
 └──────────────┘
+```
+
+структура для итогового проекта
+
+```
+energy_norms_bot/
+├── infra/
+│   ├── docker/
+│   │   ├── docker-compose.yml          # Основной compose для всех сервисов
+│   │   ├── Dockerfile.bot              # Dockerfile для Telegram-бота
+│   │   ├── Dockerfile.preprocessing    # Dockerfile для скриптов обработки
+│   │   └── .env.example                # Пример переменных окружения
+│   ├── milvus/
+│   │   ├── docker-compose.milvus.yml   # Отдельный compose для Milvus
+│   │   └── milvus.yaml                 # Конфигурация Milvus
+│   └── ollama/
+│       └── docker-compose.ollama.yml   # Compose для Ollama
+├── src/
+│   ├── bot/
+│   ├── preprocessing/
+│   └── rag/
+├── data/
+├── config/
+│   ├── bot_config.yaml                 # Конфигурация бота
+│   └── rag_config.yaml                 # Конфигурация RAG
+├── requirements.txt
+├── .gitignore
+└── README.md
+
+
+
 ```
