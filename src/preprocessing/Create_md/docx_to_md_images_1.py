@@ -508,7 +508,7 @@ def docx_to_md_with_images(docx_path, output_dir=None, merge_headers=False):
 
 ROOT = Path(__file__).resolve().parent.parent.parent.parent
 output_file_dir = ROOT / "data" / "extracted"
-file_docx = ROOT / "data" / "raw"/"Нормативная база"/"ПУЭ"/"DOCX" / "2.5.docx"
+file_docx = ROOT / "data" / "raw"/"Нормативная база"/"ПУЭ"/"DOCX" / "7.5.docx"
 
 if __name__ == "__main__":
     sys_argv = None

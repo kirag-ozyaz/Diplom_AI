@@ -121,8 +121,24 @@ energy_norms_bot/
 ├── src/
 │   ├── bot/
 │   ├── preprocessing/
+│   │   ├── __init__.py
+│   │   ├── create_md/
+│   │   │   ├── __init__.py
+│   │   │   ├── docx_to_md_images_1.py  # Конвертация DOCX → Markdown с изображениями
+│   │   │   └── generator.py            # Массовая обработка документов
+│   │   ├── create_chunked/
+│   │   │   ├── __init__.py
+│   │   │   ├── md_to_chunked_2.py      # Сегментация Markdown → JSON chunks
+│   │   │   └── generator.py            # Массовая обработка чанков
+│   │   └── create_embeddings/
+│   │       ├── __init__.py
+│   │       └── generator.py            # Генерация векторных представлений
 │   └── rag/
 ├── data/
+│   ├── raw/                            # Исходные документы (PDF/DOCX)
+│   ├── extracted/                      # Извлеченный текст в Markdown
+│   ├── chunked/                        # Сегментированные данные с метаданными
+│   └── embeddings/                     # Векторная база данных (?????)
 ├── config/
 │   ├── bot_config.yaml                 # Конфигурация бота
 │   └── rag_config.yaml                 # Конфигурация RAG
