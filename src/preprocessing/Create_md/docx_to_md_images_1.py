@@ -503,8 +503,13 @@ def docx_to_md_with_images(docx_path, output_dir=None, merge_headers=False):
     return markdown_content
 
 # file_docx = r"X:\Учеба_УИИ\Итоговы_Проект\Этап №2.  AI_ML  Сбор базы\Нормативная база\ПУЭ\DOCX\2.5.docx"
-file_docx = r"X:\Учеба_УИИ\Итоговы_Проект\data\raw\Нормативная база\ПУЭ\DOCX\2.5.docx"
-output_file_dir = r"X:\Учеба_УИИ\Итоговы_Проект\data\extracted"
+# file_docx = r"X:\Учеба_УИИ\Итоговы_Проект\data\raw\Нормативная база\ПУЭ\DOCX\2.5.docx"
+# output_file_dir = r"X:\Учеба_УИИ\Итоговы_Проект\data\extracted"
+
+ROOT = Path(__file__).resolve().parent.parent.parent.parent
+output_file_dir = ROOT / "data" / "extracted"
+file_docx = ROOT / "data" / "raw"/"Нормативная база"/"ПУЭ"/"DOCX" / "2.5.docx"
+
 if __name__ == "__main__":
     sys_argv = None
     output_dir_arg = None

@@ -261,7 +261,7 @@ def generate_chunked_file(md_path, output_dir):
         print(f"❌ Ошибка: Файл '{md_path}' не является .md файлом.")
         sys.exit(1)
 
-    output_dir = Path(output_dir)
+    output_dir = Path(output_dir).resolve()
     output_dir.mkdir(parents=True, exist_ok=True)
 
     print(f"📂 Обработка файла '{md_path.name}'")
@@ -299,8 +299,14 @@ def generate_chunked_file(md_path, output_dir):
         sys.exit(1)
 
 
-DEFAULT_OUTPUT_DIR = r"X:\Учеба_УИИ\Итоговы_Проект\data\chunked"
-DEFAULT_INPUT_FILE = r"X:\Учеба_УИИ\Итоговы_Проект\data\extracted\1.9.md"
+# Определение корня проекта и относительные пути
+ROOT = Path(__file__).resolve().parent.parent.parent.parent
+DEFAULT_OUTPUT_DIR = ROOT / "data" / "chunked"
+DEFAULT_INPUT_FILE = ROOT / "data" / "extracted" / "1.7.md"
+
+# Старые версии с абсолютными путями (закомментированы)
+# DEFAULT_OUTPUT_DIR = r"X:\Учеба_УИИ\Итоговы_Проект\data\chunked"
+# DEFAULT_INPUT_FILE = r"X:\Учеба_УИИ\Итоговы_Проект\data\extracted\1.9.md"
 
 if __name__ == "__main__":
     input_dir_arg = None

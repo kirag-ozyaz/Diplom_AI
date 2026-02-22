@@ -64,9 +64,14 @@ async def convert_file(
                 file=sys.stderr
             )
 
-# Тестовые значения для использования при запуске без аргументов
-raw_file_dir = r"X:\Учеба_УИИ\Итоговы_Проект\data\raw\Нормативная база\ПУЭ\DOCX"
-output_file_dir = r"X:\Учеба_УИИ\Итоговы_Проект\data\extracted"
+# Определение корня проекта и относительные пути
+ROOT = Path(__file__).resolve().parent.parent.parent.parent
+raw_file_dir = ROOT / "data" / "raw" / "Нормативная база" / "ПУЭ" / "DOCX"
+output_file_dir = ROOT / "data" / "extracted"
+
+# Старые версии с абсолютными путями (закомментированы)
+# raw_file_dir = r"X:\Учеба_УИИ\Итоговы_Проект\data\raw\Нормативная база\ПУЭ\DOCX"
+# output_file_dir = r"X:\Учеба_УИИ\Итоговы_Проект\data\extracted"
 
 async def main() -> None:
 

@@ -53,9 +53,14 @@ async def convert_file(
             )
 
 
-# Тестовые значения для использования при запуске без аргументов
-input_file_dir = r"X:\Учеба_УИИ\Итоговы_Проект\data\extracted"
-output_file_dir = r"X:\Учеба_УИИ\Итоговы_Проект\data\chunked"
+# Определение корня проекта и относительные пути
+ROOT = Path(__file__).resolve().parent.parent.parent.parent
+input_file_dir = ROOT / "data" / "extracted"
+output_file_dir = ROOT / "data" / "chunked"
+
+# Старые версии с абсолютными путями (закомментированы)
+# input_file_dir = r"X:\Учеба_УИИ\Итоговы_Проект\data\extracted"
+# output_file_dir = r"X:\Учеба_УИИ\Итоговы_Проект\data\chunked"
 
 
 async def main() -> None:
