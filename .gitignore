@@ -45,6 +45,14 @@ docker-compose.override.yml
 # Milvus data (если храните локально)
 milvus/data/
 milvus/logs/
+infra/milvus/volume/
+infra/milvus/volumes/
+
+# Vector DB data
+data/embeddings/
+*.db
+*.sqlite3
+chroma.sqlite3
 
 # Telegram
 *.session

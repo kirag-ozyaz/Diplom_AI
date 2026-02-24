@@ -2,6 +2,7 @@ import sys
 import json
 import re
 import uuid
+import shutil
 from pathlib import Path
 from datetime import datetime
 
@@ -254,6 +255,60 @@ def create_chunk_obj(metadata_record, content_lines, source_file):
     return chunk_data
 
 
+def copy_images_from_markdown(md_path: Path, output_dir: Path, content: str) -> None:
+    """
+    Находит в markdown все ссылки на файлы в подкаталогах image_***
+    (например, ![...](image_1.7/image9_а.png)) и копирует соответствующие
+    графические файлы (любого расширения) из директории исходного md-файла
+    в директорию output_dir, сохраняя относительный путь (папку image_*** и имя файла).
+    """
+    # Ищем все ссылки ![...](...)
+    image_pattern = re.compile(r'!\[[^\]]*\]\(([^)]+)\)')
+    matches = image_pattern.findall(content)
+
+    if not matches:
+        return
+
+    seen_paths: set[str] = set()
+
+    for raw_path in matches:
+        raw_path = raw_path.strip()
+        if not raw_path:
+            continue
+
+        # Обрабатываем только относительные пути с первой папкой image_***.
+        # Абсолютные пути считаем внешними ресурсами: не копируем, но логируем.
+        rel_path = Path(raw_path)
+        if rel_path.is_absolute() or not rel_path.parts:
+            print(f"ℹ️ Обнаружен абсолютный путь к изображению (не копируется): {raw_path}")
+            continue
+
+        first_part = rel_path.parts[0]
+        if not first_part.startswith("image_"):
+            continue
+
+        # Избегаем повторной обработки одних и тех же файлов
+        rel_path_str = str(rel_path)
+        if rel_path_str in seen_paths:
+            continue
+        seen_paths.add(rel_path_str)
+
+        src_path = md_path.parent / rel_path
+        dst_path = output_dir / rel_path
+
+        if not src_path.exists():
+            print(f"⚠️ Изображение не найдено и будет пропущено: {src_path}")
+            continue
+
+        dst_path.parent.mkdir(parents=True, exist_ok=True)
+
+        try:
+            shutil.copy2(src_path, dst_path)
+            print(f"📸 Скопировано изображение: {src_path} -> {dst_path}")
+        except Exception as e:
+            print(f"❌ Ошибка копирования изображения '{src_path}' в '{dst_path}': {e}")
+
+
 def generate_chunked_file(md_path, output_dir):
     md_path = Path(md_path).resolve()
 
@@ -272,6 +327,9 @@ def generate_chunked_file(md_path, output_dir):
     except Exception as e:
         print(f"❌ Ошибка чтения файла '{md_path.name}': {e}")
         sys.exit(1)
+
+    # Копирование изображений, на которые есть ссылки в markdown
+    copy_images_from_markdown(md_path, output_dir, content)
 
     chunks = chunk_document(content, md_path.name)
 
