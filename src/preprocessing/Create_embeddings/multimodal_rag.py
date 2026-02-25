@@ -11,6 +11,8 @@ import glob
 from typing import List, Dict, Optional, Tuple
 from pathlib import Path
 from tqdm import tqdm
+import asyncio
+import time
 
 import torch
 from PIL import Image
@@ -87,6 +89,21 @@ class MultimodalRAG:
     def _load_text_model(self, model_name: str, device: str):
         """Загрузка модели для текста"""
         print(f"📥 Загрузка текстовой модели: {model_name}")
+        # Показываем прогресс скачивания (в процентах) при первом запуске.
+        # HuggingFace Hub сам рисует tqdm progress-bar в консоли.
+        try:
+            from huggingface_hub import snapshot_download
+            print("   ⬇️ Проверка/скачивание файлов модели (HuggingFace cache)...")
+            snapshot_download(
+                repo_id=model_name,
+                resume_download=True,
+            )
+            print("   ✅ Файлы текстовой модели готовы (в кэше)")
+        except Exception as e:
+            # Если huggingface_hub недоступен или нет интернета — просто продолжаем,
+            # SentenceTransformer сам попробует загрузить/взять из кэша.
+            print(f"   ⚠️ Не удалось показать прогресс скачивания для текста: {e}")
+
         self.text_model = SentenceTransformer(model_name)
         self.text_device = device
         print("✅ Текстовая модель готова")
@@ -94,6 +111,26 @@ class MultimodalRAG:
     def _load_clip_model(self, model_name: str, device: str):
         """Загрузка CLIP модели для изображений"""
         print(f"📥 Загрузка CLIP модели: {model_name}")
+        # Пытаемся предзагрузить веса CLIP с прогресс-баром (если open_clip знает HF repo).
+        try:
+            from huggingface_hub import snapshot_download
+
+            # open_clip хранит метаданные о pretrained весах; часть из них лежит на HF Hub.
+            # Если hf_hub_id отсутствует, прогресс показать не получится — тогда просто загрузим как обычно.
+            cfg = open_clip.get_pretrained_cfg(model_name, pretrained='laion2b_e16') or {}
+            hf_id = cfg.get("hf_hub_id") or cfg.get("hf_hub") or cfg.get("repo_id")
+            if hf_id:
+                print(f"   ⬇️ Проверка/скачивание CLIP весов (HuggingFace): {hf_id}")
+                snapshot_download(
+                    repo_id=hf_id,
+                    resume_download=True,
+                )
+                print("   ✅ Файлы CLIP готовы (в кэше)")
+            else:
+                print("   ℹ️ open_clip не дал hf_hub_id для этих весов — загрузка будет без процентов")
+        except Exception as e:
+            print(f"   ⚠️ Не удалось показать прогресс скачивания для CLIP: {e}")
+
         # Используем open_clip для лучшей совместимости
         self.clip_model, _, self.clip_preprocess = open_clip.create_model_and_transforms(
             model_name,
@@ -123,7 +160,7 @@ class MultimodalRAG:
         
         fields = [
             FieldSchema(name="id", dtype=DataType.INT64, is_primary=True, auto_id=True),
-            FieldSchema(name="chunk_id", dtype=DataType.VARCHAR, max_length=256),
+            FieldSchema(name="chunk_id", dtype=DataType.VARCHAR, max_length=1024),
             FieldSchema(name="text_vector", dtype=DataType.FLOAT_VECTOR, dim=self.text_dim),
             FieldSchema(name="image_vector", dtype=DataType.FLOAT_VECTOR, dim=self.image_dim),
             FieldSchema(name="text", dtype=DataType.VARCHAR, max_length=65535),
@@ -161,36 +198,91 @@ class MultimodalRAG:
         
         print("✅ Коллекция и индексы созданы")
 
-    def _extract_images_from_chunk(self, chunk_text: str, chapter: str) -> List[str]:
+    def _extract_images_from_chunk(
+        self,
+        chunk_text: str,
+        chapter: str,
+        base_dir: Optional[Path] = None
+    ) -> List[str]:
         """
         Извлечение путей к изображениям из текста чанка.
         
         Args:
             chunk_text: Текст чанка
             chapter: Номер главы (например, "7.3")
+            base_dir: Базовая директория, относительно которой резолвим относительные пути
             
         Returns:
             Список полных путей к изображениям
         """
         import re
-        
-        # Паттерн для поиска имен файлов изображений
-        pattern = r'(img_[a-zA-Z0-9_]+\.(?:png|jpg|jpeg))'
-        matches = re.findall(pattern, chunk_text)
-        
-        # Формируем пути к папке с изображениями
-        image_folder = self.base_data_path / f"image_{chapter}"
-        
-        if not image_folder.exists():
+
+        if not chunk_text:
             return []
-        
-        # Проверяем существование файлов
-        valid_paths = []
-        for img_name in matches:
-            img_path = image_folder / img_name
-            if img_path.exists():
-                valid_paths.append(str(img_path))
-        
+
+        base_dir = Path(base_dir) if base_dir is not None else self.base_data_path
+
+        # 1) Markdown-картинки: ![alt](path "title")
+        md_pattern = r'!\[[^\]]*\]\(([^)]+)\)'
+        # 2) HTML img
+        html_pattern = r'<img[^>]+src=[\'"]([^\'"]+)[\'"]'
+        # 3) Фоллбек: любая "похожая на путь" строка с расширением картинки
+        any_img_pattern = r'([^\s\)\]]+\.(?:png|jpg|jpeg|gif|webp))'
+
+        refs: List[str] = []
+        refs.extend(re.findall(md_pattern, chunk_text, flags=re.IGNORECASE))
+        refs.extend(re.findall(html_pattern, chunk_text, flags=re.IGNORECASE))
+        if not refs:
+            refs.extend(re.findall(any_img_pattern, chunk_text, flags=re.IGNORECASE))
+
+        def _clean_ref(r: str) -> str:
+            r = r.strip().strip("<>").strip().strip('"').strip("'")
+            # если есть title после пробела — берём только путь
+            r = r.split()[0] if r else r
+            return r
+
+        def _is_url(r: str) -> bool:
+            rl = r.lower()
+            return rl.startswith("http://") or rl.startswith("https://") or rl.startswith("data:")
+
+        def _candidate_paths(ref: str) -> List[Path]:
+            # Нормализуем разделители
+            ref_norm = ref.replace("\\", "/")
+            p = Path(ref_norm)
+
+            candidates: List[Path] = []
+            if p.is_absolute():
+                candidates.append(p)
+                return candidates
+
+            # Основной кейс: JSONL и папки image_* лежат рядом
+            candidates.append(base_dir / p)
+
+            # Кейс, когда в тексте только имя файла без папки
+            candidates.append(base_dir / f"image_{chapter}" / p)
+
+            # Фоллбек на self.base_data_path (если base_dir отличается)
+            if base_dir != self.base_data_path:
+                candidates.append(self.base_data_path / p)
+                candidates.append(self.base_data_path / f"image_{chapter}" / p)
+
+            return candidates
+
+        valid_paths: List[str] = []
+        for raw in refs:
+            ref = _clean_ref(raw)
+            if not ref or _is_url(ref):
+                continue
+
+            for cand in _candidate_paths(ref):
+                try:
+                    if cand.exists() and cand.is_file():
+                        valid_paths.append(str(cand.resolve()))
+                        break
+                except OSError:
+                    # на случай некорректных символов в пути
+                    continue
+
         return list(set(valid_paths))  # Убираем дубликаты
 
     def _encode_text(self, texts: List[str]) -> List[List[float]]:
@@ -254,7 +346,9 @@ class MultimodalRAG:
         self,
         jsonl_folder: str,
         batch_size: int = 32,
-        skip_existing: bool = False
+        skip_existing: bool = False,
+        log_every_batches: int = 3,
+        log_file_summary: bool = True
     ):
         """
         Загрузка данных из папки с JSONL файлами.
@@ -276,10 +370,14 @@ class MultimodalRAG:
         total_images = 0
         
         for jsonl_file in jsonl_files:
+            file_t0 = time.time()
             print(f"\n📄 Обработка файла: {jsonl_file.name}")
             
             # Извлекаем номер главы из имени файла (например, 7.3 из 7.3.chunked.jsonl)
-            chapter = jsonl_file.stem.split('.')[0]
+            if jsonl_file.name.endswith(".chunked.jsonl"):
+                chapter = jsonl_file.name[: -len(".chunked.jsonl")]
+            else:
+                chapter = jsonl_file.stem
             
             chunks = []
             with open(jsonl_file, 'r', encoding='utf-8') as f:
@@ -288,13 +386,16 @@ class MultimodalRAG:
                         chunks.append(json.loads(line))
             
             print(f"   Найдено чанков: {len(chunks)}")
+            if log_file_summary:
+                num_batches = (len(chunks) + batch_size - 1) // batch_size if chunks else 0
+                print(f"   Глава: {chapter} | Батчей: {num_batches} | batch_size: {batch_size}")
             
             # Обработка батчами
             for i in range(0, len(chunks), batch_size):
                 batch = chunks[i:i + batch_size]
                 
                 # Извлечение текстов
-                texts = [chunk.get('text', '') for chunk in batch]
+                texts = [(chunk.get('text') or chunk.get('content') or '') for chunk in batch]
                 
                 # Векторизация текста (GPU)
                 text_vectors = self._encode_text(texts)
@@ -303,21 +404,31 @@ class MultimodalRAG:
                 image_vectors = []
                 image_paths_list = []
                 has_images = []
+                batch_images = 0
                 
                 for chunk in tqdm(batch, desc=f"   Чанки {i}-{i+len(batch)}", leave=False):
                     # Извлекаем пути к изображениям
                     img_paths = self._extract_images_from_chunk(
-                        chunk.get('text', ''),
+                        chunk.get('text') or chunk.get('content') or '',
                         chapter
+                        ,
+                        base_dir=jsonl_file.parent
                     )
                     
                     # Если в метаданных есть image_paths - добавляем
-                    meta_images = chunk.get('metadata', {}).get('image_paths', [])
+                    meta_images = (
+                        chunk.get('metadata', {}).get('image_paths', [])
+                        or chunk.get('image_paths', [])
+                    )
                     if meta_images:
                         for img_name in meta_images:
-                            img_path = self.base_data_path / f"image_{chapter}" / img_name
-                            if img_path.exists():
-                                img_paths.append(str(img_path))
+                            # meta может содержать как имя файла, так и относительный путь (например image_1.3/x.gif)
+                            meta_found = self._extract_images_from_chunk(
+                                str(img_name),
+                                chapter,
+                                base_dir=jsonl_file.parent
+                            )
+                            img_paths.extend(meta_found)
                     
                     img_paths = list(set(img_paths))
                     image_paths_list.append(json.dumps(img_paths, ensure_ascii=False))
@@ -327,6 +438,7 @@ class MultimodalRAG:
                     if img_paths:
                         img_vec = self._encode_images_batch(img_paths)
                         total_images += len(img_paths)
+                        batch_images += len(img_paths)
                     else:
                         img_vec = [0.0] * self.image_dim
                     
@@ -346,7 +458,7 @@ class MultimodalRAG:
                     ],
                     text_vectors,
                     image_vectors,
-                    [chunk.get("text", "") for chunk in batch],
+                    [(chunk.get("text") or chunk.get("content") or "") for chunk in batch],
                     image_paths_list,
                     [str(jsonl_file.name) for _ in batch],
                     [chapter for _ in batch],
@@ -357,11 +469,183 @@ class MultimodalRAG:
                 self.collection.insert(entities)
                 total_chunks += len(batch)
                 
-                if (i // batch_size) % 3 == 0:
-                    print(f"   Загружено: {min(i + batch_size, len(chunks))} / {len(chunks)}")
+                if log_every_batches and ((i // batch_size) % log_every_batches == 0):
+                    batch_no = (i // batch_size) + 1
+                    total_batches = (len(chunks) + batch_size - 1) // batch_size
+                    print(
+                        f"   [{jsonl_file.name}] батч {batch_no}/{total_batches}: "
+                        f"вставлено {len(batch)} | 🖼️ в батче {batch_images} | "
+                        f"прогресс {min(i + batch_size, len(chunks))}/{len(chunks)}"
+                    )
             
             self.collection.flush()
+            if log_file_summary:
+                dt = time.time() - file_t0
+                try:
+                    ents = self.collection.num_entities
+                except Exception:
+                    ents = "?"
+                print(f"✅ Файл завершён: {jsonl_file.name} | time={dt:.1f}s | сущностей в коллекции={ents}")
         
+        print(f"\n✅ Загрузка завершена!")
+        print(f"   📊 Всего чанков: {total_chunks}")
+        print(f"   🖼️ Всего изображений: {total_images}")
+        print(f"   📦 Сущностей в коллекции: {self.collection.num_entities}")
+
+    async def load_from_jsonl_folder_async(
+        self,
+        jsonl_folder: str,
+        batch_size: int = 32,
+        skip_existing: bool = False,
+        yield_every_batches: int = 1,
+        log_every_batches: int = 3,
+        log_file_summary: bool = True,
+    ):
+        """
+        Асинхронная версия загрузки.
+        
+        Важно: pymilvus вставляет данные синхронно, поэтому insert/flush выполняются
+        в worker-thread через asyncio.to_thread, чтобы не блокировать event loop.
+        
+        Args:
+            jsonl_folder: Путь к папке с JSONL файлами
+            batch_size: Размер пакета для загрузки
+            skip_existing: (пока не реализовано) пропуск существующих чанков
+            yield_every_batches: как часто отдавать управление loop (для отзывчивости)
+        """
+        # Переиспользуем синхронную реализацию, но самые блокирующие Milvus-операции
+        # выносим в отдельный поток. Это удобно, если вы запускаете загрузку параллельно
+        # с чем-то ещё (бот/UI/прогресс) в одном процессе.
+
+        jsonl_path = Path(jsonl_folder)
+        jsonl_files = list(jsonl_path.glob("*.jsonl"))
+
+        if not jsonl_files:
+            raise FileNotFoundError(f"Не найдено JSONL файлов в {jsonl_folder}")
+
+        print(f"📂 Найдено файлов: {len(jsonl_files)}")
+
+        total_chunks = 0
+        total_images = 0
+        batch_counter = 0
+
+        for jsonl_file in jsonl_files:
+            file_t0 = time.time()
+            print(f"\n📄 Обработка файла: {jsonl_file.name}")
+
+            # Извлекаем номер главы из имени файла (например, 7.3 из 7.3.chunked.jsonl)
+            if jsonl_file.name.endswith(".chunked.jsonl"):
+                chapter = jsonl_file.name[: -len(".chunked.jsonl")]
+            else:
+                chapter = jsonl_file.stem
+
+            # Чтение файла — IO, поэтому можно в thread
+            def _read_chunks():
+                chunks_local = []
+                with open(jsonl_file, 'r', encoding='utf-8') as f:
+                    for line in f:
+                        if line.strip():
+                            chunks_local.append(json.loads(line))
+                return chunks_local
+
+            chunks = await asyncio.to_thread(_read_chunks)
+            print(f"   Найдено чанков: {len(chunks)}")
+            if log_file_summary:
+                num_batches = (len(chunks) + batch_size - 1) // batch_size if chunks else 0
+                print(f"   Глава: {chapter} | Батчей: {num_batches} | batch_size: {batch_size}")
+
+            for i in range(0, len(chunks), batch_size):
+                batch = chunks[i:i + batch_size]
+
+                # Извлечение текстов + текстовые эмбеддинги (torch) — оставляем синхронно
+                # (обычно это самый быстрый путь и без лишней многопоточности на GPU)
+                texts = [(chunk.get('text') or chunk.get('content') or '') for chunk in batch]
+                text_vectors = self._encode_text(texts)
+
+                # Изображения (CPU) — синхронно как было, чтобы не усложнять потокобезопасность модели
+                image_vectors = []
+                image_paths_list = []
+                has_images = []
+                batch_images = 0
+
+                for chunk in tqdm(batch, desc=f"   Чанки {i}-{i+len(batch)}", leave=False):
+                    img_paths = self._extract_images_from_chunk(
+                        chunk.get('text') or chunk.get('content') or '',
+                        chapter
+                        ,
+                        base_dir=jsonl_file.parent
+                    )
+
+                    meta_images = (
+                        chunk.get('metadata', {}).get('image_paths', [])
+                        or chunk.get('image_paths', [])
+                    )
+                    if meta_images:
+                        for img_name in meta_images:
+                            meta_found = self._extract_images_from_chunk(
+                                str(img_name),
+                                chapter,
+                                base_dir=jsonl_file.parent
+                            )
+                            img_paths.extend(meta_found)
+
+                    img_paths = list(set(img_paths))
+                    image_paths_list.append(json.dumps(img_paths, ensure_ascii=False))
+                    has_images.append(len(img_paths) > 0)
+
+                    if img_paths:
+                        img_vec = self._encode_images_batch(img_paths)
+                        total_images += len(img_paths)
+                        batch_images += len(img_paths)
+                    else:
+                        img_vec = [0.0] * self.image_dim
+
+                    image_vectors.append(img_vec)
+
+                entities = [
+                    [
+                        str(
+                            chunk.get("chunk_id")
+                            or chunk.get("id")
+                            or f"{chapter}_{j}"
+                        )
+                        for j, chunk in enumerate(batch)
+                    ],
+                    text_vectors,
+                    image_vectors,
+                    [(chunk.get("text") or chunk.get("content") or "") for chunk in batch],
+                    image_paths_list,
+                    [str(jsonl_file.name) for _ in batch],
+                    [chapter for _ in batch],
+                    has_images,
+                ]
+
+                # Вставка в Milvus — в thread
+                await asyncio.to_thread(self.collection.insert, entities)
+                total_chunks += len(batch)
+
+                if log_every_batches and ((i // batch_size) % log_every_batches == 0):
+                    batch_no = (i // batch_size) + 1
+                    total_batches = (len(chunks) + batch_size - 1) // batch_size
+                    print(
+                        f"   [{jsonl_file.name}] батч {batch_no}/{total_batches}: "
+                        f"вставлено {len(batch)} | 🖼️ в батче {batch_images} | "
+                        f"прогресс {min(i + batch_size, len(chunks))}/{len(chunks)}"
+                    )
+
+                batch_counter += 1
+                if yield_every_batches and (batch_counter % yield_every_batches == 0):
+                    await asyncio.sleep(0)  # отдаём управление loop
+
+            await asyncio.to_thread(self.collection.flush)
+            if log_file_summary:
+                dt = time.time() - file_t0
+                try:
+                    ents = self.collection.num_entities
+                except Exception:
+                    ents = "?"
+                print(f"✅ Файл завершён: {jsonl_file.name} | time={dt:.1f}s | сущностей в коллекции={ents}")
+
         print(f"\n✅ Загрузка завершена!")
         print(f"   📊 Всего чанков: {total_chunks}")
         print(f"   🖼️ Всего изображений: {total_images}")
@@ -396,7 +680,7 @@ class MultimodalRAG:
         """
         # Векторизация запроса
         query_vector = self.text_model.encode(
-            [query],
+            query,
             normalize_embeddings=True
         ).tolist()
         
@@ -424,27 +708,54 @@ class MultimodalRAG:
             limit=limit,
             expr=expr if expr else None,
             output_fields=[
-                "chunk_id", "text", "image_paths", 
+                "chunk_id", "text", "image_paths",
                 "source_file", "chapter", "has_image"
             ]
         )
-        
+
+        def _get(hit, field: str, default=None):
+            """Получить поле из hit (поддержка hit.get и hit.entity.get)."""
+            if hasattr(hit, 'get') and callable(hit.get):
+                v = hit.get(field)
+                if v is not None:
+                    return v
+            if hasattr(hit, 'entity') and hit.entity is not None:
+                return hit.entity.get(field, default)
+            return default
+
         # Форматирование результатов
         formatted_results = []
         for hits in results:
             for hit in hits:
+                text_val = _get(hit, 'text') or ''
+                image_paths_raw = _get(hit, 'image_paths') or '[]'
                 formatted_results.append({
                     "id": hit.id,
                     "score": hit.score,
-                    "chunk_id": hit.entity.get('chunk_id'),
-                    "text": hit.entity.get('text'),
-                    "image_paths": json.loads(hit.entity.get('image_paths', '[]')),
-                    "source_file": hit.entity.get('source_file'),
-                    "chapter": hit.entity.get('chapter'),
-                    "has_image": hit.entity.get('has_image'),
+                    "chunk_id": _get(hit, 'chunk_id'),
+                    "text": text_val if isinstance(text_val, str) else str(text_val),
+                    "image_paths": json.loads(image_paths_raw) if isinstance(image_paths_raw, str) else (image_paths_raw or []),
+                    "source_file": _get(hit, 'source_file'),
+                    "chapter": _get(hit, 'chapter'),
+                    "has_image": _get(hit, 'has_image'),
                     "search_type": "text"
                 })
-        
+
+        # Если текст пустой — Milvus иногда не возвращает длинные VARCHAR в search; догружаем через query
+        need_text_ids = [r["id"] for r in formatted_results if not (r.get("text") or "").strip()]
+        if need_text_ids:
+            try:
+                q = self.collection.query(
+                    expr=f"id in {need_text_ids}",
+                    output_fields=["id", "text"]
+                )
+                id_to_text = {row["id"]: (row.get("text") or "") for row in q}
+                for r in formatted_results:
+                    if not (r.get("text") or "").strip() and r["id"] in id_to_text:
+                        r["text"] = id_to_text[r["id"]] or ""
+            except Exception as e:
+                print(f"⚠️ Не удалось догрузить текст по id: {e}")
+
         return formatted_results
 
     def search_image(
@@ -485,22 +796,47 @@ class MultimodalRAG:
                 "source_file", "chapter", "has_image"
             ]
         )
-        
+
+        def _get(hit, field: str, default=None):
+            if hasattr(hit, 'get') and callable(hit.get):
+                v = hit.get(field)
+                if v is not None:
+                    return v
+            if hasattr(hit, 'entity') and hit.entity is not None:
+                return hit.entity.get(field, default)
+            return default
+
         formatted_results = []
         for hits in results:
             for hit in hits:
+                text_val = _get(hit, 'text') or ''
+                image_paths_raw = _get(hit, 'image_paths') or '[]'
                 formatted_results.append({
                     "id": hit.id,
                     "score": hit.score,
-                    "chunk_id": hit.entity.get('chunk_id'),
-                    "text": hit.entity.get('text'),
-                    "image_paths": json.loads(hit.entity.get('image_paths', '[]')),
-                    "source_file": hit.entity.get('source_file'),
-                    "chapter": hit.entity.get('chapter'),
-                    "has_image": hit.entity.get('has_image'),
+                    "chunk_id": _get(hit, 'chunk_id'),
+                    "text": text_val if isinstance(text_val, str) else str(text_val),
+                    "image_paths": json.loads(image_paths_raw) if isinstance(image_paths_raw, str) else (image_paths_raw or []),
+                    "source_file": _get(hit, 'source_file'),
+                    "chapter": _get(hit, 'chapter'),
+                    "has_image": _get(hit, 'has_image'),
                     "search_type": "image"
                 })
-        
+
+        need_text_ids = [r["id"] for r in formatted_results if not (r.get("text") or "").strip()]
+        if need_text_ids:
+            try:
+                q = self.collection.query(
+                    expr=f"id in {need_text_ids}",
+                    output_fields=["id", "text"]
+                )
+                id_to_text = {row["id"]: (row.get("text") or "") for row in q}
+                for r in formatted_results:
+                    if not (r.get("text") or "").strip() and r["id"] in id_to_text:
+                        r["text"] = id_to_text[r["id"]] or ""
+            except Exception as e:
+                print(f"⚠️ Не удалось догрузить текст по id: {e}")
+
         return formatted_results
 
     def search_hybrid(
