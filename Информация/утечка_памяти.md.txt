@@ -1,0 +1,18 @@
+Как находить утечки памяти в Python с помощью tracemalloc
+
+Сохрани себе: для обнаружения утечек памяти в Python используй модуль tracemalloc. Этот инструмент поможет тебе быстро отследить, где происходит выделение памяти, и выявить проблемные участки кода
+
+```
+import tracemalloc
+def memory_leak():
+    a = []
+    for i in range(10000):
+        a.append('leak' * 100)
+tracemalloc.start()
+memory_leak()
+snapshot = tracemalloc.take_snapshot()
+top_stats = snapshot.statistics('lineno')
+print("[Top 10 memory allocations]")
+for stat in top_stats[:10]:
+    print(stat)
+```
