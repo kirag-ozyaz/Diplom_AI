@@ -1,0 +1,68 @@
+# -*- coding: utf-8 -*-
+"""
+Тестовый запрос к Multimodal RAG по уже готовой коллекции (без создания коллекции).
+Перед запуском должен быть запущен Milvus и коллекция должна существовать.
+"""
+
+import sys
+import socket
+
+
+def check_milvus_server(host: str = "localhost", port: int = 19530, timeout: float = 2.0) -> bool:
+    """Проверяет, доступен ли сервер Milvus по указанному хосту и порту."""
+    try:
+        with socket.create_connection((host, port), timeout=timeout):
+            return True
+    except (socket.timeout, socket.error, OSError):
+        return False
+
+
+def main():
+    host, port = "localhost", 19530
+    collection_name = "diplom_multimodal"
+    base_data_path = "data"
+
+    print("🔌 Проверка сервера данных (Milvus)...")
+    if not check_milvus_server(host, port):
+        print(f"❌ Сервер Milvus недоступен: {host}:{port}")
+        print("   Запустите Milvus (например, через docker-compose) и повторите попытку.")
+        sys.exit(1)
+    print(f"✅ Сервер Milvus доступен: {host}:{port}\n")
+
+    from multimodal_rag import MultimodalRAG
+
+    # Подключение к уже существующей коллекции, без создания и без загрузки CLIP
+    rag = MultimodalRAG(
+        milvus_host=host,
+        milvus_port=str(port),
+        collection_name=collection_name,
+        base_data_path=base_data_path,
+        load_image_model=False,
+    )
+
+    # Загрузка готовой коллекции в память для поиска (не создаём новую)
+    rag.load_collection()
+
+    print("\n🔍 Тестовый поиск...")
+    # results = rag.search_text("система заземления", limit=3)
+    results = rag.search_text("# Нулевой защитный и нулевой рабочий проводники", limit=10)
+
+    for i, res in enumerate(results, 1):
+        print(f"\n{i}. Score: {res['score']:.4f}")
+        print(f"   Глава: {res['chapter']}")
+        text = res.get("text") or ""
+        if text.strip():
+            # snippet = text[:150] + "..." if len(text) > 150 else text
+            snippet = text
+            print(f"   Текст: {snippet}")
+        else:
+            print(f"   Текст: (пусто)")
+        if res.get("has_image"):
+            print(f"   🖼️ Изображений: {len(res.get('image_paths') or [])}")
+
+    rag.close()
+    print("\n✅ Тест завершён")
+
+
+if __name__ == "__main__":
+    main()

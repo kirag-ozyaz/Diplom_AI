@@ -66,20 +66,20 @@ def main():
     print(f"   Поля: {stats['schema']}")
     
     # Тестовый поиск
-    print("\n🔍 Тестовый поиск...")
-    results = rag.search_text("система заземления", limit=3)
-    
-    for i, res in enumerate(results, 1):
-        print(f"\n{i}. Score: {res['score']:.4f}")
-        print(f"   Глава: {res['chapter']}")
-        text = res.get('text') or ''
-        if text.strip():
-            snippet = text[:150] + "..." if len(text) > 150 else text
-            print(f"   Текст: {snippet}")
-        else:
-            print(f"   Текст: (пусто)")
-        if res.get('has_image'):
-            print(f"   🖼️ Изображений: {len(res.get('image_paths') or [])}")
+    # print("\n🔍 Тестовый поиск...")
+    # results = rag.search_text("система заземления", limit=3)
+    #
+    # for i, res in enumerate(results, 1):
+    #     print(f"\n{i}. Score: {res['score']:.4f}")
+    #     print(f"   Глава: {res['chapter']}")
+    #     text = res.get('text') or ''
+    #     if text.strip():
+    #         snippet = text[:150] + "..." if len(text) > 150 else text
+    #         print(f"   Текст: {snippet}")
+    #     else:
+    #         print(f"   Текст: (пусто)")
+    #     if res.get('has_image'):
+    #         print(f"   🖼️ Изображений: {len(res.get('image_paths') or [])}")
     
     rag.close()
     print("\n✅ Загрузка завершена успешно!")

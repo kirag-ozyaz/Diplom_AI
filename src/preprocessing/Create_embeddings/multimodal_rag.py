@@ -13,6 +13,7 @@ from pathlib import Path
 from tqdm import tqdm
 import asyncio
 import time
+from concurrent.futures import ThreadPoolExecutor
 
 import torch
 from PIL import Image
@@ -45,7 +46,10 @@ class MultimodalRAG:
         clip_model_name: str = "ViT-B-32",
         device_text: str = "cuda",
         device_clip: str = "cpu",  # Важно для RTX 2060 6GB!
-        base_data_path: str = "data"
+        base_data_path: str = "data",
+        image_encode_workers: int = 4,
+        batch_chunk_workers: int = 2,
+        load_image_model: bool = True,
     ):
         """
         Инициализация системы.
@@ -59,11 +63,19 @@ class MultimodalRAG:
             device_text: Устройство для текста (cuda/cpu)
             device_clip: Устройство для CLIP (рекомендуется cpu)
             base_data_path: Базовый путь к данным
+            image_encode_workers: Потоков для кодирования изображений (0 или 1 = последовательно)
+            batch_chunk_workers: Потоков для параллельной обработки чанков в батче (0 = последовательно)
+            load_image_model: Загружать ли CLIP (False — только текстовый поиск по готовой коллекции)
         """
         self.milvus_host = milvus_host
         self.milvus_port = milvus_port
         self.collection_name = collection_name
         self.base_data_path = Path(base_data_path)
+        self.image_encode_workers = max(0, image_encode_workers)
+        self.batch_chunk_workers = max(0, batch_chunk_workers)
+        self._load_image_model = load_image_model
+        self._clip_model_name = clip_model_name
+        self._device_clip = device_clip
         
         # Размерности векторов
         self.text_dim = 384  # Для BGE-small
@@ -72,11 +84,18 @@ class MultimodalRAG:
         # Инициализация подключений
         self._connect_milvus()
         self._load_text_model(text_model_name, device_text)
-        self._load_clip_model(clip_model_name, device_clip)
+        if load_image_model:
+            self._load_clip_model(clip_model_name, device_clip)
+        else:
+            self.clip_model = None
+            self.clip_preprocess = None
+            self.clip_device = None
+            print("ℹ️ CLIP не загружается (режим только текстового поиска)")
         
         print("✅ MultimodalRAG инициализирован")
         print(f"   📝 Текст: {text_model_name} на {device_text}")
-        print(f"   🖼️ CLIP: {clip_model_name} на {device_clip}")
+        if load_image_model:
+            print(f"   🖼️ CLIP: {clip_model_name} на {device_clip}")
 
     def _connect_milvus(self):
         """Подключение к Milvus"""
@@ -304,6 +323,10 @@ class MultimodalRAG:
         Returns:
             Вектор изображения
         """
+        if self.clip_model is None:
+            raise RuntimeError(
+                "Модель изображений (CLIP) не загружена. Создайте MultimodalRAG с load_image_model=True для поиска по изображениям."
+            )
         try:
             image = Image.open(image_path).convert('RGB')
             image_input = self.clip_preprocess(image).unsqueeze(0).to(self.clip_device)
@@ -320,7 +343,7 @@ class MultimodalRAG:
 
     def _encode_images_batch(self, image_paths: List[str]) -> List[List[float]]:
         """
-        Векторизация нескольких изображений.
+        Векторизация нескольких изображений (с распараллеливанием по потокам).
         Возвращает усредненный вектор если изображений несколько.
         
         Args:
@@ -331,14 +354,25 @@ class MultimodalRAG:
         """
         if not image_paths:
             return [0.0] * self.image_dim
+        if self.clip_model is None:
+            raise RuntimeError(
+                "Модель изображений (CLIP) не загружена. Создайте MultimodalRAG с load_image_model=True для поиска по изображениям."
+            )
         
-        vectors = []
-        for img_path in tqdm(image_paths, desc="   Обработка изображений", leave=False):
-            vec = self._encode_image(img_path)
-            vectors.append(vec)
-        
-        # Усреднение векторов если изображений несколько
         import numpy as np
+        if self.image_encode_workers <= 1:
+            vectors = []
+            for img_path in tqdm(image_paths, desc="   Обработка изображений", leave=False):
+                vectors.append(self._encode_image(img_path))
+        else:
+            with ThreadPoolExecutor(max_workers=self.image_encode_workers) as ex:
+                vectors = list(tqdm(
+                    ex.map(self._encode_image, image_paths),
+                    total=len(image_paths),
+                    desc="   Обработка изображений",
+                    leave=False,
+                ))
+        
         avg_vector = np.mean(vectors, axis=0).tolist()
         return avg_vector
 
@@ -400,49 +434,53 @@ class MultimodalRAG:
                 # Векторизация текста (GPU)
                 text_vectors = self._encode_text(texts)
                 
-                # Обработка изображений (CPU)
-                image_vectors = []
+                # Обработка изображений (CPU): сначала собираем пути по чанкам, затем векторизуем (с опцией параллелизма)
                 image_paths_list = []
                 has_images = []
-                batch_images = 0
-                
-                for chunk in tqdm(batch, desc=f"   Чанки {i}-{i+len(batch)}", leave=False):
-                    # Извлекаем пути к изображениям
+                chunk_image_paths = []
+                for chunk in batch:
                     img_paths = self._extract_images_from_chunk(
                         chunk.get('text') or chunk.get('content') or '',
-                        chapter
-                        ,
+                        chapter,
                         base_dir=jsonl_file.parent
                     )
-                    
-                    # Если в метаданных есть image_paths - добавляем
                     meta_images = (
                         chunk.get('metadata', {}).get('image_paths', [])
                         or chunk.get('image_paths', [])
                     )
                     if meta_images:
                         for img_name in meta_images:
-                            # meta может содержать как имя файла, так и относительный путь (например image_1.3/x.gif)
                             meta_found = self._extract_images_from_chunk(
                                 str(img_name),
                                 chapter,
                                 base_dir=jsonl_file.parent
                             )
                             img_paths.extend(meta_found)
-                    
                     img_paths = list(set(img_paths))
+                    chunk_image_paths.append(img_paths)
                     image_paths_list.append(json.dumps(img_paths, ensure_ascii=False))
                     has_images.append(len(img_paths) > 0)
-                    
-                    # Векторизация изображений
-                    if img_paths:
-                        img_vec = self._encode_images_batch(img_paths)
-                        total_images += len(img_paths)
-                        batch_images += len(img_paths)
-                    else:
-                        img_vec = [0.0] * self.image_dim
-                    
-                    image_vectors.append(img_vec)
+                batch_images = sum(len(p) for p in chunk_image_paths)
+                total_images += batch_images
+
+                def _encode_chunk_images(paths: List[str]) -> List[float]:
+                    if paths:
+                        return self._encode_images_batch(paths)
+                    return [0.0] * self.image_dim
+
+                if self.batch_chunk_workers > 1:
+                    with ThreadPoolExecutor(max_workers=self.batch_chunk_workers) as ex:
+                        image_vectors = list(tqdm(
+                            ex.map(_encode_chunk_images, chunk_image_paths),
+                            total=len(chunk_image_paths),
+                            desc=f"   Чанки {i}-{i+len(batch)}",
+                            leave=False,
+                        ))
+                else:
+                    image_vectors = [
+                        _encode_chunk_images(paths)
+                        for paths in tqdm(chunk_image_paths, desc=f"   Чанки {i}-{i+len(batch)}", leave=False)
+                    ]
                 
                 # Формирование сущностей для вставки
                 # Порядок полей ДОЛЖЕН совпадать с порядком в schema, за исключением auto_id-поля "id"
@@ -562,20 +600,16 @@ class MultimodalRAG:
                 texts = [(chunk.get('text') or chunk.get('content') or '') for chunk in batch]
                 text_vectors = self._encode_text(texts)
 
-                # Изображения (CPU) — синхронно как было, чтобы не усложнять потокобезопасность модели
-                image_vectors = []
+                # Изображения (CPU): собираем пути по чанкам, затем векторизуем (с опцией параллелизма)
                 image_paths_list = []
                 has_images = []
-                batch_images = 0
-
-                for chunk in tqdm(batch, desc=f"   Чанки {i}-{i+len(batch)}", leave=False):
+                chunk_image_paths = []
+                for chunk in batch:
                     img_paths = self._extract_images_from_chunk(
                         chunk.get('text') or chunk.get('content') or '',
-                        chapter
-                        ,
+                        chapter,
                         base_dir=jsonl_file.parent
                     )
-
                     meta_images = (
                         chunk.get('metadata', {}).get('image_paths', [])
                         or chunk.get('image_paths', [])
@@ -588,19 +622,31 @@ class MultimodalRAG:
                                 base_dir=jsonl_file.parent
                             )
                             img_paths.extend(meta_found)
-
                     img_paths = list(set(img_paths))
+                    chunk_image_paths.append(img_paths)
                     image_paths_list.append(json.dumps(img_paths, ensure_ascii=False))
                     has_images.append(len(img_paths) > 0)
+                batch_images = sum(len(p) for p in chunk_image_paths)
+                total_images += batch_images
 
-                    if img_paths:
-                        img_vec = self._encode_images_batch(img_paths)
-                        total_images += len(img_paths)
-                        batch_images += len(img_paths)
-                    else:
-                        img_vec = [0.0] * self.image_dim
+                def _encode_chunk_images_async(paths: List[str]) -> List[float]:
+                    if paths:
+                        return self._encode_images_batch(paths)
+                    return [0.0] * self.image_dim
 
-                    image_vectors.append(img_vec)
+                if self.batch_chunk_workers > 1:
+                    with ThreadPoolExecutor(max_workers=self.batch_chunk_workers) as ex:
+                        image_vectors = list(tqdm(
+                            ex.map(_encode_chunk_images_async, chunk_image_paths),
+                            total=len(chunk_image_paths),
+                            desc=f"   Чанки {i}-{i+len(batch)}",
+                            leave=False,
+                        ))
+                else:
+                    image_vectors = [
+                        _encode_chunk_images_async(paths)
+                        for paths in tqdm(chunk_image_paths, desc=f"   Чанки {i}-{i+len(batch)}", leave=False)
+                    ]
 
                 entities = [
                     [
