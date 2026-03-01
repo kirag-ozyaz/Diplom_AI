@@ -146,8 +146,6 @@ def chunk_document(content, source_file):
                 current_metadata.get("Clause", "") != clause_id
         )
 
-        # === Логика завершения предыдущего блока ===
-
         # Новый Chapter - завершаем всё предыдущее
         if is_new_chapter and has_valid_context and current_content:
             chunks.append(create_chunk_obj(current_metadata, current_content, source_file))
@@ -182,7 +180,6 @@ def chunk_document(content, source_file):
             if clause_id:
                 current_metadata["Clause"] = clause_id
 
-        # === Добавляем контент ТОЛЬКО если это не заголовок и есть контекст ===
         if not is_header and content_text:
             # Проверяем что есть Paragraph или Clause для привязки контента
             if current_metadata.get("Paragraph") or current_metadata.get("Clause"):

@@ -13,7 +13,6 @@ import aiofiles
 import traceback
 
 # Импорт внешней функции конвертации
-# Замените 'your_converter_module' на реальный модуль, где объявлена функция
 try:
     from docx_to_md_images_1 import docx_to_md_with_images
 except ImportError as e:
