@@ -3,7 +3,7 @@
 Скрипт загрузки данных в Multimodal RAG систему
 """
 
-from multimodal_rag import MultimodalRAG
+from multimodal_rag import MultimodalRAG, get_default_embedding_model
 import asyncio
 from pathlib import Path
 
@@ -12,36 +12,27 @@ def main():
     print("🚀 Запуск загрузки данных в Multimodal RAG...")
     ROOT = Path(__file__).resolve().parent.parent.parent.parent
     chunked_root = ROOT / "data" / "chunked"
-    
-    # Инициализация системы (text_model_name и text_dim сохраняются в метаданных коллекции)
+
+    # Модель для загрузки берётся из embedding_config.json (default_text_model)
+    # text_model_name, _ = get_default_embedding_model()
+    # print(f"   Модель из конфига (default_text_model): {text_model_name}")
+    text_model_name = "intfloat/multilingual-e5-base"
+    print(f"   Модель из конфига: {text_model_name}")
+
+    # Инициализация: text_dim подставляется из embedding_config.json по text_model_name
     rag = MultimodalRAG(
         milvus_host="localhost",
         milvus_port="19530",
         collection_name="diplom_multimodal",
-        # text_model_name="BAAI/bge-small-en-v1.5", # 384
-        # text_model_name="sentence-transformers/all-MiniLM-L6-v2",
-        text_model_name="intfloat/multilingual-e5-base",  # 768
-        # text_model_name="BAAI/bge-base-en-v1.5",  # 768
-        # text_model_name="BAAI/bge-large-en-v1.5", # 1024        
-        text_dim=768,   # 384 для small, 768 для base, 1024 для large
+        text_model_name=text_model_name,
         clip_model_name="ViT-B-32",
-        device_text="cuda",      # Текст на GPU
-        device_clip="cpu",       # CLIP на CPU (экономия VRAM!)
-        # В вашем проекте и JSONL, и папки image_* лежат внутри data/chunked
+        device_text="cuda",
+        device_clip="cpu",
         base_data_path=str(chunked_root)
     )
-    # Старый вариант без явного text_dim (размерность бралась по умолчанию 384):
-    # rag = MultimodalRAG(
-    #     milvus_host="localhost",
-    #     milvus_port="19530",
-    #     collection_name="diplom_multimodal",
-    #     text_model_name="BAAI/bge-small-en-v1.5",
-    #     clip_model_name="ViT-B-32",
-    #     device_text="cuda",
-    #     device_clip="cpu",
-    #     base_data_path=str(chunked_root)
-    # )
-    
+    # Чтобы принудительно использовать другую модель — передайте явно, например:
+    # rag = MultimodalRAG(..., text_model_name="intfloat/multilingual-e5-base", ...)
+
     # Создание коллекции
     rag.create_collection(drop_existing=True)
     

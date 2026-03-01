@@ -116,8 +116,9 @@ energy_norms_bot/
 │   │   ├── Dockerfile.preprocessing    # Dockerfile для скриптов обработки
 │   │   └── .env.example                # Пример переменных окружения
 │   ├── milvus/
-│   │   ├── docker-compose.milvus.yml   # Отдельный compose для Milvus
-│   │   └── milvus.yaml                 # Конфигурация Milvus
+│   │   ├── docker-compose.yml          # Compose для Milvus (etcd, minio, standalone)
+│   │   ├── .env.example                # Путь к томам (для SSD: DOCKER_VOLUME_DIRECTORY)
+│   │   └── Readme.md                   # Запуск, Attu, перенос на SSD, пересборка БД
 │   └── ollama/
 │       └── docker-compose.ollama.yml   # Compose для Ollama
 ├── src/
@@ -185,8 +186,8 @@ energy_norms_bot/
 
 | Элемент | Тип | Описание |
 |--------|-----|----------|
-| `convert_file(docx_path, input_dir, output_dir, semaphore)` | async-функция | Конвертирует один DOCX в MD через `docx_to_md_with_images`, сохраняет структуру каталогов. |
-| `main()` | async-функция | Парсит аргументы (-i, -o, -j, -r), находит все .docx, запускает `convert_file` с семафором. |
+| `convert_file(docx_path, input_dir, output_dir, semaphore)` | async-функция | Конвертирует один DOCX в MD через `docx_to_md_with_images` (передаёт `output_dir`), сохраняет структуру каталогов. |
+| `main()` | async-функция | Парсит аргументы (-i, -o, -j, -r), по умолчанию использует `data/raw/.../DOCX` и `data/extracted`; находит все .docx, запускает `convert_file` с семафором. |
 | Зависимость | импорт | `from docx_to_md_images_1 import docx_to_md_with_images` |
 
 ---
@@ -220,14 +221,28 @@ energy_norms_bot/
 | Элемент | Тип | Описание |
 |--------|-----|----------|
 | `convert_file(md_path, input_dir, output_dir, semaphore)` | async-функция | Конвертирует один MD в chunked JSONL через `generate_chunked_file`. |
-| `main()` | async-функция | Аргументы -i, -o, -j, -r; поиск .md; параллельный запуск `convert_file`. |
+| `main()` | async-функция | Аргументы -i, -o, -j, -r; по умолчанию `data/extracted` и `data/chunked`; поиск .md; параллельный запуск `convert_file`. |
 | Зависимость | импорт | `from md_to_chunked_2 import generate_chunked_file` |
 
 ---
 
 ### 3. Create_embeddings (Multimodal RAG)
 
-**Файлы:** `multimodal_rag.py`, `load_data.py`, `query.py`, `query_test.py`, `test_connection.py`
+**Файлы:** `multimodal_rag.py`, `load_data.py`, `query.py`, `query_test.py`, `test_connection.py`, `embedding_config.json`
+
+#### embedding_config.json
+
+| Назначение | Описание |
+|------------|----------|
+| Конфиг эмбеддингов | Словарь `text_model_dim` (модель → размерность), `default_text_model`, `default_dim`. Используется для подстановки `text_dim` при инициализации RAG и в `get_default_embedding_model()` при отсутствии метаданных коллекции. |
+
+#### multimodal_rag.py — функции модуля (вне класса)
+
+| Функция | Тип | Описание |
+|---------|-----|----------|
+| `_load_embedding_config()` | — | Читает `embedding_config.json`; возвращает dict или None при ошибке/отсутствии файла. |
+| `_get_text_dim_from_config(text_model_name)` | — | Возвращает `text_dim` для модели из конфига; при отсутствии — `default_dim` или 384. |
+| `get_default_embedding_model()` | — | Возвращает `(default_text_model, text_dim)` из конфига. Используется в query/query_test при недоступных метаданных коллекции. |
 
 #### multimodal_rag.py — класс `MultimodalRAG`
 
@@ -235,8 +250,10 @@ energy_norms_bot/
 
 | Метод | Тип | Описание |
 |-------|-----|----------|
-| `__init__(...)` | конструктор | Параметры: milvus_host/port, collection_name, text_model_name, clip_model_name, device_text/clip, base_data_path, image_encode_workers, batch_chunk_workers, load_image_model, text_dim. Вызывает `_connect_milvus`, `_load_text_model`, при необходимости `_load_clip_model`. |
-| `_connect_milvus(self)` | private | Подключение к Milvus по host:port. |
+| `__init__(...)` | конструктор | Параметры: milvus_host/port, collection_name, text_model_name, clip_model_name, device_text/clip, base_data_path, image_encode_workers, batch_chunk_workers, load_image_model, text_dim (опционально — при None берётся из `embedding_config.json` по text_model_name). Вызывает `_connect_milvus`, `_load_text_model`, при необходимости `_load_clip_model`. |
+| `_check_milvus_available(host, port, timeout)` | @staticmethod | Проверяет доступность Milvus по сокету; используется внутренне. |
+| `check_milvus_server(host, port, timeout)` | @staticmethod | Публичная проверка доступности Milvus (port — строка или число). Для скриптов query, query_test и т.д. Возвращает bool. |
+| `_connect_milvus(self)` | private | Проверяет доступность через `_check_milvus_available`, подключается к Milvus по host:port; при недоступности — выход из процесса. |
 | `_load_text_model(self, model_name, device)` | private | Загрузка SentenceTransformer для текстовых эмбеддингов. |
 | `_load_clip_model(self, model_name, device)` | private | Загрузка CLIP (open_clip) для эмбеддингов изображений. |
 
@@ -251,7 +268,7 @@ energy_norms_bot/
 
 | Метод | Тип | Описание |
 |-------|-----|----------|
-| `_parse_embedding_meta(description)` | @staticmethod | Извлекает из строки описания коллекции `text_model` и `text_dim` (regex). |
+| `_parse_embedding_meta(description)` | @staticmethod | Извлекает из строки описания коллекции (description) `text_model` и `text_dim` по regex; возвращает dict или None. |
 | `get_collection_embedding_meta(self)` | instance | Возвращает метаданные эмбеддингов текущей коллекции. |
 | `get_embedding_meta_from_collection(cls, milvus_host, milvus_port, collection_name)` | @classmethod | Подключается к Milvus и читает метаданные коллекции без создания экземпляра RAG. |
 
@@ -290,26 +307,25 @@ energy_norms_bot/
 
 | Элемент | Описание |
 |---------|----------|
-| `main()` | Создаёт экземпляр `MultimodalRAG` (путь к данным: `data/chunked`), вызывает `create_collection(drop_existing=True)`, затем `load_from_jsonl_folder` или `load_from_jsonl_folder_async`, `load_collection`, выводит статистику и метаданные эмбеддингов, вызывает `rag.close()`. |
+| `main()` | Вычисляет `chunked_root = ROOT / "data" / "chunked"`. Задаёт `text_model_name` в коде (например `intfloat/multilingual-e5-base`; можно заменить на `get_default_embedding_model()`). Создаёт `MultimodalRAG` с `base_data_path=chunked_root`, text_dim подставляется из `embedding_config.json` по `text_model_name`. Вызывает `create_collection(drop_existing=True)`, затем `load_from_jsonl_folder` или `load_from_jsonl_folder_async` (use_async=True по умолчанию), `load_collection`, выводит статистику и метаданные эмбеддингов, вызывает `rag.close()`. |
 
 #### query.py
 
 | Элемент | Описание |
 |---------|----------|
-| `main()` | Читает метаданные коллекции через `MultimodalRAG.get_embedding_meta_from_collection`, инициализирует `MultimodalRAG` с той же моделью и text_dim, вызывает `load_collection`, интерактивное меню: поиск по тексту (1), по изображению (2), гибридный (3), статистика (4), выход (5). |
+| `main()` | Задаёт milvus_host/port, collection_name, base_data_path="data". Сначала проверяет сервер через `check_milvus_server` (из multimodal_rag); при недоступности — выход. Читает метаданные через `get_embedding_meta_from_collection`; при отсутствии — `get_default_embedding_model()`. Инициализирует `MultimodalRAG`, вызывает `load_collection`, интерактивное меню: поиск по тексту (1), по изображению (2), гибридный (3), статистика (4), выход (5). |
 
 #### query_test.py
 
 | Элемент | Описание |
 |---------|----------|
-| `check_milvus_server(host, port, timeout)` | Проверяет доступность Milvus по сокету. |
-| `main()` | Проверяет сервер, получает метаданные коллекции, создаёт RAG с `load_image_model=False`, загружает коллекцию, выполняет один тестовый `search_text`, выводит результаты и закрывает RAG. |
+| `main()` | Импортирует `check_milvus_server` из multimodal_rag. Проверяет сервер через `check_milvus_server(host, port)`, при недоступности — выход. Получает метаданные через `get_embedding_meta_from_collection` или `get_default_embedding_model()`, создаёт RAG с `load_image_model=False`, загружает коллекцию, выполняет один тестовый `search_text`, выводит результаты и закрывает RAG. |
 
 #### test_connection.py
 
 | Элемент | Описание |
 |---------|----------|
-| Скрипт | Подключается к Milvus (`connections.connect`), при необходимости создаёт БД и проверяет список коллекций (утилитарный скрипт без классов). |
+| Скрипт | Подключается к Milvus (`connections.connect`), при необходимости создаёт БД `test_db` и проверяет список коллекций (`utility.list_collections()`). Утилитарный скрипт без классов. |
 
 ---
 
@@ -331,10 +347,12 @@ chunked/*.jsonl + image_*/
 multimodal_rag.MultimodalRAG.load_from_jsonl_folder[_async]
          ↑
 load_data.main → create_collection, load_collection
+         (text_dim из embedding_config.json при необходимости)
 
 Milvus (коллекция)
          ↓
-query.main / query_test.main → MultimodalRAG.search_text, search_image, search_hybrid
+query.main / query_test.main → get_embedding_meta_from_collection или get_default_embedding_model
+         → MultimodalRAG.search_text, search_image, search_hybrid
 ```
 
 Виртуальная карта отражает текущее состояние кода проекта (классы, методы, основные функции и точки входа) и может обновляться при изменении структуры приложения.

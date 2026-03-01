@@ -5,16 +5,8 @@
 """
 
 import sys
-import socket
 
-
-def check_milvus_server(host: str = "localhost", port: int = 19530, timeout: float = 2.0) -> bool:
-    """Проверяет, доступен ли сервер Milvus по указанному хосту и порту."""
-    try:
-        with socket.create_connection((host, port), timeout=timeout):
-            return True
-    except (socket.timeout, socket.error, OSError):
-        return False
+from multimodal_rag import MultimodalRAG, get_default_embedding_model, check_milvus_server
 
 
 def main():
@@ -29,8 +21,6 @@ def main():
         sys.exit(1)
     print(f"✅ Сервер Milvus доступен: {host}:{port}\n")
 
-    from multimodal_rag import MultimodalRAG
-
     # Метаданные эмбеддингов из коллекции — для поиска используем ту же модель и text_dim
     meta = MultimodalRAG.get_embedding_meta_from_collection(host, str(port), collection_name)
     if meta:
@@ -38,8 +28,8 @@ def main():
         text_dim = meta["text_dim"]
         print(f"   Модель из метаданных коллекции: {text_model_name}, text_dim={text_dim}\n")
     else:
-        text_model_name = "BAAI/bge-small-en-v1.5"
-        text_dim = 384
+        text_model_name, text_dim = get_default_embedding_model()
+        print(f"   Модель по умолчанию из конфига: {text_model_name}, text_dim={text_dim}\n")
 
     # Подключение к уже существующей коллекции, без создания и без загрузки CLIP
     rag = MultimodalRAG(

@@ -3,8 +3,10 @@
 Скрипт поиска в Multimodal RAG системе
 """
 
-from multimodal_rag import MultimodalRAG
+from multimodal_rag import MultimodalRAG, get_default_embedding_model, check_milvus_server
 import os
+import sys
+
 
 def main():
     print("🔍 Поиск в Multimodal RAG системе...")
@@ -14,6 +16,13 @@ def main():
     collection_name = "diplom_multimodal"
     base_data_path = "data"
 
+    print("🔌 Проверка сервера данных (Milvus)...")
+    if not check_milvus_server(milvus_host, milvus_port):
+        print(f"❌ Сервер Milvus недоступен: {milvus_host}:{milvus_port}")
+        print("   Запустите Milvus (например, через docker-compose) и повторите попытку.")
+        sys.exit(1)
+    print(f"✅ Сервер Milvus доступен: {milvus_host}:{milvus_port}\n")
+
     # Метаданные эмбеддингов из коллекции — для поиска используем ту же модель и text_dim
     meta = MultimodalRAG.get_embedding_meta_from_collection(milvus_host, milvus_port, collection_name)
     if meta:
@@ -21,8 +30,8 @@ def main():
         text_dim = meta["text_dim"]
         print(f"   Модель из метаданных коллекции: {text_model_name}, text_dim={text_dim}")
     else:
-        text_model_name = "BAAI/bge-small-en-v1.5"
-        text_dim = 384
+        text_model_name, text_dim = get_default_embedding_model()
+        print(f"   Модель по умолчанию из конфига: {text_model_name}, text_dim={text_dim}")
 
     # Инициализация (без создания коллекции)
     rag = MultimodalRAG(

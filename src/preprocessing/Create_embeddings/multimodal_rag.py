@@ -10,7 +10,7 @@ import sys
 import json
 import glob
 import socket
-from typing import List, Dict, Optional, Tuple, Any
+from typing import List, Dict, Optional, Tuple, Any, Union
 from pathlib import Path
 from tqdm import tqdm
 import asyncio
@@ -31,6 +31,47 @@ from pymilvus import (
     Collection,
     MilvusException
 )
+
+# Путь к конфигу «модель → размерность» (рядом с multimodal_rag.py)
+_EMBEDDING_CONFIG_PATH = Path(__file__).resolve().parent / "embedding_config.json"
+
+
+def _load_embedding_config() -> Optional[Dict[str, Any]]:
+    """Читает embedding_config.json. Возвращает None при ошибке или отсутствии файла."""
+    if not _EMBEDDING_CONFIG_PATH.exists():
+        return None
+    try:
+        with open(_EMBEDDING_CONFIG_PATH, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except (json.JSONDecodeError, OSError, TypeError):
+        return None
+
+
+def _get_text_dim_from_config(text_model_name: str) -> int:
+    """
+    Возвращает text_dim для модели из embedding_config.json.
+    Если модели нет в конфиге — используется default_dim из конфига или 384.
+    """
+    data = _load_embedding_config()
+    if not data:
+        return 384
+    mapping = data.get("text_model_dim") or {}
+    if text_model_name in mapping:
+        return int(mapping[text_model_name])
+    return int(data.get("default_dim", 384))
+
+
+def get_default_embedding_model() -> Tuple[str, int]:
+    """
+    Возвращает (default_text_model, text_dim) из embedding_config.json.
+    Используется, когда метаданные коллекции недоступны (query/query_test).
+    """
+    data = _load_embedding_config()
+    if not data:
+        return ("BAAI/bge-small-en-v1.5", 384)
+    model = data.get("default_text_model") or "BAAI/bge-small-en-v1.5"
+    dim = _get_text_dim_from_config(model)
+    return (model, dim)
 
 
 class MultimodalRAG:
@@ -53,11 +94,11 @@ class MultimodalRAG:
         image_encode_workers: int = 4,
         batch_chunk_workers: int = 2,
         load_image_model: bool = True,
-        text_dim: int = 384, 
+        text_dim: Optional[int] = None,
     ):
         """
         Инициализация системы.
-        
+
         Args:
             milvus_host: Хост Milvus
             milvus_port: Порт Milvus
@@ -70,7 +111,7 @@ class MultimodalRAG:
             image_encode_workers: Потоков для кодирования изображений (0 или 1 = последовательно)
             batch_chunk_workers: Потоков для параллельной обработки чанков в батче (0 = последовательно)
             load_image_model: Загружать ли CLIP (False — только текстовый поиск по готовой коллекции)
-            text_dim: Размерность текстового эмбеддинга (384/768/1024 в зависимости от text_model_name). При смене — пересоздать коллекцию
+            text_dim: Размерность текстового эмбеддинга. Если None — берётся из embedding_config.json по text_model_name.
         """
         self.milvus_host = milvus_host
         self.milvus_port = milvus_port
@@ -83,8 +124,11 @@ class MultimodalRAG:
         self._clip_model_name = clip_model_name
         self._device_clip = device_clip
         
-        # Размерности векторов
-        self.text_dim = text_dim   # 384=BGE-small, 768=bge-base, 1024=bge-large
+        # Размерности векторов (text_dim из аргумента или из embedding_config.json по text_model_name)
+        if text_dim is not None:
+            self.text_dim = text_dim
+        else:
+            self.text_dim = _get_text_dim_from_config(text_model_name)
         self.image_dim = 512  # Для ViT-B-32
         # Таблица текстовых моделей (RAM 64Gb, RTX 2060 6Gb). При смене dim — пересоздать коллекцию.
         # --------------------------------------------------------------------------------------------
@@ -201,6 +245,19 @@ class MultimodalRAG:
                 return True
         except (socket.timeout, socket.error, OSError, ValueError):
             return False
+
+    @staticmethod
+    def check_milvus_server(
+        host: str = "localhost",
+        port: Union[str, int] = 19530,
+        timeout: float = 2.0,
+    ) -> bool:
+        """
+        Проверяет, доступен ли сервер Milvus по указанному хосту и порту.
+        Общий метод для скриптов (query, query_test, load_data и т.д.).
+        port может быть строкой или числом.
+        """
+        return MultimodalRAG._check_milvus_available(host, str(port), timeout)
 
     def _connect_milvus(self):
         """Подключение к Milvus. При недоступности сервера — сообщение и завершение процесса."""
@@ -628,7 +685,7 @@ class MultimodalRAG:
                     total_batches = (len(chunks) + batch_size - 1) // batch_size
                     print(
                         f"   [{jsonl_file.name}] батч {batch_no}/{total_batches}: "
-                        f"вставлено {len(batch)} | 🖼️ в батче {batch_images} | "
+                        f"вставлено {len(batch)} | картинок в батче {batch_images} | "
                         f"прогресс {min(i + batch_size, len(chunks))}/{len(chunks)}"
                     )
             
@@ -791,7 +848,7 @@ class MultimodalRAG:
                     total_batches = (len(chunks) + batch_size - 1) // batch_size
                     print(
                         f"   [{jsonl_file.name}] батч {batch_no}/{total_batches}: "
-                        f"вставлено {len(batch)} | 🖼️ в батче {batch_images} | "
+                        f"вставлено {len(batch)} | картинок в батче {batch_images} | "
                         f"прогресс {min(i + batch_size, len(chunks))}/{len(chunks)}"
                     )
 
@@ -1126,3 +1183,7 @@ class MultimodalRAG:
         """Закрытие соединения с Milvus"""
         connections.disconnect("default")
         print("🔌 Соединение с Milvus закрыто")
+
+
+# Публичная функция для скриптов: from multimodal_rag import check_milvus_server
+check_milvus_server = MultimodalRAG.check_milvus_server
