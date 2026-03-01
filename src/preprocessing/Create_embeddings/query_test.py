@@ -31,14 +31,34 @@ def main():
 
     from multimodal_rag import MultimodalRAG
 
+    # Метаданные эмбеддингов из коллекции — для поиска используем ту же модель и text_dim
+    meta = MultimodalRAG.get_embedding_meta_from_collection(host, str(port), collection_name)
+    if meta:
+        text_model_name = meta["text_model"]
+        text_dim = meta["text_dim"]
+        print(f"   Модель из метаданных коллекции: {text_model_name}, text_dim={text_dim}\n")
+    else:
+        text_model_name = "BAAI/bge-small-en-v1.5"
+        text_dim = 384
+
     # Подключение к уже существующей коллекции, без создания и без загрузки CLIP
     rag = MultimodalRAG(
         milvus_host=host,
         milvus_port=str(port),
         collection_name=collection_name,
+        text_model_name=text_model_name,
+        text_dim=text_dim,
         base_data_path=base_data_path,
         load_image_model=False,
     )
+    # Старый вариант без учёта метаданных коллекции:
+    # rag = MultimodalRAG(
+    #     milvus_host=host,
+    #     milvus_port=str(port),
+    #     collection_name=collection_name,
+    #     base_data_path=base_data_path,
+    #     load_image_model=False,
+    # )
 
     # Загрузка готовой коллекции в память для поиска (не создаём новую)
     rag.load_collection()

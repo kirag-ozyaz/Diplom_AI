@@ -6,9 +6,11 @@ CLIP работает на CPU для экономии VRAM
 """
 
 import os
+import sys
 import json
 import glob
-from typing import List, Dict, Optional, Tuple
+import socket
+from typing import List, Dict, Optional, Tuple, Any
 from pathlib import Path
 from tqdm import tqdm
 import asyncio
@@ -42,7 +44,8 @@ class MultimodalRAG:
         milvus_host: str = "localhost",
         milvus_port: str = "19530",
         collection_name: str = "diplom_multimodal",
-        text_model_name: str = "BAAI/bge-small-en-v1.5",
+        text_model_name: str = "BAAI/bge-small-en-v1.5",  
+        # альт.: "sentence-transformers/all-MiniLM-L6-v2" (легче, 384 dim)
         clip_model_name: str = "ViT-B-32",
         device_text: str = "cuda",
         device_clip: str = "cpu",  # Важно для RTX 2060 6GB!
@@ -50,6 +53,7 @@ class MultimodalRAG:
         image_encode_workers: int = 4,
         batch_chunk_workers: int = 2,
         load_image_model: bool = True,
+        text_dim: int = 384, 
     ):
         """
         Инициализация системы.
@@ -66,10 +70,12 @@ class MultimodalRAG:
             image_encode_workers: Потоков для кодирования изображений (0 или 1 = последовательно)
             batch_chunk_workers: Потоков для параллельной обработки чанков в батче (0 = последовательно)
             load_image_model: Загружать ли CLIP (False — только текстовый поиск по готовой коллекции)
+            text_dim: Размерность текстового эмбеддинга (384/768/1024 в зависимости от text_model_name). При смене — пересоздать коллекцию
         """
         self.milvus_host = milvus_host
         self.milvus_port = milvus_port
         self.collection_name = collection_name
+        self._text_model_name = text_model_name  # для метаданных коллекции и проверки при поиске
         self.base_data_path = Path(base_data_path)
         self.image_encode_workers = max(0, image_encode_workers)
         self.batch_chunk_workers = max(0, batch_chunk_workers)
@@ -78,9 +84,98 @@ class MultimodalRAG:
         self._device_clip = device_clip
         
         # Размерности векторов
-        self.text_dim = 384  # Для BGE-small
+        self.text_dim = text_dim   # 384=BGE-small, 768=bge-base, 1024=bge-large
         self.image_dim = 512  # Для ViT-B-32
-        
+        # Таблица текстовых моделей (RAM 64Gb, RTX 2060 6Gb). При смене dim — пересоздать коллекцию.
+        # --------------------------------------------------------------------------------------------
+        # Модель                                    | dim  | Память   | Замечание
+        # ------------------------------------------|------|----------|------------------------------
+        # BAAI/bge-small-en-v1.5                     | 384  | ~400 MB  | по умолчанию, баланс качества
+        # sentence-transformers/all-MiniLM-L6-v2      | 384  | ~90 MB   | легче и быстрее
+        # sentence-transformers/paraphrase-MiniLM-L3-v2 | 384 | ~60 MB  | ещё легче
+        # BAAI/bge-base-en-v1.5                      | 768  | ~450 MB  | лучше качество, text_dim=768
+        # sentence-transformers/all-mpnet-base-v2    | 768  | ~420 MB  | text_dim=768
+        # BAAI/bge-large-en-v1.5                     | 1024 | ~1.3 GB  | макс. качество, text_dim=1024
+        # --------------------------------------------------------------------------------------------
+
+        # ВАЖНЫЕ ПРИМЕЧАНИЯ ПО ВЫБОРУ МОДЕЛИ:
+        # 1. Max tokens: У разных моделей разный максимум токенов на один документ.
+        #    - MiniLM, bge-small: 512 токенов
+        #    - bge-m3, nomic-embed: 8192 токенов (можно слать целые страницы)
+        #    - jina-embeddings-v3: 8192 токенов
+        #    - multilingual-e5-base: 512 токенов
+        #
+        # 2. Normalization: Большинство новых моделей требуют нормализации векторов.
+        #    Добавьте в код: embeddings = model.encode(docs) 
+        #                     normalized = embeddings / np.linalg.norm(embeddings, axis=1, keepdims=True)
+        #
+        # 3. Query instruction: Некоторые модели (bge, e5) требуют специальных префиксов:
+        #    - Для BGE: query = f"Represent this sentence for searching relevant passages: {query}"
+        #    - Для E5: query = f"query: {query}", passage = f"passage: {text}"
+        #    - Для mxbai: query = f"Represent this query for retrieving documents: {query}"
+        #    - Для jina-embeddings-v3: query = model.encode([query], task="retrieval.query")
+        #                               doc = model.encode([text], task="retrieval.passage")
+        #
+        # 4. Метрика расстояния: Для нормализованных векторов используйте COSINE, для ненормализованных - IP
+        #
+        # 5. Размерность (dim): При смене модели с другой размерностью необходимо пересоздать коллекцию в Milvus
+
+        # Таблица текстовых эмбеддинговых моделей (RAM 64Gb, RTX 2060 6Gb)
+        # --------------------------------------------------------------------------------------------------------------------
+        # Модель                                    | dim  | Память   | Скорость | Язык     | Особенность
+        # ------------------------------------------|------|----------|----------|----------|--------------------------------
+        # Базовые модели (легкие и быстрые)
+        # ------------------------------------------|------|----------|----------|----------|--------------------------------
+        # sentence-transformers/paraphrase-MiniLM-L3-v2 | 384 | ~60 MB   | ⚡⚡⚡⚡⚡ | Мульти  | Максимально легкая, базовая
+        # sentence-transformers/all-MiniLM-L6-v2      | 384  | ~90 MB   | ⚡⚡⚡⚡ | EN       | Легче и быстрее
+        # BAAI/bge-small-en-v1.5                     | 384  | ~400 MB  | ⚡⚡⚡   | EN       | По умолчанию, баланс качества
+        # intfloat/e5-small-v2                        | 384  | ~450 MB  | ⚡⚡⚡   | EN       | Специализация на retrieval
+        # Cohere/embed-multilingual-light-v3.0        | 384  | ~300 MB  | ⚡⚡⚡   | Мульти  | Легкая мультиязычная (API или локально)
+        # 
+        # Модели среднего размера (оптимальный баланс)
+        # ------------------------------------------|------|----------|----------|----------|--------------------------------
+        # BAAI/bge-base-en-v1.5                      | 768  | ~450 MB  | ⚡⚡     | EN       | Лучше качество, text_dim=768
+        # sentence-transformers/all-mpnet-base-v2     | 768  | ~420 MB  | ⚡⚡     | EN       | Хороший баланс скорость/качество
+        # intfloat/e5-base-v2                         | 768  | ~500 MB  | ⚡⚡     | EN       | Высокое качество для поиска
+        # Alibaba-NLP/gte-base-en-v1.5                | 768  | ~450 MB  | ⚡⚡     | EN       | SOTA для retrieval (2024)
+        # nomic-embed-text-v1.5                       | 768  | ~550 MB  | ⚡⚡     | EN/Мульти| Поддержка длинного контекста (8192)
+        # intfloat/multilingual-e5-base                | 768  | ~1.1 GB  | ⚡⚡     | Мульти  | Отличное качество для русского и английского
+        # 
+        # Крупные модели (максимальное качество)
+        # ------------------------------------------|------|----------|----------|----------|--------------------------------
+        # mixedbread-ai/mxbai-embed-large-v1          | 1024 | ~670 MB  | ⚡⚡     | EN       | SOTA для RAG, trainable prefix
+        # BAAI/bge-large-en-v1.5                      | 1024 | ~1.3 GB  | ⚡       | EN       | Макс. качество для английского
+        # BAAI/bge-m3                                  | 1024 | ~2.2 GB  | ⚡       | Мульти  | Поддержка 100+ языков, dense/sparse, длинные тексты
+        # jina-embeddings-v3                          | 1024 | ~1.1 GB  | ⚡⚡     | Мульти  | 512/768/1024 dim, поддержка 8192 токенов
+        # 
+        # Реранкеры (используются после основного поиска для переранжирования)
+        # ------------------------------------------|------|----------|----------|----------|--------------------------------
+        # BAAI/bge-reranker-v2-m3                      | -    | ~2.5 GB  | 🐢       | Мульти  | Реранкер (отдельный этап после поиска)
+        # 
+        # Модели, которые НЕ влезут в VRAM (для справки)
+        # ------------------------------------------|------|----------|----------|----------|--------------------------------
+        # intfloat/e5-mistral-7b-instruct              | 4096 | ~15 GB   | 🐢🐢🐢   | EN       | ❌ Не влезет в 6GB VRAM
+        # --------------------------------------------------------------------------------------------------------------------
+
+        # Рекомендации по выбору под задачу:
+        # -----------------------------------
+        # Для первоначального тестирования выбипаем:
+        # BAAI/bge-small-en-v1.5 (dim 384)
+        # sentence-transformers/all-MiniLM-L6-v2 (dim 384)
+        # BAAI/bge-m3 (dim 1024)
+        # intfloat/multilingual-e5-base (dim 768? хороший русский язык)
+        #
+        # Для английских документов, максимум качества:     BAAI/bge-large-en-v1.5 или mixedbread-ai/mxbai-embed-large-v1
+        # Для английских документов, баланс:                BAAI/bge-base-en-v1.5 или intfloat/e5-base-v2
+        # Для английских документов, максимальная скорость:  sentence-transformers/all-MiniLM-L6-v2
+        #
+        # Для мультиязычных (русский + английский), качество:  intfloat/multilingual-e5-base или BAAI/bge-m3
+        # Для мультиязычных (русский + английский), скорость:   Cohere/embed-multilingual-light-v3.0
+        #
+        # Для очень длинных документов (целые страницы):       nomic-embed-text-v1.5 или jina-embeddings-v3 или BAAI/bge-m3
+        #
+        # Если нужен реранкинг для максимальной точности:      BAAI/bge-reranker-v2-m3 (использовать ТОЛЬКО после основного поиска)
+       
         # Инициализация подключений
         self._connect_milvus()
         self._load_text_model(text_model_name, device_text)
@@ -97,13 +192,33 @@ class MultimodalRAG:
         if load_image_model:
             print(f"   🖼️ CLIP: {clip_model_name} на {device_clip}")
 
+    @staticmethod
+    def _check_milvus_available(host: str, port: str, timeout: float = 2.0) -> bool:
+        """Проверяет, доступен ли сервер Milvus по указанному хосту и порту."""
+        try:
+            port_int = int(port)
+            with socket.create_connection((host, port_int), timeout=timeout):
+                return True
+        except (socket.timeout, socket.error, OSError, ValueError):
+            return False
+
     def _connect_milvus(self):
-        """Подключение к Milvus"""
+        """Подключение к Milvus. При недоступности сервера — сообщение и завершение процесса."""
+        if not self._check_milvus_available(self.milvus_host, self.milvus_port):
+            print(
+                f"❌ База данных (Milvus) недоступна: {self.milvus_host}:{self.milvus_port}\n"
+                "   Убедитесь, что Milvus запущен (например, через docker-compose), и повторите попытку."
+            )
+            sys.exit(1)
         try:
             connections.connect(host=self.milvus_host, port=self.milvus_port)
             print(f"✅ Подключение к Milvus: {self.milvus_host}:{self.milvus_port}")
         except Exception as e:
-            raise MilvusException(f"Не удалось подключиться к Milvus: {e}")
+            print(
+                f"❌ Не удалось подключиться к Milvus: {e}\n"
+                "   Проверьте, что сервер запущен и параметры подключения верны."
+            )
+            sys.exit(1)
 
     def _load_text_model(self, model_name: str, device: str):
         """Загрузка модели для текста"""
@@ -189,10 +304,11 @@ class MultimodalRAG:
             FieldSchema(name="has_image", dtype=DataType.BOOL),
         ]
         
-        schema = CollectionSchema(
-            fields, 
-            "Multimodal коллекция для диплома ИИ (текст + изображения)"
+        desc = (
+            "Multimodal коллекция для диплома ИИ (текст + изображения). "
+            f"text_model={self._text_model_name}, text_dim={self.text_dim}"
         )
+        schema = CollectionSchema(fields, desc)
         
         self.collection = Collection(self.collection_name, schema)
         
@@ -697,11 +813,69 @@ class MultimodalRAG:
         print(f"   🖼️ Всего изображений: {total_images}")
         print(f"   📦 Сущностей в коллекции: {self.collection.num_entities}")
 
+    @staticmethod
+    def _parse_embedding_meta(description: str) -> Optional[Dict[str, Any]]:
+        """Извлекает text_model и text_dim из описания коллекции (метаданные эмбеддингов)."""
+        if not description:
+            return None
+        import re
+        m = re.search(r"text_model=([^,]+),\s*text_dim=(\d+)", description)
+        if not m:
+            return None
+        return {"text_model": m.group(1).strip(), "text_dim": int(m.group(2))}
+
+    def get_collection_embedding_meta(self) -> Optional[Dict[str, Any]]:
+        """Возвращает метаданные эмбеддингов коллекции (text_model, text_dim), если записаны."""
+        if not hasattr(self, "collection"):
+            self.collection = Collection(self.collection_name)
+        info = self.collection.describe()
+        desc = info.get("description") or ""
+        return self._parse_embedding_meta(desc)
+
+    @classmethod
+    def get_embedding_meta_from_collection(
+        cls, milvus_host: str, milvus_port: str, collection_name: str
+    ) -> Optional[Dict[str, Any]]:
+        """Подключение к Milvus и чтение метаданных эмбеддингов из описания коллекции (без создания RAG)."""
+        if not cls._check_milvus_available(milvus_host, milvus_port):
+            print(
+                f"❌ База данных (Milvus) недоступна: {milvus_host}:{milvus_port}\n"
+                "   Убедитесь, что Milvus запущен (например, через docker-compose), и повторите попытку."
+            )
+            sys.exit(1)
+        try:
+            connections.connect(host=milvus_host, port=milvus_port)
+        except Exception as e:
+            print(
+                f"❌ Не удалось подключиться к Milvus: {e}\n"
+                "   Проверьте, что сервер запущен и параметры подключения верны."
+            )
+            sys.exit(1)
+        if not utility.has_collection(collection_name):
+            return None
+        c = Collection(collection_name)
+        info = c.describe()
+        return cls._parse_embedding_meta(info.get("description") or "")
+
     def load_collection(self):
         """Загрузка коллекции в память для поиска"""
         if not hasattr(self, 'collection'):
             self.collection = Collection(self.collection_name)
-        
+
+        info = self.collection.describe()
+        meta = self._parse_embedding_meta(info.get("description") or "")
+        if meta:
+            if meta.get("text_dim") != self.text_dim:
+                print(
+                    f"⚠️ Внимание: коллекция создана с text_dim={meta['text_dim']}, "
+                    f"сейчас задано {self.text_dim}. Поиск может сломаться — используйте ту же модель и text_dim."
+                )
+            if meta.get("text_model") != self._text_model_name:
+                print(
+                    f"⚠️ Внимание: коллекция создана с text_model={meta['text_model']}, "
+                    f"сейчас задано {self._text_model_name}. Нужна та же модель для корректного поиска."
+                )
+
         self.collection.load()
         print("✅ Коллекция загружена в память")
 

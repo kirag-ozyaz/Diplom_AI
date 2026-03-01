@@ -147,7 +147,194 @@ energy_norms_bot/
 ├── requirements.txt
 ├── .gitignore
 └── README.md
+```
 
+---
 
+## Виртуальная карта кода приложения
+
+Карта классов, методов, функций и связей между модулями проекта.
+
+### Обзор модулей
+
+| Модуль | Назначение |
+|--------|------------|
+| `src/preprocessing/Create_mds/` | Конвертация DOCX → Markdown с изображениями |
+| `src/preprocessing/Create_chunkeds/` | Сегментация Markdown → чанки (JSONL) с метаданными ПУЭ |
+| `src/preprocessing/Create_embeddings/` | Multimodal RAG: эмбеддинги, Milvus, поиск по тексту и изображениям |
+
+---
+
+### 1. Create_mds (DOCX → Markdown)
+
+**Файлы:** `docx_to_md_images_1.py`, `generator.py`
+
+#### docx_to_md_images_1.py — функции (без классов)
+
+| Функция | Описание |
+|---------|----------|
+| `clean_hidden_tags_in_docx(docx_path)` | Удаляет скрытые метки (#G0, #M..., #S и т.п.) из параграфов и ячеек таблиц DOCX. Возвращает `Document`. |
+| `clean_hidden_tags_in_markdown(markdown_content)` | Удаляет те же скрытые метки из уже сгенерированного Markdown-текста. |
+| `merge_split_headers(markdown_content)` | Объединяет заголовки, разбитые на несколько строк, в одну строку. |
+| `extract_images_and_fix_refs(docx_path, output_dir, file_stem)` | Извлекает изображения из DOCX во внешние файлы и строит карту путей для подстановки в HTML/MD. |
+| `replace_image_tags_in_html(html, image_map, images_folder_name, images_dir)` | Заменяет ссылки на изображения в HTML на актуальные пути. |
+| `fix_images_in_markdown(markdown_content, images_dir, images_folder_name)` | Исправляет ссылки на изображения в Markdown под заданную папку. |
+| `docx_to_md_with_images(docx_path, output_dir=None, merge_headers=False)` | **Точка входа:** конвертирует один DOCX в Markdown с извлечёнными изображениями; возвращает строку MD. |
+
+#### generator.py (Create_mds)
+
+| Элемент | Тип | Описание |
+|--------|-----|----------|
+| `convert_file(docx_path, input_dir, output_dir, semaphore)` | async-функция | Конвертирует один DOCX в MD через `docx_to_md_with_images`, сохраняет структуру каталогов. |
+| `main()` | async-функция | Парсит аргументы (-i, -o, -j, -r), находит все .docx, запускает `convert_file` с семафором. |
+| Зависимость | импорт | `from docx_to_md_images_1 import docx_to_md_with_images` |
+
+---
+
+### 2. Create_chunkeds (Markdown → Chunked JSONL)
+
+**Файлы:** `md_to_chunked_2.py`, `generator.py`
+
+#### md_to_chunked_2.py
+
+**Класс: `PueMetadataParser`**
+
+| Метод | Описание |
+|-------|----------|
+| `__init__(self)` | Инициализирует `metadata` (Document, Section, Chapter, Paragraph, Clause) и флаг `is_header_line`. |
+| `parse_line(self, line: str) -> dict \| None` | Парсит одну строку MD; возвращает словарь с метаданными и полем `Content`, или `None`. Распознаёт: ### Document, ## Раздел, # Глава, # Paragraph, (X.Y.Z) Clause, контент. |
+| `_reset(self, keys: list)` | Обнуляет указанные ключи в `metadata`. |
+| `_make_record(self, content: str) -> dict` | Возвращает копию метаданных + `Content` и `_is_header`. |
+
+**Функции (вне класса):**
+
+| Функция | Описание |
+|---------|----------|
+| `chunk_document(content, source_file)` | Разбивает контент на чанки с помощью `PueMetadataParser`; возвращает список чанков. |
+| `create_chunk_obj(metadata_record, content_lines, source_file)` | Формирует объект чанка (id, text, section, chapter, paragraph, clause, source_file и т.д.) для записи в JSONL. |
+| `copy_images_from_markdown(md_path, output_dir, content)` | Копирует изображения, на которые ссылается MD, в выходную директорию с сохранением структуры. |
+| `generate_chunked_file(md_path, output_dir)` | **Точка входа:** читает MD, вызывает `chunk_document` и `create_chunk_obj`, записывает JSONL и копирует изображения. |
+
+#### generator.py (Create_chunkeds)
+
+| Элемент | Тип | Описание |
+|--------|-----|----------|
+| `convert_file(md_path, input_dir, output_dir, semaphore)` | async-функция | Конвертирует один MD в chunked JSONL через `generate_chunked_file`. |
+| `main()` | async-функция | Аргументы -i, -o, -j, -r; поиск .md; параллельный запуск `convert_file`. |
+| Зависимость | импорт | `from md_to_chunked_2 import generate_chunked_file` |
+
+---
+
+### 3. Create_embeddings (Multimodal RAG)
+
+**Файлы:** `multimodal_rag.py`, `load_data.py`, `query.py`, `query_test.py`, `test_connection.py`
+
+#### multimodal_rag.py — класс `MultimodalRAG`
+
+**Инициализация и подключение**
+
+| Метод | Тип | Описание |
+|-------|-----|----------|
+| `__init__(...)` | конструктор | Параметры: milvus_host/port, collection_name, text_model_name, clip_model_name, device_text/clip, base_data_path, image_encode_workers, batch_chunk_workers, load_image_model, text_dim. Вызывает `_connect_milvus`, `_load_text_model`, при необходимости `_load_clip_model`. |
+| `_connect_milvus(self)` | private | Подключение к Milvus по host:port. |
+| `_load_text_model(self, model_name, device)` | private | Загрузка SentenceTransformer для текстовых эмбеддингов. |
+| `_load_clip_model(self, model_name, device)` | private | Загрузка CLIP (open_clip) для эмбеддингов изображений. |
+
+**Коллекция и индексы**
+
+| Метод | Описание |
+|-------|----------|
+| `create_collection(self, drop_existing=True)` | Создаёт коллекцию в Milvus (поля: id, chunk_id, text_vector, image_vector, text, image_paths, source_file, chapter, has_image), индексы HNSW для text_vector и image_vector. |
+| `load_collection(self)` | Загружает коллекцию в память для поиска; проверяет совпадение text_model/text_dim с метаданными. |
+
+**Метаданные эмбеддингов**
+
+| Метод | Тип | Описание |
+|-------|-----|----------|
+| `_parse_embedding_meta(description)` | @staticmethod | Извлекает из строки описания коллекции `text_model` и `text_dim` (regex). |
+| `get_collection_embedding_meta(self)` | instance | Возвращает метаданные эмбеддингов текущей коллекции. |
+| `get_embedding_meta_from_collection(cls, milvus_host, milvus_port, collection_name)` | @classmethod | Подключается к Milvus и читает метаданные коллекции без создания экземпляра RAG. |
+
+**Извлечение и кодирование**
+
+| Метод | Описание |
+|-------|----------|
+| `_extract_images_from_chunk(self, chunk_text, chapter, base_dir)` | Извлекает пути к изображениям из текста чанка (Markdown/HTML-ссылки), резолвит относительно base_dir. |
+| `_encode_text(self, texts)` | Векторизация списка текстов (SentenceTransformer, normalize_embeddings=True). |
+| `_encode_image(self, image_path)` | Векторизация одного изображения через CLIP; при ошибке — нулевой вектор. |
+| `_encode_images_batch(self, image_paths)` | Векторизация нескольких изображений (с потоками); возвращает один усреднённый вектор на чанк. |
+
+**Загрузка данных**
+
+| Метод | Описание |
+|-------|----------|
+| `load_from_jsonl_folder(self, jsonl_folder, batch_size, skip_existing, ...)` | Синхронная загрузка: читает JSONL из папки, кодирует текст и изображения, вставляет батчи в Milvus. |
+| `load_from_jsonl_folder_async(self, jsonl_folder, batch_size, ...)` | Асинхронный вариант загрузки (insert/flush в потоках), с прогрессом и сводкой по файлам. |
+
+**Поиск**
+
+| Метод | Описание |
+|-------|----------|
+| `search_text(self, query, limit=5, filter_chapter=None, with_images_only=False)` | Поиск по текстовому запросу; возвращает список dict (id, score, chunk_id, text, image_paths, source_file, chapter, has_image, search_type). |
+| `search_image(self, image_path, limit=5, filter_chapter=None)` | Поиск по изображению (image-to-image). |
+| `search_hybrid(self, text_query, image_path=None, limit=5, text_weight=0.7, image_weight=0.3)` | Комбинирует результаты search_text и (опционально) search_image с весами. |
+
+**Утилиты**
+
+| Метод | Описание |
+|-------|----------|
+| `get_collection_stats(self)` | Возвращает name, num_entities, schema, indexes коллекции. |
+| `close(self)` | Отключается от Milvus. |
+
+#### load_data.py
+
+| Элемент | Описание |
+|---------|----------|
+| `main()` | Создаёт экземпляр `MultimodalRAG` (путь к данным: `data/chunked`), вызывает `create_collection(drop_existing=True)`, затем `load_from_jsonl_folder` или `load_from_jsonl_folder_async`, `load_collection`, выводит статистику и метаданные эмбеддингов, вызывает `rag.close()`. |
+
+#### query.py
+
+| Элемент | Описание |
+|---------|----------|
+| `main()` | Читает метаданные коллекции через `MultimodalRAG.get_embedding_meta_from_collection`, инициализирует `MultimodalRAG` с той же моделью и text_dim, вызывает `load_collection`, интерактивное меню: поиск по тексту (1), по изображению (2), гибридный (3), статистика (4), выход (5). |
+
+#### query_test.py
+
+| Элемент | Описание |
+|---------|----------|
+| `check_milvus_server(host, port, timeout)` | Проверяет доступность Milvus по сокету. |
+| `main()` | Проверяет сервер, получает метаданные коллекции, создаёт RAG с `load_image_model=False`, загружает коллекцию, выполняет один тестовый `search_text`, выводит результаты и закрывает RAG. |
+
+#### test_connection.py
+
+| Элемент | Описание |
+|---------|----------|
+| Скрипт | Подключается к Milvus (`connections.connect`), при необходимости создаёт БД и проверяет список коллекций (утилитарный скрипт без классов). |
+
+---
+
+### Связи между модулями (поток данных)
 
 ```
+docx_to_md_images_1.docx_to_md_with_images
+         ↑
+Create_mds/generator.convert_file, main
+
+extracted/*.md
+         ↓
+md_to_chunked_2.generate_chunked_file → chunk_document → PueMetadataParser
+         ↑
+Create_chunkeds/generator.convert_file, main
+
+chunked/*.jsonl + image_*/
+         ↓
+multimodal_rag.MultimodalRAG.load_from_jsonl_folder[_async]
+         ↑
+load_data.main → create_collection, load_collection
+
+Milvus (коллекция)
+         ↓
+query.main / query_test.main → MultimodalRAG.search_text, search_image, search_hybrid
+```
+
+Виртуальная карта отражает текущее состояние кода проекта (классы, методы, основные функции и точки входа) и может обновляться при изменении структуры приложения.

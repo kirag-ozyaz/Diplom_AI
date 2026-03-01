@@ -8,17 +8,43 @@ import os
 
 def main():
     print("🔍 Поиск в Multimodal RAG системе...")
-    
+
+    milvus_host = "localhost"
+    milvus_port = "19530"
+    collection_name = "diplom_multimodal"
+    base_data_path = "data"
+
+    # Метаданные эмбеддингов из коллекции — для поиска используем ту же модель и text_dim
+    meta = MultimodalRAG.get_embedding_meta_from_collection(milvus_host, milvus_port, collection_name)
+    if meta:
+        text_model_name = meta["text_model"]
+        text_dim = meta["text_dim"]
+        print(f"   Модель из метаданных коллекции: {text_model_name}, text_dim={text_dim}")
+    else:
+        text_model_name = "BAAI/bge-small-en-v1.5"
+        text_dim = 384
+
     # Инициализация (без создания коллекции)
     rag = MultimodalRAG(
-        milvus_host="localhost",
-        milvus_port="19530",
-        collection_name="diplom_multimodal",
+        milvus_host=milvus_host,
+        milvus_port=milvus_port,
+        collection_name=collection_name,
+        text_model_name=text_model_name,
+        text_dim=text_dim,
         device_text="cuda",
         device_clip="cpu",
-        base_data_path="data"
+        base_data_path=base_data_path,
     )
-    
+    # Старый вариант без учёта метаданных коллекции (могла быть рассинхронизация с load_data):
+    # rag = MultimodalRAG(
+    #     milvus_host="localhost",
+    #     milvus_port="19530",
+    #     collection_name="diplom_multimodal",
+    #     device_text="cuda",
+    #     device_clip="cpu",
+    #     base_data_path="data"
+    # )
+
     # Загрузка коллекции в память
     rag.load_collection()
     

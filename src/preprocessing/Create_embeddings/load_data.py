@@ -13,18 +13,34 @@ def main():
     ROOT = Path(__file__).resolve().parent.parent.parent.parent
     chunked_root = ROOT / "data" / "chunked"
     
-    # Инициализация системы
+    # Инициализация системы (text_model_name и text_dim сохраняются в метаданных коллекции)
     rag = MultimodalRAG(
         milvus_host="localhost",
         milvus_port="19530",
         collection_name="diplom_multimodal",
-        text_model_name="BAAI/bge-small-en-v1.5",
+        # text_model_name="BAAI/bge-small-en-v1.5", # 384
+        # text_model_name="sentence-transformers/all-MiniLM-L6-v2",
+        text_model_name="intfloat/multilingual-e5-base",  # 768
+        # text_model_name="BAAI/bge-base-en-v1.5",  # 768
+        # text_model_name="BAAI/bge-large-en-v1.5", # 1024        
+        text_dim=768,   # 384 для small, 768 для base, 1024 для large
         clip_model_name="ViT-B-32",
         device_text="cuda",      # Текст на GPU
         device_clip="cpu",       # CLIP на CPU (экономия VRAM!)
         # В вашем проекте и JSONL, и папки image_* лежат внутри data/chunked
         base_data_path=str(chunked_root)
     )
+    # Старый вариант без явного text_dim (размерность бралась по умолчанию 384):
+    # rag = MultimodalRAG(
+    #     milvus_host="localhost",
+    #     milvus_port="19530",
+    #     collection_name="diplom_multimodal",
+    #     text_model_name="BAAI/bge-small-en-v1.5",
+    #     clip_model_name="ViT-B-32",
+    #     device_text="cuda",
+    #     device_clip="cpu",
+    #     base_data_path=str(chunked_root)
+    # )
     
     # Создание коллекции
     rag.create_collection(drop_existing=True)
@@ -58,12 +74,15 @@ def main():
     # Загрузка в память для поиска
     rag.load_collection()
     
-    # Статистика
+    # Статистика и метаданные эмбеддингов (для поиска использовать те же text_model_name и text_dim)
     stats = rag.get_collection_stats()
     print(f"\n📊 Статистика коллекции:")
     print(f"   Название: {stats['name']}")
     print(f"   Сущностей: {stats['num_entities']}")
     print(f"   Поля: {stats['schema']}")
+    meta = rag.get_collection_embedding_meta()
+    if meta:
+        print(f"   Метаданные эмбеддингов: text_model={meta['text_model']}, text_dim={meta['text_dim']}")
     
     # Тестовый поиск
     # print("\n🔍 Тестовый поиск...")
