@@ -106,7 +106,7 @@ class PueMetadataParser:
 
 def chunk_document(content, source_file):
     """
-    Разбивает контент на чанки используя PueMetadataParser.
+    Разбить контент на чанки используя PueMetadataParser.
     """
     lines = content.split('\n')
     parser = PueMetadataParser()
@@ -196,7 +196,7 @@ def chunk_document(content, source_file):
 
 
 def create_chunk_obj(metadata_record, content_lines, source_file):
-    """Формирует JSON-объект для чанка согласно новой структуре"""
+    """Формировать JSON-объект для чанка согласно новой структуре"""
     text_content = "\n".join(content_lines).strip()
 
     # Уникальный ID
@@ -254,8 +254,8 @@ def create_chunk_obj(metadata_record, content_lines, source_file):
 
 def copy_images_from_markdown(md_path: Path, output_dir: Path, content: str) -> None:
     """
-    Находит в markdown все ссылки на файлы в подкаталогах image_***
-    (например, ![...](image_1.7/image9_а.png)) и копирует соответствующие
+    Найти в markdown все ссылки на файлы в подкаталогах image_***
+    (например, ![...](image_1.7/image9_а.png)) и скопировать соответствующие
     графические файлы (любого расширения) из директории исходного md-файла
     в директорию output_dir, сохраняя относительный путь (папку image_*** и имя файла).
     """

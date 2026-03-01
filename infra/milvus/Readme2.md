@@ -6,11 +6,11 @@
 
 Для разработки и тестирования проще всего использовать официальный файл Docker Compose от Milvus. Он запускает сам Milvus и его зависимости: etcd (хранилище метаданных) и MinIO (хранилище данных).
 
-**Скачайте актуальную конфигурацию:**
+**Скачать актуальную конфигурацию:**
 ```bash
 wget https://github.com/milvus-io/milvus/releases/download/v2.5.5/milvus-standalone-docker-compose.yml -O docker-compose.yml
 
-# Запустите Milvus
+# Запустить Milvus
 sudo docker compose up -d
 ```
 Это создаст три контейнера: `milvus-standalone`, `milvus-minio` и `milvus-etcd`.
@@ -18,11 +18,11 @@ sudo docker compose up -d
 ### ⚙️ Вариант 2: Продуктовая конфигурация (свои настройки)
 
 Для продуктивной среды нужно тоньше настраивать параметры: пути к данным, кэширование, GPU и т.д. Для этого:
-1. Создаём свой файл `milvus.yaml`
-2. Монтируем его в контейнер через `docker-compose.yml`
+1. Создать свой файл `milvus.yaml`
+2. Смонтировать его в контейнер через `docker-compose.yml`
 
-#### 1. Скачайте шаблон конфигурации
-Начните с официального шаблона:
+#### 1. Скачать шаблон конфигурации
+Начать с официального шаблона:
 ```bash
 wget https://raw.githubusercontent.com/milvus-io/milvus/v2.4.23/configs/milvus.yaml
 ```
@@ -112,7 +112,7 @@ networks:
 ```
 
 #### 4. Запуск с вашими настройками
-Положите `milvus.yaml` и `docker-compose.yml` в одну папку и выполните:
+Положить `milvus.yaml` и `docker-compose.yml` в одну папку и выполнить:
 ```bash
 docker compose up -d
 ```
@@ -124,6 +124,4 @@ docker compose up -d
   ```bash
   docker compose --profile attu up -d
   ```
-  После этого Attu будет доступен в браузере.
-
-Для продуктивного использования или нагрузочного тестирования я рекомендую **второй вариант** с собственным `milvus.yaml`. Только так вы сможете точно настроить память, GPU и пути к данным под свои задачи.
+  Attu будет доступен в браузере.

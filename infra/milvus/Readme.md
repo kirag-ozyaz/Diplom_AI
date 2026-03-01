@@ -1,7 +1,7 @@
 https://milvus.io/docs/ru/quickstart.md
 https://milvus.io/docs/ru/install_standalone-windows.md
 
-### 0. Установить Milvus
+### 0. Установка Milvus
 
 # Download the configuration file and rename it as docker-compose.yml
 C:\>Invoke-WebRequest https://github.com/milvus-io/milvus/releases/download/v2.6.11/milvus-standalone-docker-compose.yml -OutFile docker-compose.yml
@@ -15,8 +15,8 @@ C:\>docker compose up -d
 
 Вот следующие шаги для полной готовности системы:
 
-### 1. Как запустить интерфейс (Attu)
-Чтобы визуально просматривать данные (), нужно запустить Attu отдельно. Так как основные сервисы уже работают, просто добавьте интерфейс:
+### 1. Как запуск интерфейс (Attu)
+Чтобы визуально просматривать данные (), нужно запустить Attu отдельно. Так как основные сервисы уже работают, просто добавить интерфейс:
 
 ```powershell
 docker run -d --name milvus-attu -p 3000:3000 -e MILVUS_URL=http://milvus-standalone:19530 --network milvus zilliz/attu:v2.4.0
@@ -35,12 +35,12 @@ docker rm -f milvus-attu 2>$null; docker run -d --name milvus-attu -p 3000:3000 
 Откройте **http://localhost:3000** — Attu подключится к текущему Milvus (в т.ч. к базе на SSD).
 
 ### 2. Проверка подключения через Python
-Прежде чем загружать данные, убедитесь, что Python видит базу. Установите клиент, если еще нет:
+Прежде чем загружать данные, убедиться, что Python видит базу. Установить клиент, если еще нет:
 ```powershell
 pip install pymilvus
 ```
 
-Создайте файл `test_connection.py` и запустите:
+Создать файл `test_connection.py` и запустить:
 ```python
 from pymilvus import connections, utility
 
@@ -67,25 +67,25 @@ except Exception as e:
 
 Чтобы хранить БД на SSD:
 
-1. В каталоге `infra/milvus/` скопируйте пример конфига:  
+1. В каталоге `infra/milvus/` скопировать пример конфига:  
    `copy .env.example .env`
-2. Откройте `.env` и задайте путь на SSD, например:  
+2. Открыть `.env` и задать путь на SSD, например:  
    `DOCKER_VOLUME_DIRECTORY=D:/milvus_data`  
-   (или `E:/milvus_volumes` — используйте свой букву диска и путь).
+   (или `E:/milvus_volumes` — использовать свой букву диска и путь).
 3. При следующем запуске `docker-compose up -d` тома будут созданы уже на SSD.  
-   Если контейнеры уже были запущены с старым путём, сначала выполните шаги из «Полная пересборка БД» ниже.
+   Если контейнеры уже были запущены с старым путём, сначала выполнить шаги из «Полная пересборка БД» ниже.
 
 **Полная пересборка БД (удаление старой БД и создание новой на SSD)**
 
-1. Перейдите в каталог с `docker-compose.yml`:  
+1. Перейти в каталог с `docker-compose.yml`:  
    `cd infra/milvus`
-2. Остановите контейнеры и **удалите тома** (вся база будет удалена):  
+2. Остановить контейнеры и **удалить тома** (вся база будет удалена):  
    `docker-compose down -v`
-3. (Опционально) Задайте путь на SSD в `.env`, как в пункте 6 выше.
-4. Запустите заново:  
+3. (Опционально) Задать путь на SSD в `.env`, как в пункте 6 выше.
+4. Запустить заново:  
    `docker-compose up -d`
-5. Дождитесь готовности Milvus (проверка: `query_test.py` или порт 19530).
-6. Заново проиндексируйте данные:  
+5. Дождаться готовности Milvus (проверка: `query_test.py` или порт 19530).
+6. Заново проиндексировать данные:  
    `python src/preprocessing/Create_embeddings/load_data.py`  
    (из корня проекта или из папки `Create_embeddings`).
 
@@ -93,15 +93,15 @@ except Exception as e:
 
 **Если папка на диске (например, `c:/milvus_volumes`) остаётся пустой**
 
-1. **Используется именно `.env`** — Docker Compose подхватывает только файл с именем `.env` в папке с `docker-compose.yml`. Если вы правили только `.env.example`, скопируйте его в `.env`:  
+1. **Используется именно `.env`** — Docker Compose подхватывает только файл с именем `.env` в папке с `docker-compose.yml`. Если вы правили только `.env.example`, скопировать его в `.env`:  
    `copy .env.example .env`  
-   и в `.env` задайте `DOCKER_VOLUME_DIRECTORY=c:/milvus_volumes` (или свой путь).
+   и в `.env` задать `DOCKER_VOLUME_DIRECTORY=c:/milvus_volumes` (или свой путь).
 
 2. **Docker Desktop (Windows):** для монтирования диска он должен быть в списке «File sharing».  
-   Откройте **Docker Desktop → Settings → Resources → File sharing** и добавьте при необходимости диск (например, `C:\`) или используйте путь внутри профиля, который уже расшарен:  
+   Открыть **Docker Desktop → Settings → Resources → File sharing** и добавить при необходимости диск (например, `C:\`) или использовать путь внутри профиля, который уже расшарен:  
    `C:/Users/<ваш_логин>/milvus_volumes`.
 
-3. После изменения `.env` перезапустите с пересозданием томов:  
+3. После изменения `.env` перезапустить с пересозданием томов:  
    `docker-compose down -v`  
    `docker-compose up -d`  
-   Ожидаемая структура на диске: `c:/milvus_volumes/volumes/etcd`, `.../volumes/minio`, `.../volumes/milvus` — каталоги создаются при первом запуске контейнеров.
+   будет следующая структура на диске: `c:/milvus_volumes/volumes/etcd`, `.../volumes/minio`, `.../volumes/milvus` — каталоги создаются при первом запуске контейнеров.

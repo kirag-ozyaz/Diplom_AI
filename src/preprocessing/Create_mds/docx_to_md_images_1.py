@@ -17,7 +17,7 @@ import hashlib
 
 def clean_hidden_tags_in_docx(docx_path):
     """
-    Удаляет скрытые метки вроде:
+    Удалить скрытые метки вроде:
       #G0...
       #M12291 901873648 ...
       #S
@@ -66,7 +66,7 @@ def clean_hidden_tags_in_docx(docx_path):
 
 def clean_hidden_tags_in_markdown(markdown_content):
     """
-    Удаляет скрытые метки вроде:
+    Удалить скрытые метки вроде:
       #G0...
       #M12291 901873648 ...
       #S
@@ -91,11 +91,11 @@ def clean_hidden_tags_in_markdown(markdown_content):
 
 def merge_split_headers(markdown_content):
     """
-    Объединяет заголовки, разбитые на несколько строк.
+    Объединить заголовки, разбитые на несколько строк.
     
     Если заголовок (строка начинающаяся с #) заканчивается без знака препинания,
     а следующая строка не является новым заголовком, списком, таблицей или кодом,
-    то объединяет их в одну строку. Может объединять несколько строк подряд.
+    то объединить их в одну строку. Может объединять несколько строк подряд.
     
     Пример:
         # Первая часть заголовка
@@ -110,7 +110,7 @@ def merge_split_headers(markdown_content):
     i = 0
     
     def is_block_start(line):
-        """Проверяет, является ли строка началом нового блока."""
+        """Проверить, является ли строка началом нового блока."""
         stripped = line.strip()
         if not stripped:
             return True
@@ -164,7 +164,7 @@ def merge_split_headers(markdown_content):
 
 
 def extract_images_and_fix_refs(docx_path, output_dir, file_stem):
-    """Извлекает изображения из .docx и возвращает словарь {rId: имя_файла}"""
+    """Извлечь изображения из .docx и вернуть словарь {rId: имя_файла}"""
     # Создаем папку с именем image_<имя_файла>
     images_dir = output_dir / f"image_{file_stem}"
     
@@ -279,7 +279,7 @@ def extract_images_and_fix_refs(docx_path, output_dir, file_stem):
 
 
 def replace_image_tags_in_html(html, image_map, images_folder_name, images_dir):
-    """Заменяет <img> теги на корректные пути, сохраняя все изображения"""
+    """Заменить <img> теги на корректные пути, сохраняя все изображения"""
     soup = BeautifulSoup(html, 'html.parser')
     #image_counter = image_counter_start
 
