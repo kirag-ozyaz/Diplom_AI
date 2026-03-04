@@ -260,10 +260,10 @@ energy_norms_bot/
 
 | Метод | Тип | Описание |
 |-------|-----|----------|
-| `__init__(...)` | конструктор | Параметры: milvus_host/port, collection_name, text_model_name, clip_model_name, device_text/clip, base_data_path, image_encode_workers, batch_chunk_workers, load_image_model, text_dim (опционально — при None берётся из `embedding_config.json` по text_model_name). Вызывает `_connect_milvus`, `_load_text_model`, при необходимости `_load_clip_model`. |
-| `_check_milvus_available(host, port, timeout)` | @staticmethod | Проверяет доступность Milvus по сокету; используется внутренне. |
-| `check_milvus_server(host, port, timeout)` | @staticmethod | Публичная проверка доступности Milvus (port — строка или число). Для скриптов query, query_test и т.д. Возвращает bool. |
-| `_connect_milvus(self)` | private | Проверяет доступность через `_check_milvus_available`, подключается к Milvus по host:port; при недоступности — выход из процесса. |
+| `__init__(...)` | конструктор | Параметры: vector_db_host/port, collection_name, text_model_name, clip_model_name, device_text/clip, base_data_path, image_encode_workers, batch_chunk_workers, load_image_model, text_dim (опционально — при None берётся из `embedding_config.json` по text_model_name). Вызывает `_connect_vector_db`, `_load_text_model`, при необходимости `_load_clip_model`. |
+| `_check_vector_db_available(host, port, timeout)` | @staticmethod | Проверяет доступность векторной БД по сокету; используется внутренне. |
+| `check_vector_db_server(host, port, timeout)` | @staticmethod | Публичная проверка доступности векторной БД (port — строка или число). Для скриптов query, query_test и т.д. Возвращает bool. |
+| `_connect_vector_db(self)` | private | Проверяет доступность через `_check_vector_db_available`, подключается к векторной БД по host:port; при недоступности — выход из процесса. |
 | `_load_text_model(self, model_name, device)` | private | Загрузка SentenceTransformer для текстовых эмбеддингов. |
 | `_load_clip_model(self, model_name, device)` | private | Загрузка CLIP (open_clip) для эмбеддингов изображений. |
 
@@ -271,7 +271,7 @@ energy_norms_bot/
 
 | Метод | Описание |
 |-------|----------|
-| `create_collection(self, drop_existing=True)` | Создаёт коллекцию в Milvus (поля: id, chunk_id, text_vector, image_vector, text, image_paths, source_file, chapter, has_image), индексы HNSW для text_vector и image_vector. |
+| `create_collection(self, drop_existing=True)` | Создаёт коллекцию в векторной БД (поля: id, chunk_id, text_vector, image_vector, text, image_paths, source_file, chapter, has_image), индексы HNSW для text_vector и image_vector. |
 | `load_collection(self)` | Загружает коллекцию в память для поиска; проверяет совпадение text_model/text_dim с метаданными. |
 
 **Метаданные эмбеддингов**
@@ -280,7 +280,7 @@ energy_norms_bot/
 |-------|-----|----------|
 | `_parse_embedding_meta(description)` | @staticmethod | Извлекает из строки описания коллекции (description) `text_model` и `text_dim` по regex; возвращает dict или None. |
 | `get_collection_embedding_meta(self)` | instance | Возвращает метаданные эмбеддингов текущей коллекции. |
-| `get_embedding_meta_from_collection(cls, milvus_host, milvus_port, collection_name)` | @classmethod | Подключается к Milvus и читает метаданные коллекции без создания экземпляра RAG. |
+| `get_embedding_meta_from_collection(cls, vector_db_host, vector_db_port, collection_name)` | @classmethod | Подключается к векторной БД и читает метаданные коллекции без создания экземпляра RAG. |
 
 **Извлечение и кодирование**
 
@@ -295,7 +295,7 @@ energy_norms_bot/
 
 | Метод | Описание |
 |-------|----------|
-| `load_from_jsonl_folder(self, jsonl_folder, batch_size, skip_existing, ...)` | Синхронная загрузка: читает JSONL из папки, кодирует текст и изображения, вставляет батчи в Milvus. |
+| `load_from_jsonl_folder(self, jsonl_folder, batch_size, skip_existing, ...)` | Синхронная загрузка: читает JSONL из папки, кодирует текст и изображения, вставляет батчи в векторную БД. |
 | `load_from_jsonl_folder_async(self, jsonl_folder, batch_size, ...)` | Асинхронный вариант загрузки (insert/flush в потоках), с прогрессом и сводкой по файлам. |
 
 **Поиск**
@@ -311,7 +311,7 @@ energy_norms_bot/
 | Метод | Описание |
 |-------|----------|
 | `get_collection_stats(self)` | Возвращает name, num_entities, schema, indexes коллекции. |
-| `close(self)` | Отключается от Milvus. |
+| `close(self)` | Отключается от векторной БД. |
 
 #### load_data.py
 
@@ -323,19 +323,19 @@ energy_norms_bot/
 
 | Элемент | Описание |
 |---------|----------|
-| `main()` | Задаёт milvus_host/port, collection_name, base_data_path="data". Сначала проверяет сервер через `check_milvus_server` (из multimodal_rag); при недоступности — выход. Читает метаданные через `get_embedding_meta_from_collection`; при отсутствии — `get_default_embedding_model()`. Инициализирует `MultimodalRAG`, вызывает `load_collection`, интерактивное меню: поиск по тексту (1), по изображению (2), гибридный (3), статистика (4), выход (5). |
+| `main()` | Задаёт vector_db_host/port, collection_name, base_data_path="data". Сначала проверяет сервер через `check_vector_db_server` (из multimodal_rag); при недоступности — выход. Читает метаданные через `get_embedding_meta_from_collection`; при отсутствии — `get_default_embedding_model()`. Инициализирует `MultimodalRAG`, вызывает `load_collection`, интерактивное меню: поиск по тексту (1), по изображению (2), гибридный (3), статистика (4), выход (5). |
 
 #### query_test.py
 
 | Элемент | Описание |
 |---------|----------|
-| `main()` | Импортирует `check_milvus_server` из multimodal_rag. Проверяет сервер через `check_milvus_server(host, port)`, при недоступности — выход. Получает метаданные через `get_embedding_meta_from_collection` или `get_default_embedding_model()`, создаёт RAG с `load_image_model=False`, загружает коллекцию, выполняет один тестовый `search_text`, выводит результаты и закрывает RAG. |
+| `main()` | Импортирует `check_vector_db_server` из multimodal_rag. Проверяет сервер через `check_vector_db_server(host, port)`, при недоступности — выход. Получает метаданные через `get_embedding_meta_from_collection` или `get_default_embedding_model()`, создаёт RAG с `load_image_model=False`, загружает коллекцию, выполняет один тестовый `search_text`, выводит результаты и закрывает RAG. |
 
 #### test_connection.py
 
 | Элемент | Описание |
 |---------|----------|
-| Скрипт | Подключается к Milvus (`connections.connect`), при необходимости создаёт БД `test_db` и проверяет список коллекций (`utility.list_collections()`). Утилитарный скрипт без классов. |
+| Скрипт | Подключается к векторной БД (`connections.connect`), при необходимости создаёт БД `test_db` и проверяет список коллекций (`utility.list_collections()`). Утилитарный скрипт без классов. |
 
 ---
 

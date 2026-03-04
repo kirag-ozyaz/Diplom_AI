@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 Multimodal RAG System для диплома ИИ
-Поддержка текстового и изображений векторов в Milvus
+Поддержка текстовых и изображений векторов в векторной БД
 CLIP работает на CPU для экономии VRAM
 """
 
@@ -82,8 +82,8 @@ class MultimodalRAG:
 
     def __init__(
         self,
-        milvus_host: str = "localhost",
-        milvus_port: str = "19530",
+        vector_db_host: str = "localhost",
+        vector_db_port: str = "19530",
         collection_name: str = "diplom_multimodal",
         text_model_name: str = "BAAI/bge-small-en-v1.5",  
         # альт.: "sentence-transformers/all-MiniLM-L6-v2" (легче, 384 dim)
@@ -100,8 +100,8 @@ class MultimodalRAG:
         Инициализация системы.
 
         Args:
-            milvus_host: Хост Milvus
-            milvus_port: Порт Milvus
+            vector_db_host: Хост векторной БД
+            vector_db_port: Порт векторной БД
             collection_name: Имя коллекции
             text_model_name: Модель для текстовых эмбедингов
             clip_model_name: Модель CLIP для изображений
@@ -113,8 +113,8 @@ class MultimodalRAG:
             load_image_model: Загружать ли CLIP (False — только текстовый поиск по готовой коллекции)
             text_dim: Размерность текстового эмбеддинга. Если None — берётся из embedding_config.json по text_model_name.
         """
-        self.milvus_host = milvus_host
-        self.milvus_port = milvus_port
+        self.vector_db_host = vector_db_host
+        self.vector_db_port = vector_db_port
         self.collection_name = collection_name
         self._text_model_name = text_model_name  # для метаданных коллекции и проверки при поиске
         self.base_data_path = Path(base_data_path)
@@ -162,7 +162,7 @@ class MultimodalRAG:
         #
         # 4. Метрика расстояния: Для нормализованных векторов используйте COSINE, для ненормализованных - IP
         #
-        # 5. Размерность (dim): При смене модели с другой размерностью необходимо пересоздать коллекцию в Milvus
+        # 5. Размерность (dim): При смене модели с другой размерностью необходимо пересоздать коллекцию в векторной БД
 
         # Таблица текстовых эмбеддинговых моделей (RAM 64Gb, RTX 2060 6Gb)
         # --------------------------------------------------------------------------------------------------------------------
@@ -221,7 +221,7 @@ class MultimodalRAG:
         # Если нужен реранкинг для максимальной точности:      BAAI/bge-reranker-v2-m3 (использовать ТОЛЬКО после основного поиска)
        
         # Инициализация подключений
-        self._connect_milvus()
+        self._connect_vector_db()
         self._load_text_model(text_model_name, device_text)
         if load_image_model:
             self._load_clip_model(clip_model_name, device_clip)
@@ -237,8 +237,8 @@ class MultimodalRAG:
             print(f"   🖼️ CLIP: {clip_model_name} на {device_clip}")
 
     @staticmethod
-    def _check_milvus_available(host: str, port: str, timeout: float = 2.0) -> bool:
-        """Проверяет, доступен ли сервер Milvus по указанному хосту и порту."""
+    def _check_vector_db_available(host: str, port: str, timeout: float = 2.0) -> bool:
+        """Проверяет, доступен ли сервер векторной БД по указанному хосту и порту."""
         try:
             port_int = int(port)
             with socket.create_connection((host, port_int), timeout=timeout):
@@ -247,32 +247,32 @@ class MultimodalRAG:
             return False
 
     @staticmethod
-    def check_milvus_server(
+    def check_vector_db_server(
         host: str = "localhost",
         port: Union[str, int] = 19530,
         timeout: float = 2.0,
     ) -> bool:
         """
-        Проверяет, доступен ли сервер Milvus по указанному хосту и порту.
+        Проверяет, доступен ли сервер векторной БД по указанному хосту и порту.
         Общий метод для скриптов (query, query_test, load_data и т.д.).
         port может быть строкой или числом.
         """
-        return MultimodalRAG._check_milvus_available(host, str(port), timeout)
+        return MultimodalRAG._check_vector_db_available(host, str(port), timeout)
 
-    def _connect_milvus(self):
-        """Подключение к Milvus. При недоступности сервера — сообщение и завершение процесса."""
-        if not self._check_milvus_available(self.milvus_host, self.milvus_port):
+    def _connect_vector_db(self):
+        """Подключение к векторной БД. При недоступности сервера — сообщение и завершение процесса."""
+        if not self._check_vector_db_available(self.vector_db_host, self.vector_db_port):
             print(
-                f"❌ База данных (Milvus) недоступна: {self.milvus_host}:{self.milvus_port}\n"
-                "   Убедитесь, что Milvus запущен (например, через docker-compose), и повторите попытку."
+                f"❌ Векторная БД недоступна: {self.vector_db_host}:{self.vector_db_port}\n"
+                "   Убедитесь, что сервер запущен (например, через docker-compose), и повторите попытку."
             )
             sys.exit(1)
         try:
-            connections.connect(host=self.milvus_host, port=self.milvus_port)
-            print(f"✅ Подключение к Milvus: {self.milvus_host}:{self.milvus_port}")
+            connections.connect(host=self.vector_db_host, port=self.vector_db_port)
+            print(f"✅ Подключение к векторной БД: {self.vector_db_host}:{self.vector_db_port}")
         except Exception as e:
             print(
-                f"❌ Не удалось подключиться к Milvus: {e}\n"
+                f"❌ Не удалось подключиться к векторной БД: {e}\n"
                 "   Проверьте, что сервер запущен и параметры подключения верны."
             )
             sys.exit(1)
@@ -334,7 +334,7 @@ class MultimodalRAG:
 
     def create_collection(self, drop_existing: bool = True):
         """
-        Создание коллекции в Milvus.
+        Создание коллекции в векторной БД.
         
         Args:
             drop_existing: Удалить существующую коллекцию
@@ -676,7 +676,7 @@ class MultimodalRAG:
                     has_images,
                 ]
                 
-                # Вставка в Milvus
+                # Вставка в векторную БД
                 self.collection.insert(entities)
                 total_chunks += len(batch)
                 
@@ -715,7 +715,7 @@ class MultimodalRAG:
         """
         Асинхронная версия загрузки.
         
-        Важно: pymilvus вставляет данные синхронно, поэтому insert/flush выполняются
+        Клиент вставляет данные синхронно, поэтому insert/flush выполняются
         в worker-thread через asyncio.to_thread, чтобы не блокировать event loop.
         
         Args:
@@ -724,7 +724,7 @@ class MultimodalRAG:
             skip_existing: (пока не реализовано) пропуск существующих чанков
             yield_every_batches: как часто отдавать управление loop (для отзывчивости)
         """
-        # Переиспользуем синхронную реализацию, но самые блокирующие Milvus-операции
+        # Переиспользуем синхронную реализацию, но самые блокирующие операции с БД
         # выносим в отдельный поток. Это удобно, если вы запускаете загрузку параллельно
         # с чем-то ещё (бот/UI/прогресс) в одном процессе.
 
@@ -839,7 +839,7 @@ class MultimodalRAG:
                     has_images,
                 ]
 
-                # Вставка в Milvus — в thread
+                # Вставка в векторную БД — в thread
                 await asyncio.to_thread(self.collection.insert, entities)
                 total_chunks += len(batch)
 
@@ -891,20 +891,20 @@ class MultimodalRAG:
 
     @classmethod
     def get_embedding_meta_from_collection(
-        cls, milvus_host: str, milvus_port: str, collection_name: str
+        cls, vector_db_host: str, vector_db_port: str, collection_name: str
     ) -> Optional[Dict[str, Any]]:
-        """Подключение к Milvus и чтение метаданных эмбеддингов из описания коллекции (без создания RAG)."""
-        if not cls._check_milvus_available(milvus_host, milvus_port):
+        """Подключение к векторной БД и чтение метаданных эмбеддингов из описания коллекции (без создания RAG)."""
+        if not cls._check_vector_db_available(vector_db_host, vector_db_port):
             print(
-                f"❌ База данных (Milvus) недоступна: {milvus_host}:{milvus_port}\n"
-                "   Убедитесь, что Milvus запущен (например, через docker-compose), и повторите попытку."
+                f"❌ Векторная БД недоступна: {vector_db_host}:{vector_db_port}\n"
+                "   Убедитесь, что сервер запущен (например, через docker-compose), и повторите попытку."
             )
             sys.exit(1)
         try:
-            connections.connect(host=milvus_host, port=milvus_port)
+            connections.connect(host=vector_db_host, port=vector_db_port)
         except Exception as e:
             print(
-                f"❌ Не удалось подключиться к Milvus: {e}\n"
+                f"❌ Не удалось подключиться к векторной БД: {e}\n"
                 "   Проверьте, что сервер запущен и параметры подключения верны."
             )
             sys.exit(1)
@@ -1018,7 +1018,7 @@ class MultimodalRAG:
                     "search_type": "text"
                 })
 
-        # Если текст пустой — Milvus иногда не возвращает длинные VARCHAR в search; догружаем через query
+        # Если текст пустой — векторная БД иногда не возвращает длинные VARCHAR в search; догружаем через query
         need_text_ids = [r["id"] for r in formatted_results if not (r.get("text") or "").strip()]
         if need_text_ids:
             try:
@@ -1180,10 +1180,10 @@ class MultimodalRAG:
         }
 
     def close(self):
-        """Закрытие соединения с Milvus"""
+        """Закрытие соединения с векторной БД"""
         connections.disconnect("default")
-        print("🔌 Соединение с Milvus закрыто")
+        print("🔌 Соединение с векторной БД закрыто")
 
 
-# Публичная функция для скриптов: from multimodal_rag import check_milvus_server
-check_milvus_server = MultimodalRAG.check_milvus_server
+# Публичная функция для скриптов: from multimodal_rag import check_vector_db_server
+check_vector_db_server = MultimodalRAG.check_vector_db_server

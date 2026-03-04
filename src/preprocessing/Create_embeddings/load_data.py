@@ -21,8 +21,8 @@ def main():
 
     # Инициализация: text_dim подставляется из embedding_config.json по text_model_name
     rag = MultimodalRAG(
-        milvus_host="localhost",
-        milvus_port="19530",
+        vector_db_host="localhost",
+        vector_db_port="19530",
         collection_name="diplom_multimodal",
         text_model_name=text_model_name,
         clip_model_name="ViT-B-32",

@@ -3,7 +3,7 @@
 Скрипт поиска в Multimodal RAG системе
 """
 
-from multimodal_rag import MultimodalRAG, get_default_embedding_model, check_milvus_server
+from multimodal_rag import MultimodalRAG, get_default_embedding_model, check_vector_db_server
 import os
 import sys
 
@@ -11,20 +11,20 @@ import sys
 def main():
     print("🔍 Поиск в Multimodal RAG системе...")
 
-    milvus_host = "localhost"
-    milvus_port = "19530"
+    vector_db_host = "localhost"
+    vector_db_port = "19530"
     collection_name = "diplom_multimodal"
     base_data_path = "data"
 
-    print("🔌 Проверка сервера данных (Milvus)...")
-    if not check_milvus_server(milvus_host, milvus_port):
-        print(f"❌ Сервер Milvus недоступен: {milvus_host}:{milvus_port}")
-        print("   Запустите Milvus (например, через docker-compose) и повторите попытку.")
+    print("🔌 Проверка сервера векторной БД...")
+    if not check_vector_db_server(vector_db_host, vector_db_port):
+        print(f"❌ Сервер векторной БД недоступен: {vector_db_host}:{vector_db_port}")
+        print("   Запустите сервер (например, через docker-compose) и повторите попытку.")
         sys.exit(1)
-    print(f"✅ Сервер Milvus доступен: {milvus_host}:{milvus_port}\n")
+    print(f"✅ Сервер векторной БД доступен: {vector_db_host}:{vector_db_port}\n")
 
     # Метаданные эмбеддингов из коллекции — для поиска используем ту же модель и text_dim
-    meta = MultimodalRAG.get_embedding_meta_from_collection(milvus_host, milvus_port, collection_name)
+    meta = MultimodalRAG.get_embedding_meta_from_collection(vector_db_host, vector_db_port, collection_name)
     if meta:
         text_model_name = meta["text_model"]
         text_dim = meta["text_dim"]
@@ -35,8 +35,8 @@ def main():
 
     # Инициализация (без создания коллекции)
     rag = MultimodalRAG(
-        milvus_host=milvus_host,
-        milvus_port=milvus_port,
+        vector_db_host=vector_db_host,
+        vector_db_port=vector_db_port,
         collection_name=collection_name,
         text_model_name=text_model_name,
         text_dim=text_dim,
@@ -46,8 +46,8 @@ def main():
     )
     # Старый вариант без учёта метаданных коллекции (могла быть рассинхронизация с load_data):
     # rag = MultimodalRAG(
-    #     milvus_host="localhost",
-    #     milvus_port="19530",
+    #     vector_db_host="localhost",
+    #     vector_db_port="19530",
     #     collection_name="diplom_multimodal",
     #     device_text="cuda",
     #     device_clip="cpu",

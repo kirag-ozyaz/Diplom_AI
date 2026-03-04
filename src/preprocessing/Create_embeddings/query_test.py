@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 """
 Тестовый запрос к Multimodal RAG по уже готовой коллекции (без создания коллекции).
-Перед запуском должен быть запущен Milvus и коллекция должна существовать.
+Перед запуском должен быть запущен сервер векторной БД и коллекция должна существовать.
 """
 
 import sys
 
-from multimodal_rag import MultimodalRAG, get_default_embedding_model, check_milvus_server
+from multimodal_rag import MultimodalRAG, get_default_embedding_model, check_vector_db_server
 
 
 def main():
@@ -14,12 +14,12 @@ def main():
     collection_name = "diplom_multimodal"
     base_data_path = "data"
 
-    print("🔌 Проверка сервера данных (Milvus)...")
-    if not check_milvus_server(host, port):
-        print(f"❌ Сервер Milvus недоступен: {host}:{port}")
-        print("   Запустите Milvus (например, через docker-compose) и повторите попытку.")
+    print("🔌 Проверка сервера векторной БД...")
+    if not check_vector_db_server(host, port):
+        print(f"❌ Сервер векторной БД недоступен: {host}:{port}")
+        print("   Запустите сервер (например, через docker-compose) и повторите попытку.")
         sys.exit(1)
-    print(f"✅ Сервер Milvus доступен: {host}:{port}\n")
+    print(f"✅ Сервер векторной БД доступен: {host}:{port}\n")
 
     # Метаданные эмбеддингов из коллекции — для поиска используем ту же модель и text_dim
     meta = MultimodalRAG.get_embedding_meta_from_collection(host, str(port), collection_name)
@@ -33,8 +33,8 @@ def main():
 
     # Подключение к уже существующей коллекции, без создания и без загрузки CLIP
     rag = MultimodalRAG(
-        milvus_host=host,
-        milvus_port=str(port),
+        vector_db_host=host,
+        vector_db_port=str(port),
         collection_name=collection_name,
         text_model_name=text_model_name,
         text_dim=text_dim,
@@ -43,8 +43,8 @@ def main():
     )
     # Старый вариант без учёта метаданных коллекции:
     # rag = MultimodalRAG(
-    #     milvus_host=host,
-    #     milvus_port=str(port),
+    #     vector_db_host=host,
+    #     vector_db_port=str(port),
     #     collection_name=collection_name,
     #     base_data_path=base_data_path,
     #     load_image_model=False,
