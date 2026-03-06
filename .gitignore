@@ -1,3 +1,12 @@
+# чистка кэша игнора
+# git rm -r --cached .
+# git add .
+# git commit -m "fix: update gitignore"
+# Игнорим все что с точек начинается
+.*
+!.gitignore
+!.github/
+!.gitlab-ci.yml
 # Python
 __pycache__/
 *.py[cod]
