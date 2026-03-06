@@ -53,9 +53,12 @@ def main():
     # Загрузка готовой коллекции в память для поиска (не создаём новую)
     rag.load_collection()
 
-    print("\n🔍 Тестовый поиск...")
+    search_text = "# Нулевой защитный и нулевой рабочий проводники"
+    print(f"\n🔍 Тестовый поиск...")
+    print(f"🔍 Текст для поиска: {search_text}")
     # results = rag.search_text("система заземления", limit=3)
-    results = rag.search_text("# Нулевой защитный и нулевой рабочий проводники", limit=10)
+
+    results = rag.search_text(search_text, limit=10)
 
     for i, res in enumerate(results, 1):
         print(f"\n{i}. Score: {res['score']:.4f}")
