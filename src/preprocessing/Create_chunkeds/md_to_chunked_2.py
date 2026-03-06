@@ -357,7 +357,7 @@ def generate_chunked_file(md_path, output_dir):
 # Определение корня проекта и относительные пути
 ROOT = Path(__file__).resolve().parent.parent.parent.parent
 DEFAULT_OUTPUT_DIR = ROOT / "data" / "chunked"
-DEFAULT_INPUT_FILE = ROOT / "data" / "extracted" / "1.7.md"
+DEFAULT_INPUT_FILE = ROOT / "data" / "extracted" / "2.5.md"
 
 # Старые версии с абсолютными путями (закомментированы)
 # DEFAULT_OUTPUT_DIR = r"X:\Учеба_УИИ\Итоговы_Проект\data\chunked"
