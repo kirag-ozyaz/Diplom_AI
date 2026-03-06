@@ -1,4 +1,5 @@
 # чистка кэша игнора
+# 1. Убираем из индекса Git ВСЕ файлы (но оставляем на диске!)
 # git rm -r --cached .
 # git add .
 # git commit -m "fix: update gitignore"
