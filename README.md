@@ -110,29 +110,32 @@ https://code.visualstudio.com/docs/languages/python
 ```
 energy_norms_bot/
 ├── infra/                              # Инфраструктура и развертывание
-│   ├── docker/                         # (в разработке)
+│   ├── docker/                         # Docker-конфигурации (в разработке)
 │   │   ├── Dockerfile.bot              # Dockerfile для Telegram-бота
 │   │   ├── Dockerfile.preprocessing    # Dockerfile для скриптов обработки
 │   │   ├── docker-compose.yml          # Основной compose для всех сервисов
 │   │   └── .env.example                # Пример переменных окружения
-│   ├── docker.attu/                    # Docker для Attu UI
-│   │   └── start-attu.bat              # Скрипт запуска Attu UI для Milvus
+│   ├── Docker.attu/                    # Docker для Attu UI
+│   │   ├── start-attu.bat              # Скрипт запуска Attu UI (Windows)
+│   │   └── start-attu.sh               # Скрипт запуска Attu UI (Linux/Mac)
 │   ├── milvus/
 │   │   ├── docker-compose.yml          # Compose для Milvus (etcd, minio, standalone)
-│   │   ├── .env.example                # Путь к томам (для SSD: DOCKER_VOLUME_DIRECTORY)
+│   │   ├── .env                        # Переменные окружения (не в git)
+│   │   ├── .env.example                # Пример переменных окружения. Путь к томам (для SSD: DOCKER_VOLUME_DIRECTORY)
 │   │   └── Readme.md                   # Запуск, Attu, перенос на SSD, пересборка БД
 │   ├── ollama/                         # (в разработке)
 │   └── info.md                         # Общая информация по инфраструктуре
 ├── src/                                # Исходный код приложения
 │   ├── bot/                            # Telegram-бот (в разработке)
 │   ├── preprocessing/                  # Модули предобработки документов
-│   │   ├── Create_mds/
+│   │   ├── Create_mds/                 # Этап 1: DOCX → Markdown
 │   │   │   ├── docx_to_md_images_1.py  # Конвертация DOCX → Markdown с изображениями
 │   │   │   └── generator.py            # Массовая обработка документов
-│   │   ├── Create_chunkeds/
+│   │   ├── Create_chunkeds/            # Этап 2: Markdown → Chunks
 │   │   │   ├── md_to_chunked_2.py      # Сегментация Markdown → JSONL chunks
-│   │   │   └── generator.py            # Массовая обработка чанков
-│   │   ├── Create_embeddings/
+│   │   │   ├── generator.py            # Массовая обработка чанков
+│   │   │   └── pipeline_create_chunked.md  # Документация пайплайна
+│   │   ├── Create_embeddings/          # Этап 3: Chunks → Векторная БД
 │   │   │   ├── multimodal_rag.py       # Класс MultimodalRAG для работы с Milvus
 │   │   │   ├── load_data.py            # Загрузка данных в векторную БД
 │   │   │   ├── query.py                # Интерактивный поиск по базе
@@ -151,13 +154,16 @@ energy_norms_bot/
 │   ├── chunked/                        # Сегментированные данные (*.jsonl + image_*/)
 │   └── embeddings/                     # Векторная база данных Milvus
 ├── config/                             # (в разработке)
-├── Этапы/                              # Отчеты по этапам проекта
-│   └── Reports/
-│       ├── Readme-1.md
-│       ├── Readme-2.md
-│       └── Readme-3.md
+├── Этапы/
+│   └── Reports/                        # Отчеты по этапам проекта
+│       ├── Readme-1.md                 # Отчет: Этап 1 (DOCX → MD)
+│       ├── Readme-2.md                 # Отчет: Этап 2 (MD → Chunks)
+│       ├── Readme-3.md                 # Отчет: Этап 3 (Chunks → Embeddings)
+│       └── Readme-3.ipynb              # Jupyter notebook для Этапа 3
+├── Информация/                         # Справочные материалы
+├── Тема/                               # Материалы по теме проекта
 ├── .gitignore
-└── README.md
+└── Readme.md                           # Описание проекта (этот файл)
 ```
 
 ---
