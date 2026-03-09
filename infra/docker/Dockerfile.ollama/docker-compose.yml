@@ -1,0 +1,34 @@
+version: '3.8'
+
+# NVIDIA GPU (RTX 2060 и др.) — требуется NVIDIA Container Toolkit
+
+services:
+  # Сервис ИИ
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    restart: unless-stopped
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+  # Сервис бота (моя логика не реализована, может отдельно сделаю в будущем)
+  #backend:
+  #  build: ./backend
+  #  container_name: telegram_bot
+  #  environment:
+  #    # Внутри сети Docker обращаемся по имени сервиса 'ollama'
+  #    - OLLAMA_HOST=http://ollama:11434
+  #    - TG_BOT_TOKEN=${TG_BOT_TOKEN}
+  #  depends_on:
+  #    - ollama
+  #  restart: unless-stopped
+volumes:
+  ollama_data:

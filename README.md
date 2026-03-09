@@ -113,6 +113,9 @@ energy_norms_bot/
 │   ├── docker/                         # Docker-конфигурации (в разработке)
 │   │   ├── Dockerfile.bot              # Dockerfile для Telegram-бота
 │   │   ├── Dockerfile.preprocessing    # Dockerfile для скриптов обработки
+│   │   ├── Dockerfile.ollama/          # Ollama в Docker (LLM для RAG-бота)
+│   │   │   ├── README.md               # Подробная инструкция: запуск, модели, API
+│   │   │   └── docker-compose.yml      # Compose для Ollama с поддержкой NVIDIA GPU
 │   │   ├── docker-compose.yml          # Основной compose для всех сервисов
 │   │   └── .env.example                # Пример переменных окружения
 │   ├── Docker.attu/                    # Docker для Attu UI
@@ -123,7 +126,7 @@ energy_norms_bot/
 │   │   ├── .env                        # Переменные окружения (не в git)
 │   │   ├── .env.example                # Пример переменных окружения. Путь к томам (для SSD: DOCKER_VOLUME_DIRECTORY)
 │   │   └── Readme.md                   # Запуск, Attu, перенос на SSD, пересборка БД
-│   ├── ollama/                         # (в разработке)
+│   ├── ollama/                         # См. infra/docker/Dockerfile.ollama/
 │   └── info.md                         # Общая информация по инфраструктуре
 ├── src/                                # Исходный код приложения
 │   ├── bot/                            # Telegram-бот (в разработке)
@@ -165,6 +168,31 @@ energy_norms_bot/
 ├── .gitignore
 └── Readme.md                           # Описание проекта (этот файл)
 ```
+
+---
+
+## Ollama в Docker (LLM для RAG-бота)
+
+Локальный запуск языковой модели через Ollama в Docker для работы Telegram-бота с RAG.
+
+**Расположение:** `infra/docker/Dockerfile.ollama/`
+
+**Быстрый старт:**
+```bash
+cd infra/docker/Dockerfile.ollama
+docker compose up -d
+```
+
+**Требования:** NVIDIA GPU (RTX 2060 и выше), NVIDIA Container Toolkit, 16+ ГБ ОЗУ.
+
+**API:** `http://localhost:11434` (с хоста) или `http://ollama:11434` (из Docker Compose).
+
+**Рекомендуемые модели для RTX 2060 (6 ГБ VRAM):**
+- `qwen2.5:3b` — лучшая для русского языка и технических текстов (ПУЭ, ПТЭЭП)
+- `llama3.2:3b` — универсальная
+- `phi3:mini` — для работы с нормативами и документацией
+
+Подробная инструкция (модели, команды, примеры кода, промпты для ПУЭ): см. `infra/docker/Dockerfile.ollama/README.md`.
 
 ---
 
