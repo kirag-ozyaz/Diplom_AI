@@ -84,3 +84,7 @@ Thumbs.db
 # Если хотите игнорировать папки с черновиками
 # trash/
 # trash_2/
+
+# Jupyter Notebook контрольные точки уже игнорируются правилом .*
+.ipynb_checkpoints/
+**/.ipynb_checkpoints/
