@@ -1,0 +1,23 @@
+# Запуск Telegram-бота (из infra/docker/Dockerfile.bot/)
+# docker compose up -d
+#
+# Требуется .env с TG_BOT_TOKEN=...
+# Ollama и Milvus должны быть запущены отдельно (см. infra/docker/Dockerfile.ollama, infra/milvus)
+
+services:
+  bot:
+    build:
+      context: ../../..
+      dockerfile: infra/docker/Dockerfile.bot/Dockerfile
+    container_name: energy_norms_bot
+    environment:
+      - TG_BOT_TOKEN=${TG_BOT_TOKEN}
+      - OLLAMA_HOST=${OLLAMA_HOST:-http://ollama:11434}
+      - MILVUS_HOST=${MILVUS_HOST:-milvus-standalone}
+      - MILVUS_PORT=${MILVUS_PORT:-19530}
+    restart: unless-stopped
+    # Раскомментировать, если бот в одной сети с ollama/milvus:
+    # networks:
+    #   - ollama_net
+    # depends_on:
+    #   - ollama

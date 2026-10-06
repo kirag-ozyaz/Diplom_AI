@@ -1,24 +1,55 @@
-from pymilvus import connections, utility, db
+# -*- coding: utf-8 -*-
+"""Проверка подключения к Milvus и списка коллекций (база default — как в RAG)."""
 
-try:
-    # Подключение к локальному Milvus
-    connections.connect(host="localhost", port="19530")
-    print("✅ Успешное подключение к Milvus!")
+from pymilvus import Collection, connections, db, utility
 
-    if "test_db" not in db.list_database():
-        db.create_database("test_db")
+from runtime_config import load_runtime_config
 
-    db.using_database("test_db")
 
-    # 2. Работа с Коллекцией (Collection)
-    # Теперь коллекция создается внутри выбранной БД
-    if not utility.has_collection("diplom_rag"):
-        # ... создание схемы и коллекции ...
-        pass
+def main() -> None:
+    cfg = load_runtime_config()
+    vector_db = cfg["vector_db"]
+    host = vector_db["host"]
+    port = str(vector_db["port"])
+    collection_name = vector_db["collection_name"]
 
-    # Проверка списка коллекций
-    collections = utility.list_collections()
-    print(f"📦 Существующие коллекции: {collections}")
-    
-except Exception as e:
-    print(f"❌ Ошибка подключения: {e}")
+    try:
+        connections.connect(host=host, port=port)
+        print(f"✅ Успешное подключение к Milvus ({host}:{port})")
+
+        databases = db.list_database()
+        print(f"📚 Базы данных: {databases}")
+
+        # RAG-пайплайн (load_data, query) работает с базой default
+        db.using_database("default")
+        collections = utility.list_collections()
+        print(f"📦 Коллекции в default: {collections}")
+
+        if collection_name in collections:
+            coll = Collection(collection_name)
+            coll.load()
+            print(
+                f"✅ Коллекция '{collection_name}' найдена, "
+                f"записей: {coll.num_entities}"
+            )
+        else:
+            print(
+                f"⚠️ Коллекция '{collection_name}' не найдена в default. "
+                "Если в Attu она видна — проверьте, что выбрана база default."
+            )
+
+        # Старый test_db мог остаться от прежней версии скрипта
+        if "test_db" in databases:
+            db.using_database("test_db")
+            test_collections = utility.list_collections()
+            if test_collections:
+                print(f"ℹ️ В test_db (устаревшая тестовая БД): {test_collections}")
+            else:
+                print("ℹ️ База test_db пуста (можно игнорировать)")
+
+    except Exception as e:
+        print(f"❌ Ошибка подключения: {e}")
+
+
+if __name__ == "__main__":
+    main()

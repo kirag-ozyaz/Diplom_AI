@@ -1,0 +1,43 @@
+{
+  "vector_db": {
+    "host": "localhost",
+    "port": "19530",
+    "collection_name": "diplom_multimodal"
+  },
+  "paths": {
+    "base_data_path": "data",
+    "chunked_path": "data/chunked"
+  },
+  "models": {
+    "text_model_name": "intfloat/multilingual-e5-base",
+    "clip_model_name": "ViT-B-32",
+    "device_text": "cuda",
+    "device_clip": "cpu"
+  },
+  "model_selection": {
+    "auto_select_text_model": true,
+    "auto_select_ollama_model": true
+  },
+  "load_data": {
+    "drop_existing": true,
+    "use_async": true,
+    "batch_size": 32,
+    "skip_existing": false,
+    "log_every_batches": 1,
+    "log_file_summary": true
+  },
+  "query": {
+    "default_limit": 5
+  },
+  "query_test": {
+    "search_text": "# Нулевой защитный и нулевой рабочий проводники",
+    "limit": 10
+  },
+  "ollama": {
+    "host": "http://localhost:11434",
+    "model": "qwen2.5:3b",
+    "timeout_sec": 120,
+    "temperature": 0.2,
+    "num_predict": 512
+  }
+}

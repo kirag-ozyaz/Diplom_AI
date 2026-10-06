@@ -5,61 +5,71 @@
 
 from multimodal_rag import MultimodalRAG, get_default_embedding_model
 import asyncio
-from pathlib import Path
+from runtime_config import load_runtime_config, resolve_repo_path
+from model_selector import select_text_model
 
 def main():
-
     print("🚀 Запуск загрузки данных в Multimodal RAG...")
-    ROOT = Path(__file__).resolve().parent.parent.parent.parent
-    chunked_root = ROOT / "data" / "chunked"
+    cfg = load_runtime_config()
+    vector_db = cfg["vector_db"]
+    paths = cfg["paths"]
+    models = cfg["models"]
+    load_cfg = cfg["load_data"]
 
-    # Модель для загрузки берётся из embedding_config.json (default_text_model)
-    # text_model_name, _ = get_default_embedding_model()
-    # print(f"   Модель из конфига (default_text_model): {text_model_name}")
-    text_model_name = "intfloat/multilingual-e5-base"
-    print(f"   Модель из конфига: {text_model_name}")
+    chunked_root = resolve_repo_path(paths["chunked_path"])
+
+    text_model_name, selection_reason = select_text_model(cfg)
+    if not text_model_name:
+        text_model_name, _ = get_default_embedding_model()
+        selection_reason = "fallback to embedding_config default model"
+    print(f"   Текстовая модель: {text_model_name}")
+    print(f"   Выбор модели: {selection_reason}")
+    print(
+        f"   Векторная БД: {vector_db['host']}:{vector_db['port']} "
+        f"(collection={vector_db['collection_name']})"
+    )
 
     # Инициализация: text_dim подставляется из embedding_config.json по text_model_name
     rag = MultimodalRAG(
-        vector_db_host="localhost",
-        vector_db_port="19530",
-        collection_name="diplom_multimodal",
+        vector_db_host=vector_db["host"],
+        vector_db_port=str(vector_db["port"]),
+        collection_name=vector_db["collection_name"],
         text_model_name=text_model_name,
-        clip_model_name="ViT-B-32",
-        device_text="cuda",
-        device_clip="cpu",
-        base_data_path=str(chunked_root)
+        clip_model_name=models["clip_model_name"],
+        device_text=models["device_text"],
+        device_clip=models["device_clip"],
+        base_data_path=str(chunked_root),
     )
     # Чтобы принудительно использовать другую модель — передайте явно, например:
     # rag = MultimodalRAG(..., text_model_name="intfloat/multilingual-e5-base", ...)
 
     # Создание коллекции
-    rag.create_collection(drop_existing=True)
+    rag.create_collection(drop_existing=bool(load_cfg["drop_existing"]))
     
     # Загрузка данных
     # Можно грузить синхронно (по умолчанию) или асинхронно.
     # Асинхронный режим полезен, если вы хотите, чтобы event loop оставался отзывчивым
     # (например, параллельно крутится UI/бот), т.к. insert/flush вынесены в thread.
-    use_async = True
+    use_async = bool(load_cfg["use_async"])
     jsonl_folder = chunked_root
 
     if use_async:
         asyncio.run(
             rag.load_from_jsonl_folder_async(
                 jsonl_folder=str(jsonl_folder),
-                batch_size=32,
-                skip_existing=False,
-                log_every_batches=1,
-                log_file_summary=True
+                batch_size=int(load_cfg["batch_size"]),
+                skip_existing=bool(load_cfg["skip_existing"]),
+                log_every_batches=int(load_cfg["log_every_batches"]),
+                log_file_summary=bool(load_cfg["log_file_summary"]),
             )
         )
     else:
         rag.load_from_jsonl_folder(
             jsonl_folder=str(jsonl_folder),
-            batch_size=32,
-            skip_existing=False,
-            log_every_batches=1,
-            log_file_summary=True
+            batch_size=int(load_cfg["batch_size"]),
+            skip_existing=bool(load_cfg["skip_existing"]),
+            log_every_batches=int(load_cfg["log_every_batches"]),
+            log_file_summary=bool(load_cfg["log_file_summary"]),
         )
     
     # Загрузка в память для поиска

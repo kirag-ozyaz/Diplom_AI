@@ -5,11 +5,13 @@ Multimodal RAG System для диплома ИИ
 CLIP работает на CPU для экономии VRAM
 """
 
+import contextlib
 import os
 import sys
 import json
 import glob
 import socket
+import warnings
 from typing import List, Dict, Optional, Tuple, Any, Union
 from pathlib import Path
 from tqdm import tqdm
@@ -21,6 +23,39 @@ import torch
 from PIL import Image
 from sentence_transformers import SentenceTransformer
 import open_clip
+
+
+@contextlib.contextmanager
+def _quiet_hf_weight_load():
+    """Скрыть LOAD REPORT / tqdm при SentenceTransformer (шум в ноутбуке)."""
+    saved: dict[str, str | None] = {}
+    for key, val in (
+        ("TRANSFORMERS_VERBOSITY", "error"),
+        ("HF_HUB_DISABLE_PROGRESS_BARS", "1"),
+    ):
+        saved[key] = os.environ.get(key)
+        os.environ[key] = val
+    hf_logging = None
+    prev_verbosity = None
+    try:
+        from transformers.utils import logging as hf_logging_mod
+
+        hf_logging = hf_logging_mod
+        prev_verbosity = hf_logging.get_verbosity()
+        hf_logging.set_verbosity_error()
+    except Exception:
+        pass
+    try:
+        yield
+    finally:
+        for key, val in saved.items():
+            if val is None:
+                os.environ.pop(key, None)
+            else:
+                os.environ[key] = val
+        if hf_logging is not None and prev_verbosity is not None:
+            hf_logging.set_verbosity(prev_verbosity)
+
 
 from pymilvus import (
     connections,
@@ -72,6 +107,26 @@ def get_default_embedding_model() -> Tuple[str, int]:
     model = data.get("default_text_model") or "BAAI/bge-small-en-v1.5"
     dim = _get_text_dim_from_config(model)
     return (model, dim)
+
+
+def resolve_torch_device(device: str, purpose: str = "модели") -> str:
+    """
+    Возвращает рабочее устройство PyTorch.
+    Если в конфиге cuda, но torch собран без CUDA — переключает на cpu с предупреждением.
+    """
+    requested = (device or "cpu").strip().lower()
+    if requested.startswith("cuda"):
+        if torch.cuda.is_available():
+            return device.strip()
+        print(
+            f"⚠️ В конфиге device_text/device_clip={device!r} для {purpose}, "
+            "но PyTorch установлен без CUDA — используется cpu.\n"
+            "   Для ускорения на GPU (RTX): "
+            "pip install torch torchvision --index-url https://download.pytorch.org/whl/cu124",
+            flush=True,
+        )
+        return "cpu"
+    return requested if requested else "cpu"
 
 
 class MultimodalRAG:
@@ -222,6 +277,9 @@ class MultimodalRAG:
        
         # Инициализация подключений
         self._connect_vector_db()
+        device_text = resolve_torch_device(device_text, "текстовой модели")
+        device_clip = resolve_torch_device(device_clip, "CLIP")
+        self.text_device = device_text
         self._load_text_model(text_model_name, device_text)
         if load_image_model:
             self._load_clip_model(clip_model_name, device_clip)
@@ -232,7 +290,7 @@ class MultimodalRAG:
             print("ℹ️ CLIP не загружается (режим только текстового поиска)")
         
         print("✅ MultimodalRAG инициализирован")
-        print(f"   📝 Текст: {text_model_name} на {device_text}")
+        print(f"   📝 Текст: {text_model_name} на {self.text_device}")
         if load_image_model:
             print(f"   🖼️ CLIP: {clip_model_name} на {device_clip}")
 
@@ -285,17 +343,23 @@ class MultimodalRAG:
         try:
             from huggingface_hub import snapshot_download
             print("   ⬇️ Проверка/скачивание файлов модели (HuggingFace cache)...")
-            snapshot_download(
-                repo_id=model_name,
-                resume_download=True,
-            )
+            snapshot_download(repo_id=model_name)
             print("   ✅ Файлы текстовой модели готовы (в кэше)")
         except Exception as e:
             # Если huggingface_hub недоступен или нет интернета — просто продолжаем,
             # SentenceTransformer сам попробует загрузить/взять из кэша.
             print(f"   ⚠️ Не удалось показать прогресс скачивания для текста: {e}")
 
-        self.text_model = SentenceTransformer(model_name)
+        if "e5" in model_name.lower():
+            warnings.warn(
+                "При загрузке multilingual-e5 в логе HuggingFace иногда "
+                "«embeddings.position_ids | UNEXPECTED» — это нормально, "
+                "на поиск и Hit@k не влияет.",
+                UserWarning,
+                stacklevel=2,
+            )
+        with _quiet_hf_weight_load():
+            self.text_model = SentenceTransformer(model_name, device=device)
         self.text_device = device
         print("✅ Текстовая модель готова")
 

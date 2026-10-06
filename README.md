@@ -91,7 +91,7 @@ https://code.visualstudio.com/docs/languages/python
        │                },
        │                ...
        │              ]
-       ▼  [sentence-transformers/all-MiniLM-L6-v2]
+       ▼  [sentence-transformers / multilingual-e5-base / bge-m3 — автовыбор по GPU]
        │
 ┌──────────────┐
 │ embeddings/  │  ←  ./embeddings/
@@ -100,8 +100,9 @@ https://code.visualstudio.com/docs/languages/python
        │
        ▼  [RAG-запрос]
 ┌──────────────┐
-│ Telegram-бот │  ←  Поиск → Релевантные чанки → LLM (Llama 3.1 8B)
+│ Telegram-бот │  ←  Поиск → Релевантные чанки → LLM (qwen2.5:3b / llama3.2:3b / llama3.1:8b)
 │  (Ollama)    │      → Структурированный ответ с ссылками на ПУЭ/ПТЭЭП
+│              │      Конфиг: config/rag_runtime.json + model_profiles.json
 └──────────────┘
 ```
 
@@ -111,7 +112,9 @@ https://code.visualstudio.com/docs/languages/python
 energy_norms_bot/
 ├── infra/                              # Инфраструктура и развертывание
 │   ├── docker/                         # Docker-конфигурации (в разработке)
-│   │   ├── Dockerfile.bot              # Dockerfile для Telegram-бота
+│   │   ├── Dockerfile.bot/             # Docker для Telegram-бота
+│   │   │   ├── Dockerfile
+│   │   │   └── docker-compose.yml
 │   │   ├── Dockerfile.preprocessing    # Dockerfile для скриптов обработки
 │   │   ├── Dockerfile.ollama/          # Ollama в Docker (LLM для RAG-бота)
 │   │   │   ├── README.md               # Подробная инструкция: запуск, модели, API
@@ -129,7 +132,8 @@ energy_norms_bot/
 │   ├── ollama/                         # См. infra/docker/Dockerfile.ollama/
 │   └── info.md                         # Общая информация по инфраструктуре
 ├── src/                                # Исходный код приложения
-│   ├── bot/                            # Telegram-бот (в разработке)
+│   ├── bot/                            # Telegram-бот (aiogram, RAG в разработке)
+│   │   └── __main__.py                 # Запуск: python -m src.bot (TG_BOT_TOKEN)
 │   ├── preprocessing/                  # Модули предобработки документов
 │   │   ├── Create_mds/                 # Этап 1: DOCX → Markdown
 │   │   │   ├── docx_to_md_images_1.py  # Конвертация DOCX → Markdown с изображениями
@@ -144,7 +148,9 @@ energy_norms_bot/
 │   │   │   ├── query.py                # Интерактивный поиск по базе
 │   │   │   ├── query_test.py           # Тестовый поиск
 │   │   │   ├── test_connection.py      # Проверка подключения к Milvus
-│   │   │   └── embedding_config.json   # Конфигурация моделей эмбеддингов
+│   │   │   ├── runtime_config.py       # Загрузка config/rag_runtime.json
+│   │   │   ├── model_selector.py       # Автовыбор embedding-модели по GPU
+│   │   │   └── embedding_config.json   # Конфигурация моделей эмбеддингов (dim, default)
 │   │   ├── __init__.py
 │   │   └── main.py                     # Главный скрипт запуска пайплайна
 │   ├── rag/                            # RAG-модуль (в разработке)
@@ -156,7 +162,13 @@ energy_norms_bot/
 │   ├── extracted/                      # Извлеченный текст в Markdown (*.md + image_*/)
 │   ├── chunked/                        # Сегментированные данные (*.jsonl + image_*/)
 │   └── embeddings/                     # Векторная база данных Milvus
-├── config/                             # (в разработке)
+├── config/                             # Runtime-конфигурация RAG и профили моделей
+│   ├── rag_runtime.json                # Хост Milvus, пути, устройства, load_data/query
+│   └── model_profiles.json             # Профили GPU, overrides, каталог кандидатов моделей
+├── scripts/
+│   └── update_model_profiles.py        # Обновление candidates в model_profiles.json (HF + Ollama)
+├── start/
+│   └── Readme.md                       # ★ Пошаговый запуск проекта (с нуля до query/бота)
 ├── Этапы/
 │   └── Reports/                        # Отчеты по этапам проекта
 │       ├── Readme-1.md                 # Отчет: Этап 1 (DOCX → MD)
@@ -167,6 +179,28 @@ energy_norms_bot/
 ├── Тема/                               # Материалы по теме проекта
 ├── .gitignore
 └── Readme.md                           # Описание проекта (этот файл)
+```
+
+---
+
+## Пошаговый запуск
+
+**Полная инструкция:** [`start/Readme.md`](start/Readme.md) — установка, конфиг, Milvus, загрузка данных, поиск, Ollama, бот.
+
+Кратко (если `data/chunked/` уже готов):
+
+```powershell
+# 0. Окружение (один раз)
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+
+# 1. Milvus
+cd infra\milvus; docker compose up -d; cd ..\..
+
+# 2. Загрузка + поиск
+python src\preprocessing\Create_embeddings\load_data.py
+python src\preprocessing\Create_embeddings\query_test.py
 ```
 
 ---
@@ -192,7 +226,150 @@ docker compose up -d
 - `llama3.2:3b` — универсальная
 - `phi3:mini` — для работы с нормативами и документацией
 
+**Рекомендуемые модели для ≥8–12 ГБ VRAM (квантование Q4):**
+- `llama3.1:8b` — изначально запланированная модель проекта (~4.7 GB, Q4)
+- `llama3.1:8b-instruct-q4_K_M` — instruct-версия с явным Q4_K_M для RAG-промптов
+- `qwen2.5:7b` — альтернатива с сильным русским языком (7B-класс)
+- `mistral:7b` — баланс качества и скорости на 8 ГБ VRAM
+
+> На RTX 2060 (6 ГБ) Llama 3.1 8B **не рекомендуется** — используйте 3B-модели из первого списка или GPU с ≥8 ГБ VRAM.
+
 Подробная инструкция (модели, команды, примеры кода, промпты для ПУЭ): см. `infra/docker/Dockerfile.ollama/README.md`.
+
+---
+
+## Переключение окружения только через конфиг
+
+Все runtime-параметры RAG вынесены в `config/rag_runtime.json`:
+- `vector_db.host/port/collection_name` — подключение к Milvus
+- `paths.base_data_path`, `paths.chunked_path` — пути к данным
+- `models.device_text/device_clip`, `models.text_model_name` — устройства и модель эмбеддингов
+- `model_selection.auto_select_text_model` — автовыбор модели по GPU
+- `load_data.*` — параметры загрузки (`drop_existing`, `use_async`, `batch_size`, …)
+- `query.default_limit` — лимит результатов в интерактивном поиске
+- `query_test.search_text/limit` — тестовый запрос для `query_test.py`
+
+Профили авто-выбора модели по GPU лежат в `config/model_profiles.json`:
+- `profiles` — набор профилей по VRAM (`rtx2060_baseline`, `mid_gpu`, `high_gpu`)
+- `gpu_name_overrides` — привязка конкретной видеокарты к профилю (например, RTX 2060 → `all-MiniLM-L6-v2`)
+- `candidates` — каталог embedding/LLM-моделей (обновляется скриптом `scripts/update_model_profiles.py`)
+
+**Автовыбор embedding-модели** (`model_selector.py`):
+1. `auto_select_text_model=false` → берётся `models.text_model_name`
+2. override по имени GPU из `gpu_name_overrides`
+3. match по VRAM из `profiles`
+4. `default_profile` из `model_profiles.json`
+5. fallback на `models.text_model_name`
+
+**Обновление каталога моделей:**
+```bash
+python scripts/update_model_profiles.py
+# или с лимитами:
+python scripts/update_model_profiles.py --max-hf-per-query 5 --max-ollama-models 20
+```
+Скрипт дополняет `candidates` моделями из Hugging Face API, Ollama и `embedding_config.json`, не удаляя закреплённые (`pinned`) записи.
+
+### Включение и отключение CUDA (embedding)
+
+Параметры в `config/rag_runtime.json` → секция `models`:
+
+| Режим | `device_text` | `device_clip` | Когда |
+|-------|---------------|---------------|--------|
+| **CPU** | `"cpu"` | `"cpu"` | Нет GPU, отладка, PyTorch без CUDA |
+| **GPU** | `"cuda"` | `"cpu"` | Есть NVIDIA + PyTorch с CUDA |
+
+**Отключить:** `"device_text": "cpu"` — достаточно для работы на процессоре.
+
+**Включить:**
+1. `"device_text": "cuda"` в конфиге.
+2. PyTorch с CUDA (из venv, после удаления CPU-сборки):
+
+```powershell
+pip uninstall torch torchvision -y
+pip install torch torchvision --index-url https://download.pytorch.org/whl/cu124
+python -c "import torch; print(torch.cuda.is_available())"
+```
+
+Если `False` после установки — переустановите с `cu128` или проверьте драйвер NVIDIA (`nvidia-smi`).
+
+При `"cuda"` в конфиге, но CPU-only PyTorch — **авто-fallback на cpu** (`multimodal_rag.py`), ошибки не будет.
+
+Подробнее: [`start/Readme.md`](start/Readme.md) → шаг 2.
+
+### Пример 1: local (Python на хосте, Milvus на localhost)
+
+```json
+{
+  "vector_db": { "host": "localhost", "port": "19530", "collection_name": "diplom_multimodal" },
+  "paths": { "base_data_path": "data", "chunked_path": "data/chunked" },
+  "models": { "device_text": "cuda", "device_clip": "cpu", "text_model_name": "intfloat/multilingual-e5-base" },
+  "model_selection": { "auto_select_text_model": true }
+}
+```
+
+### Пример 2: Docker Compose (скрипт внутри одной сети с Milvus)
+
+```json
+{
+  "vector_db": { "host": "milvus-standalone", "port": "19530", "collection_name": "diplom_multimodal" },
+  "paths": { "base_data_path": "data", "chunked_path": "data/chunked" },
+  "models": { "device_text": "cuda", "device_clip": "cpu", "text_model_name": "intfloat/multilingual-e5-base" },
+  "model_selection": { "auto_select_text_model": true }
+}
+```
+
+### Пример 3: WSL2/Linux (Docker на Windows, доступ с WSL к хосту)
+
+```json
+{
+  "vector_db": { "host": "host.docker.internal", "port": "19530", "collection_name": "diplom_multimodal" },
+  "paths": { "base_data_path": "data", "chunked_path": "data/chunked" },
+  "models": { "device_text": "cuda", "device_clip": "cpu", "text_model_name": "intfloat/multilingual-e5-base" },
+  "model_selection": { "auto_select_text_model": true }
+}
+```
+
+Если нужно зафиксировать модель вручную, отключите авто-выбор:
+
+```json
+"model_selection": { "auto_select_text_model": false }
+```
+
+Тогда будет использована модель из `models.text_model_name`.
+
+**Профили GPU по умолчанию** (`config/model_profiles.json`):
+
+| Профиль | VRAM | Модель эмбеддингов |
+|---------|------|--------------------|
+| `rtx2060_baseline` | ≤ 8 ГБ | `sentence-transformers/all-MiniLM-L6-v2` |
+| `mid_gpu` | 8–12 ГБ | `intfloat/multilingual-e5-base` |
+| `high_gpu` | ≥ 12 ГБ | `BAAI/bge-m3` |
+
+### Быстрый запуск RAG-скриптов
+
+> Подробнее (все шаги с нуля): **[start/Readme.md](start/Readme.md)**
+
+Все скрипты читают `config/rag_runtime.json` — менять код не нужно, достаточно отредактировать конфиг.
+
+```bash
+# 1. Запустить Milvus (см. infra/milvus/Readme.md)
+cd infra/milvus && docker compose up -d
+
+# 2. Загрузить чанки в векторную БД
+python src/preprocessing/Create_embeddings/load_data.py
+
+# 3. Интерактивный поиск
+python src/preprocessing/Create_embeddings/query.py
+
+# 4. Быстрый тест (запрос из query_test.search_text в конфиге)
+python src/preprocessing/Create_embeddings/query_test.py
+```
+
+**Telegram-бот** (заготовка, RAG ещё не подключён):
+```bash
+set TG_BOT_TOKEN=your_token   # Windows
+python -m src.bot
+```
 
 ---
 
@@ -206,7 +383,9 @@ docker compose up -d
 |--------|------------|
 | `src/preprocessing/Create_mds/` | Конвертация DOCX → Markdown с изображениями |
 | `src/preprocessing/Create_chunkeds/` | Сегментация Markdown → чанки (JSONL) с метаданными ПУЭ |
-| `src/preprocessing/Create_embeddings/` | Multimodal RAG: эмбеддинги, Milvus, поиск по тексту и изображениям |
+| `src/preprocessing/Create_embeddings/` | Multimodal RAG: эмбеддинги, Milvus, поиск; runtime-конфиг и автовыбор модели |
+| `config/` | `rag_runtime.json` — параметры окружения; `model_profiles.json` — профили GPU |
+| `scripts/update_model_profiles.py` | Обновление каталога embedding/LLM-моделей в `model_profiles.json` |
 
 ---
 
@@ -272,13 +451,33 @@ docker compose up -d
 
 ### 3. Create_embeddings (Multimodal RAG)
 
-**Файлы:** `multimodal_rag.py`, `load_data.py`, `query.py`, `query_test.py`, `test_connection.py`, `embedding_config.json`
+**Файлы:** `multimodal_rag.py`, `load_data.py`, `query.py`, `query_test.py`, `test_connection.py`, `runtime_config.py`, `model_selector.py`, `embedding_config.json`
 
 #### embedding_config.json
 
 | Назначение | Описание |
 |------------|----------|
-| Конфиг эмбеддингов | Словарь `text_model_dim` (модель → размерность), `default_text_model`, `default_dim`. Используется для подстановки `text_dim` при инициализации RAG и в `get_default_embedding_model()` при отсутствии метаданных коллекции. |
+| Конфиг эмбеддингов | Словарь `text_model_dim` (модель → размерность), `default_text_model`, `default_dim`. Используется для подстановки `text_dim` при инициализации RAG и в `get_default_embedding_model()` при отсутствии метаданных коллекции. Дополняет `model_profiles.json` локальными dim-значениями. |
+
+#### runtime_config.py
+
+| Функция / константа | Описание |
+|---------------------|----------|
+| `ROOT` | Корень репозитория (3 уровня выше модуля). |
+| `DEFAULT_CONFIG_PATH` | Путь к `config/rag_runtime.json`. |
+| `DEFAULT_RUNTIME_CONFIG` | Встроенные значения по умолчанию (Milvus, пути, модели, load_data, query). |
+| `load_runtime_config(config_path=None)` | Загружает и мержит JSON-конфиг с дефолтами; при ошибке/отсутствии файла — безопасный fallback. |
+| `resolve_repo_path(path_value)` | Преобразует относительный путь из конфига в абсолютный от корня репозитория. |
+
+#### model_selector.py
+
+| Функция / класс | Описание |
+|-----------------|----------|
+| `GpuInfo` | dataclass: `name`, `vram_gb`, `source` (nvidia-smi или torch.cuda). |
+| `detect_gpu_info()` | Определяет GPU через `nvidia-smi`, затем через `torch.cuda`. |
+| `select_text_model(runtime_cfg)` | **Точка входа:** возвращает `(model_name, reason)` — выбор embedding-модели по конфигу и GPU. |
+| `_load_model_profiles()` | Читает `config/model_profiles.json`. |
+| `_match_profile_by_vram()` | Подбирает профиль по диапазону VRAM. |
 
 #### multimodal_rag.py — функции модуля (вне класса)
 
@@ -351,31 +550,46 @@ docker compose up -d
 
 | Элемент | Описание |
 |---------|----------|
-| `main()` | Вычисляет `chunked_root = ROOT / "data" / "chunked"`. Задаёт `text_model_name` в коде (например `intfloat/multilingual-e5-base`; можно заменить на `get_default_embedding_model()`). Создаёт `MultimodalRAG` с `base_data_path=chunked_root`, text_dim подставляется из `embedding_config.json` по `text_model_name`. Вызывает `create_collection(drop_existing=True)`, затем `load_from_jsonl_folder` или `load_from_jsonl_folder_async` (use_async=True по умолчанию), `load_collection`, выводит статистику и метаданные эмбеддингов, вызывает `rag.close()`. |
+| `main()` | Читает `load_runtime_config()` → `vector_db`, `paths`, `models`, `load_data`. Вызывает `select_text_model(cfg)` для автовыбора embedding-модели. Создаёт `MultimodalRAG` с параметрами из конфига, `create_collection(drop_existing=...)`, загружает JSONL из `paths.chunked_path` (sync/async по `load_data.use_async`), выводит статистику и метаданные эмбеддингов. |
 
 #### query.py
 
 | Элемент | Описание |
 |---------|----------|
-| `main()` | Задаёт vector_db_host/port, collection_name, base_data_path="data". Сначала проверяет сервер через `check_vector_db_server` (из multimodal_rag); при недоступности — выход. Читает метаданные через `get_embedding_meta_from_collection`; при отсутствии — `get_default_embedding_model()`. Инициализирует `MultimodalRAG`, вызывает `load_collection`, интерактивное меню: поиск по тексту (1), по изображению (2), гибридный (3), статистика (4), выход (5). |
+| `main()` | Читает конфиг через `load_runtime_config()`. Проверяет Milvus через `check_vector_db_server`. Модель берёт из метаданных коллекции; при отсутствии — `select_text_model(cfg)` или `get_default_embedding_model()`. Интерактивное меню: поиск по тексту (1), по изображению (2), гибридный (3), статистика (4), выход (5). Лимит результатов — `query.default_limit`. |
 
 #### query_test.py
 
 | Элемент | Описание |
 |---------|----------|
-| `main()` | Импортирует `check_vector_db_server` из multimodal_rag. Проверяет сервер через `check_vector_db_server(host, port)`, при недоступности — выход. Получает метаданные через `get_embedding_meta_from_collection` или `get_default_embedding_model()`, создаёт RAG с `load_image_model=False`, загружает коллекцию, выполняет один тестовый `search_text`, выводит результаты и закрывает RAG. |
+| `main()` | Аналогично `query.py`: конфиг из `rag_runtime.json`, проверка Milvus, модель из метаданных коллекции или автовыбор. Выполняет один `search_text` с запросом из `query_test.search_text` и лимитом `query_test.limit`. CLIP не загружается (`load_image_model=False`). |
 
 #### test_connection.py
 
 | Элемент | Описание |
 |---------|----------|
-| Скрипт | Подключается к векторной БД (`connections.connect`), при необходимости создаёт БД `test_db` и проверяет список коллекций (`utility.list_collections()`). Утилитарный скрипт без классов. |
+| `main()` | Читает `config/rag_runtime.json`, подключается к Milvus, выводит базы и коллекции в **default** (как load_data/query). Проверяет наличие коллекции из конфига и число записей. |
+
+---
+
+### 4. scripts/update_model_profiles.py
+
+| Функция | Описание |
+|---------|----------|
+| `update_model_profiles(max_hf_per_query, max_ollama_models)` | Обновляет блок `candidates` в `config/model_profiles.json`: собирает модели из `embedding_config.json`, Hugging Face API, Ollama; сохраняет pinned-модели; записывает `candidate_refresh.updated_at_utc`. |
+| `main()` | CLI: `--max-hf-per-query`, `--max-ollama-models`. Запуск: `python scripts/update_model_profiles.py`. |
 
 ---
 
 ### Связи между модулями (поток данных)
 
 ```
+config/rag_runtime.json
+         ↓
+runtime_config.load_runtime_config → resolve_repo_path
+         ↓
+model_selector.select_text_model (если auto_select_text_model=true)
+         ↓
 docx_to_md_images_1.docx_to_md_with_images
          ↑
 Create_mds/generator.convert_file, main
@@ -391,11 +605,12 @@ chunked/*.jsonl + image_*/
 multimodal_rag.MultimodalRAG.load_from_jsonl_folder[_async]
          ↑
 load_data.main → create_collection, load_collection
-         (text_dim из embedding_config.json при необходимости)
+         (модель: select_text_model + embedding_config.json для text_dim)
 
 Milvus (коллекция)
          ↓
-query.main / query_test.main → get_embedding_meta_from_collection или get_default_embedding_model
+query.main / query_test.main
+         → get_embedding_meta_from_collection или select_text_model
          → MultimodalRAG.search_text, search_image, search_hybrid
 ```
 

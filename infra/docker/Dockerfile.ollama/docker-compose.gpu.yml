@@ -1,0 +1,16 @@
+# NVIDIA GPU (RTX 2060 и др.) — требуется NVIDIA Container Toolkit
+# Дополнение к docker-compose.yml; без этого файла Ollama в контейнере идёт на CPU.
+#
+# Запуск:
+#   docker compose -f docker-compose.yml -f docker-compose.gpu.yml up -d
+# Или: python scripts/start_ollama.py
+
+services:
+  ollama:
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]

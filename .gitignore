@@ -88,3 +88,7 @@ Thumbs.db
 # Jupyter Notebook контрольные точки уже игнорируются правилом .*
 .ipynb_checkpoints/
 **/.ipynb_checkpoints/
+
+# manual: в Git только markdown; книги/PDF/DjVu — локально
+manual/*
+!manual/*.md

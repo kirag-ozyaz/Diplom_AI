@@ -42,19 +42,23 @@ pip install pymilvus
 
 Создать файл `test_connection.py` и запустить:
 ```python
-from pymilvus import connections, utility
+from pymilvus import connections, utility, db
 
 try:
-    # Подключение к локальному Milvus
     connections.connect(host="localhost", port="19530")
     print("✅ Успешное подключение к Milvus!")
-    
-    # Проверка списка коллекций
+
+    db.using_database("default")  # RAG-коллекции лежат здесь, не в test_db
     collections = utility.list_collections()
-    print(f"📦 Существующие коллекции: {collections}")
-    
+    print(f"📦 Существующие коллекции (default): {collections}")
+
 except Exception as e:
     print(f"❌ Ошибка подключения: {e}")
+```
+
+Или используйте готовый скрипт проекта из корня репозитория:
+```powershell
+python src\preprocessing\Create_embeddings\test_connection.py
 ```
 
 --

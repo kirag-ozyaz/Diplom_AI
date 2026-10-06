@@ -1,6 +1,7 @@
-version: '3.8'
-
-# NVIDIA GPU (RTX 2060 и др.) — требуется NVIDIA Container Toolkit
+# Ollama — базовый compose (CPU). Работает без NVIDIA Container Toolkit.
+# NVIDIA GPU (RTX 2060 и др.) — docker-compose.gpu.yml, нужен NVIDIA Container Toolkit.
+# С GPU: docker compose -f docker-compose.yml -f docker-compose.gpu.yml up -d
+# Автовыбор GPU/CPU: python scripts/start_ollama.py (из корня репозитория)
 
 services:
   # Сервис ИИ
@@ -12,14 +13,9 @@ services:
     volumes:
       - ollama_data:/root/.ollama
     restart: unless-stopped
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: all
-              capabilities: [gpu]
+
   # Сервис бота (моя логика не реализована, может отдельно сделаю в будущем)
+  # Сейчас бот: src/bot + infra/docker/Dockerfile.bot/ (не раскомментировать без общей docker-сети с Milvus)
   #backend:
   #  build: ./backend
   #  container_name: telegram_bot
@@ -30,5 +26,6 @@ services:
   #  depends_on:
   #    - ollama
   #  restart: unless-stopped
+
 volumes:
   ollama_data:
