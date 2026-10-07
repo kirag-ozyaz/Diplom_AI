@@ -2,8 +2,8 @@
 
 **Дата прогона:** 07.10.2026 00:10  
 **Режим:** `mock` (запрошен `mock`)  
-**Скрипт:** `Diplom_AI/scripts/eval_rag_generation.py`  
-**Набор:** те же 25 вопросов, что Hit@k (`Этапы/Reports/stage4_eval_questions.json`)  
+**Скрипт:** `scripts/stage4_eval/eval_rag_generation.py`  
+**Набор:** тот же файл вопросов, что Hit@k (`Этапы/Reports/etap4/data/stage4_eval_questions.json`)  
 **Выравнивание по Hit@5:** True (из `stage4_hitk_results.json`)
 
 ## Инфраструктура
@@ -23,14 +23,14 @@
 cd Diplom_AI
 python scripts/start_milvus.py
 python scripts/start_ollama.py --pull
-python scripts/eval_rag_generation.py --mode live \
+python scripts/stage4_eval/eval_rag_generation.py --mode live \
   --out /workspace/stage4_gen_eval_results.json --llm-judge
 ```
 
 Mock / dry-run (без Docker):
 
 ```bash
-python scripts/eval_rag_generation.py --mode mock --out /workspace/stage4_gen_eval_results.json
+python scripts/stage4_eval/eval_rag_generation.py --mode mock
 ```
 
 ## Метрики (mock, N=25)
@@ -56,7 +56,7 @@ Mock **симулирует** generation с опорой на Hit@5 из уже 
 
 | Файл | Назначение |
 |------|------------|
-| `/workspace/Diplom_AI/scripts/eval_rag_generation.py` | скрипт оценки |
+| `scripts/stage4_eval/eval_rag_generation.py` | скрипт оценки |
 | `/workspace/stage4_gen_eval_results.json` | результаты этого прогона |
 | `/workspace/Diplom_AI/Этапы/Reports/stage4_gen_eval_results.json` | копия в дереве репо (локально, **не запушено**) |
 | `/workspace/Etap4-gen-metrics.md` | эта сводка |

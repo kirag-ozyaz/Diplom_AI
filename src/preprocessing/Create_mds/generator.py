@@ -52,12 +52,12 @@ async def convert_file(
             async with aiofiles.open(md_path, 'w', encoding='utf-8') as f:
                 await f.write(md_content)
 
-            print(f"✓ {docx_path.relative_to(input_dir)} -> {md_path.relative_to(output_dir)}")
+            print(f" {docx_path.relative_to(input_dir)} -> {md_path.relative_to(output_dir)}")
 
         except Exception as e:
             # Детальный вывод ошибки только для проблемного файла
             print(
-                f"✗ Ошибка конвертации {docx_path.relative_to(input_dir)}:\n"
+                f" Ошибка конвертации {docx_path.relative_to(input_dir)}:\n"
                 f"  {type(e).__name__}: {e}\n"
                 f"  {traceback.format_exc(limit=2)}",
                 file=sys.stderr
@@ -111,7 +111,7 @@ async def main() -> None:
     # Если аргументы не переданы, используем тестовые значения
     if not has_input_arg:
         input_dir = Path(raw_file_dir).resolve()
-        print(f"📁 Используются тестовые значения:")
+        print(f" Используются тестовые значения:")
         print(f"   Входная папка: {input_dir}")
     else:
         if args.input is None:

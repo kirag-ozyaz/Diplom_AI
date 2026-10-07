@@ -61,6 +61,7 @@ milvus/data/
 milvus/logs/
 infra/milvus/volume/
 infra/milvus/volumes/
+infra/milvus/logs/
 
 # Vector DB data
 data/embeddings/

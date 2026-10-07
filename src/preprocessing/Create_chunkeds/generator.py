@@ -39,14 +39,14 @@ async def convert_file(
 
             if result:
                 rel_path = md_path.relative_to(input_dir)
-                print(f"✓ {rel_path} -> {Path(result).name}")
+                print(f" {rel_path} -> {Path(result).name}")
             else:
-                print(f"⚠️ {md_path.relative_to(input_dir)} - чанки не созданы (пустой результат)")
+                print(f" {md_path.relative_to(input_dir)} - чанки не созданы (пустой результат)")
 
         except Exception as e:
             # Детальный вывод ошибки только для проблемного файла
             print(
-                f"✗ Ошибка конвертации {md_path.relative_to(input_dir)}:\n"
+                f" Ошибка конвертации {md_path.relative_to(input_dir)}:\n"
                 f"  {type(e).__name__}: {e}\n"
                 f"  {traceback.format_exc(limit=2)}",
                 file=sys.stderr
@@ -100,7 +100,7 @@ async def main() -> None:
     # Если аргументы не переданы, используем тестовые значения
     if not has_input_arg:
         input_dir = Path(input_file_dir).resolve()
-        print(f"📁 Используются тестовые значения:")
+        print(f" Используются тестовые значения:")
         print(f"   Входная папка: {input_dir}")
     else:
         if args.input is None:

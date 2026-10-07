@@ -263,14 +263,15 @@ python src\preprocessing\Create_embeddings\query_test.py
 
 ```powershell
 python scripts\compute_detect.py
-# при необходимости подстроить device_text и ollama.model по GPU:
 python scripts\compute_detect.py --apply-config
 ```
 
-**Запуск Ollama** (автовыбор compose и модели LLM; `--apply-config` пишет `ollama.model` в конфиг):
+При старте **Milvus / Ollama / start_report_docker** конфиг `rag_runtime.json` синхронизируется автоматически (`device_text`, при `auto_select_ollama_model` — `ollama.model`).
+
+**Запуск Ollama** (автовыбор compose и модели LLM):
 
 ```powershell
-python scripts\start_ollama.py --apply-config --pull
+python scripts\start_ollama.py --pull
 ```
 
 Ручной вариант:
@@ -353,6 +354,16 @@ data/raw (DOCX)
 | Пустой поиск | Коллекция создана? `load_data.py` завершился без ошибок? |
 | `Torch not compiled with CUDA enabled` | В конфиге `"device_text": "cuda"`, но PyTorch **CPU-only**. Скрипт теперь сам переключится на cpu; для GPU: `pip install torch torchvision --index-url https://download.pytorch.org/whl/cu124` |
 | `query_test.py` / `query.py` «висит» без вывода | Первый запуск: загрузка torch и embedding-модели (1–3 мин). |
+
+---
+
+## Метрики этапа 4 (Hit@k + generation)
+
+Пошаговый мануал и PowerShell-обёртки: **`scripts/stage4_eval/README.md`**.
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\stage4_eval\run_all.ps1
+```
 
 ---
 

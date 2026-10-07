@@ -8,6 +8,8 @@ from pathlib import Path
 
 from notebook_bootstrap import find_project_root
 
+SCRIPTS_DIR = Path(__file__).resolve().parent
+
 
 def start_report_docker(
     *,
@@ -17,6 +19,12 @@ def start_report_docker(
 ) -> int:
     project_root = find_project_root(root)
     scripts = project_root / "scripts"
+
+    sys.path.insert(0, str(SCRIPTS_DIR))
+    from compute_detect import ensure_runtime_config  # noqa: E402
+
+    ensure_runtime_config(apply=True, print_report=True)
+    print()
 
     print("=== Milvus (etcd, minio, standalone) ===")
     milvus = subprocess.run(
@@ -31,7 +39,7 @@ def start_report_docker(
         return 0
 
     print("\n=== Ollama ===")
-    ollama_cmd = [sys.executable, str(scripts / "start_ollama.py")]
+    ollama_cmd = [sys.executable, str(scripts / "start_ollama.py"), "--no-apply-config"]
     if pull_ollama:
         ollama_cmd.append("--pull")
     ollama = subprocess.run(ollama_cmd, cwd=project_root)

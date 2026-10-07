@@ -1,7 +1,7 @@
 # Hit@k — теория и применение в проекте
 
 **Проект:** RAG по ПУЭ, этап 4 (первая точность retrieval).  
-**Код оценки:** `scripts/eval_retrieval_hitk.py`
+**Код оценки:** `scripts/stage4_eval/eval_retrieval_hitk.py`
 
 ---
 
@@ -20,7 +20,7 @@
 
 **Hit@k = (1 / N) · Σ hit@k(q)**
 
-В прототипе: *N* = 15, один эталонный пункт ПУЭ (`Clause`) на вопрос, *k* ∈ {1, 3, 5}.
+В прототипе: *N* — число записей в `stage4_eval_questions.json`, один эталонный пункт ПУЭ (`Clause`) на вопрос, *k* ∈ {1, 3, 5}.
 
 | Метрика | Смысл |
 |---------|--------|
@@ -85,10 +85,12 @@ https://arxiv.org/abs/2005.11401
 
 ## 4. Как считается в коде
 
-1. Вопрос из `Этапы/Reports/stage4_eval_questions.json`.
+Скрипт: `python scripts/stage4_eval/eval_retrieval_hitk.py` (см. `scripts/stage4_eval/README.md`).
+
+1. Вопрос из `Этапы/Reports/etap4/data/stage4_eval_questions.json` (формулировки можно брать из билетов Tests24 — см. `manual/tests24_electro_safety.md`, сырые JSON в `data/tests24/`).
 2. Один вызов `search_text` (лимит ≥ 5).
 3. Успех, если в поле `text` одного из первых *k* чанков есть номер пункта (`1.1.4`, `п. 1.1.4`, `Пункт 1.1.4`).
 
 Оценивается **только retrieval**, не качество текста ответа LLM.
 
-Текст для Word-отчёта также включён в `Этапы/Reports/Readme-4.md` (п. 4.4).
+Текст для Word-отчёта также включён в `Этапы/Reports/etap4/Readme-4.md` (п. 4.4).

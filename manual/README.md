@@ -1,8 +1,8 @@
-# Теория метрики Hit@k (этап 4)
+# Справочные материалы (manual)
 
 Локальная библиотека для отчёта и защиты. В репозиторий Git попадают **только файлы `*.md`** из этой папки; PDF, DjVu и прочие носители книг хранятся у вас на диске (см. `.gitignore`).
 
-Краткий конспект: **`Hit_at_k.md`**.
+Краткие конспекты: **`Hit_at_k.md`**, **`OpenCLIP_ViT-B-32.md`**.
 
 ---
 
@@ -12,6 +12,8 @@
 |------|------------|
 | `README.md` | Этот каталог |
 | `Hit_at_k.md` | Hit@k: определение, формула, связь с Recall@k, применение в проекте |
+| `OpenCLIP_ViT-B-32.md` | CLIP/OpenCLIP ViT-B-32: роль в `multimodal_rag`, Milvus `image_vector`, `load_image_model` |
+| `tests24_electro_safety.md` | Внешние билеты ЭБ: [tests24.ru](https://tests24.ru/), [tests24.su](https://tests24.su/test-24/elektrobezopasnost/), скрипты `scripts/tests24/` |
 
 ---
 
@@ -38,4 +40,4 @@
 - DPR: https://arxiv.org/abs/2004.04906  
 - RAG: https://arxiv.org/abs/2005.11401  
 
-Связь с отчётом: `Этапы/Reports/Readme-4.md`, п. **4.4** и приложения.
+Связь с отчётом: `Этапы/Reports/etap4/Readme-4.md`, п. **4.4** и приложения.

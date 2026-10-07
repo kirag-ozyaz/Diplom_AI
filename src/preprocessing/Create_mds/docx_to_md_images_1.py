@@ -182,7 +182,7 @@ def extract_images_and_fix_refs(docx_path, output_dir, file_stem):
         # Сначала читаем relationships
         rels_path = 'word/_rels/document.xml.rels'
         if rels_path not in docx_zip.namelist():
-            print(f"  ⚠️  Файл {rels_path} не найден в архиве")
+            print(f"    Файл {rels_path} не найден в архиве")
             return image_map
         
         rels_xml = docx_zip.read(rels_path).decode('utf-8')
@@ -190,7 +190,7 @@ def extract_images_and_fix_refs(docx_path, output_dir, file_stem):
         
         # Получаем все Relationship элементы
         relationships = soup.find_all('Relationship')
-        print(f"  📋 Найдено relationships: {len(relationships)}")
+        print(f"   Найдено relationships: {len(relationships)}")
         
         # Парсим все связи изображений
         for rel in relationships:
@@ -203,7 +203,7 @@ def extract_images_and_fix_refs(docx_path, output_dir, file_stem):
             target = rel.get('Target', '')
             
             if not r_id or not target:
-                print(f"  ⚠️  Пропущена связь: Id={r_id}, Target={target}")
+                print(f"    Пропущена связь: Id={r_id}, Target={target}")
                 continue
             
             # Формируем полный путь к изображению
@@ -235,7 +235,7 @@ def extract_images_and_fix_refs(docx_path, output_dir, file_stem):
                         break
                 
                 if not found:
-                    print(f"  ❌ Изображение не найдено: rId={r_id}, target={target}, пробовали: {img_path_in_zip}")
+                    print(f"   Изображение не найдено: rId={r_id}, target={target}, пробовали: {img_path_in_zip}")
                     # Выводим список всех файлов в архиве для отладки
                     media_files = [f for f in docx_zip.namelist() if 'media' in f.lower() or 'image' in f.lower()]
                     if media_files:
@@ -270,10 +270,10 @@ def extract_images_and_fix_refs(docx_path, output_dir, file_stem):
                     f.write(docx_zip.read(img_path_in_zip))
                 
                 image_map[r_id] = img_name
-                print(f"  ✓ {r_id} → {img_name} (из {img_path_in_zip})")
+                print(f"   {r_id} → {img_name} (из {img_path_in_zip})")
                 image_counter += 1
             except Exception as e:
-                print(f"  ❌ Ошибка при сохранении изображения {r_id}: {e}")
+                print(f"   Ошибка при сохранении изображения {r_id}: {e}")
 
     return image_map
 
@@ -293,7 +293,7 @@ def replace_image_tags_in_html(html, image_map, images_folder_name, images_dir):
             r_id = match.group(1) if match else src
             if r_id in image_map:
                 new_src = f"{images_folder_name}/{image_map[r_id]}"
-                print(f"  ✓ Обработан rId: {r_id} → {image_map[r_id]}")
+                print(f"   Обработан rId: {r_id} → {image_map[r_id]}")
 
         # 2. Обработка base64 (только если rId не найден)
         elif src.startswith('data:image/'):
@@ -331,9 +331,9 @@ def replace_image_tags_in_html(html, image_map, images_folder_name, images_dir):
                         f.write(img_data)
 
                     new_src = f"{images_folder_name}/{img_name}"
-                    print(f"  ✓ Извлечено из base64: {img_name}")
+                    print(f"   Извлечено из base64: {img_name}")
             except Exception as e:
-                print(f"  ⚠️ Ошибка base64: {e}")
+                print(f"   Ошибка base64: {e}")
 
         # 3. Если не распознано — НЕ удаляем, оставляем для отладки
         if new_src:
@@ -342,7 +342,7 @@ def replace_image_tags_in_html(html, image_map, images_folder_name, images_dir):
                 img['alt'] = Path(new_src).name
         else:
             # Оставляем тег, но помечаем для отладки
-            print(f"  ⚠️ Необработанное изображение (src='{src[:60]}...'), оставлено как есть")
+            print(f"   Необработанное изображение (src='{src[:60]}...'), оставлено как есть")
 
     return str(soup)
 
@@ -378,7 +378,7 @@ def fix_images_in_markdown(markdown_content, images_dir, images_folder_name):
                 
                 return f'![image]({images_folder_name}/{img_name})'
             except Exception as e:
-                print(f"  ⚠️ Ошибка при обработке base64: {e}")
+                print(f"   Ошибка при обработке base64: {e}")
                 return match.group(0)
         
         pattern = r'!\[\]\((data:image/[^)]+)\)'
@@ -420,7 +420,7 @@ def docx_to_md_with_images(docx_path, output_dir=None, merge_headers=False):
     """
     docx_path = Path(docx_path).resolve()
     if docx_path.suffix.lower() != '.docx':
-        print("❌ Поддерживается только .docx")
+        print(" Поддерживается только .docx")
         sys.exit(1)
 
     # Если output_dir не указан, используем папку с исходным файлом
@@ -432,7 +432,7 @@ def docx_to_md_with_images(docx_path, output_dir=None, merge_headers=False):
     # md_path = output_dir / f"{docx_path.stem}.md"
 
     # Шаг 1: Извлекаем изображения (из оригинального файла, как в docx_to_md_images_3.py)
-    print("🖼️  Извлечение изображений...")
+    print("  Извлечение изображений...")
     file_stem = docx_path.stem
     images_folder_name = f"image_{file_stem}"
     image_map = extract_images_and_fix_refs(docx_path, output_dir, file_stem)
@@ -440,19 +440,19 @@ def docx_to_md_with_images(docx_path, output_dir=None, merge_headers=False):
 
     # Шаг 2: Конвертируем в HTML через mammoth
     # Используем ОРИГИНАЛЬНЫЙ файл, чтобы mammoth оставил изображения как rId (не преобразовывал в base64)
-    print("🔄 Конвертация в HTML...")
+    print(" Конвертация в HTML...")
     
     with open(docx_path, "rb") as docx_file:
         result = mammoth.convert_to_html(docx_file)
         html = result.value
 
     # Шаг 3: Заменяем ссылки на изображения
-    print("🔗 Проверка ссылок на изображения...")
+    print(" Проверка ссылок на изображения...")
     # Отладочный вывод: проверяем, какие img теги есть в HTML
     soup_debug = BeautifulSoup(html, 'html.parser')
     img_tags = soup_debug.find_all('img')
     if img_tags:
-        print(f"  📋 Найдено img тегов в HTML (первые три тэга): {len(img_tags)}")
+        print(f"   Найдено img тегов в HTML (первые три тэга): {len(img_tags)}")
         for i, img in enumerate(img_tags[:3]):  # Показываем первые 3 для отладки
             src = img.get('src', '')
             print(f"     img[{i}]: src='{src[:80]}...' (первые 80 символов)")
@@ -467,38 +467,38 @@ def docx_to_md_with_images(docx_path, output_dir=None, merge_headers=False):
     soup_after = BeautifulSoup(html, 'html.parser')
     img_tags_after = soup_after.find_all('img')
     if img_tags_after:
-        print(f"  📋 После замены найдено img тегов: {len(img_tags_after)}")
+        print(f"   После замены найдено img тегов: {len(img_tags_after)}")
         for i, img in enumerate(img_tags_after[:3]):  # Показываем первые 3 для отладки
             src = img.get('src', '')
             alt = img.get('alt', '')
             print(f"     img[{i}]: src='{src}', alt='{alt}'")
 
     # Шаг 4: Конвертируем HTML → Markdown
-    print("📝 Преобразование в Markdown...")
+    print(" Преобразование в Markdown...")
     from markdownify import markdownify as md
 
     markdown_content = md(html, heading_style="ATX", strip=['style'])
 
     # Шаг 4.5: Исправляем изображения (заменяем base64 и <img> на ссылки)
-    print("🔧 Исправление ссылок на изображения...")
+    print(" Исправление ссылок на изображения...")
     markdown_content = fix_images_in_markdown(markdown_content, images_dir, images_folder_name)
 
     # Шаг 4.6: Очищаем скрытые метки из markdown
-    print("🧹 Очистка скрытых меток...")
+    print(" Очистка скрытых меток...")
     markdown_content = clean_hidden_tags_in_markdown(markdown_content)
 
     # Шаг 4.7: Объединяем разбитые заголовки (если включено)
     if merge_headers:
-        print("🔗 Объединение разбитых заголовков...")
+        print(" Объединение разбитых заголовков...")
         markdown_content = merge_split_headers(markdown_content)
 
     # # Шаг 5: Сохраняем
     # with open(md_path, 'w', encoding='utf-8') as f:
     #     f.write(markdown_content)
 
-    print(f"\n✅ Готово!")
-    # print(f"📄 Markdown: {md_path}")
-    print(f"🖼️  Изображения: {output_dir / images_folder_name}")
+    print(f"\n Готово!")
+    # print(f" Markdown: {md_path}")
+    print(f"  Изображения: {output_dir / images_folder_name}")
     
     return markdown_content
 
@@ -548,16 +548,16 @@ if __name__ == "__main__":
         with open(md_path, 'w', encoding='utf-8') as f:
             f.write(markdown_content)
 
-        print(f"📄 Markdown: {md_path}")
+        print(f" Markdown: {md_path}")
     except FileNotFoundError as e:
-        print(f"❌ Ошибка: {e}")
+        print(f" Ошибка: {e}")
         print("Использование: python docx_to_md_with_images.py <файл.docx> [output_dir]")
         sys.exit(1)
     except NotADirectoryError as e:
-        print(f"❌ Ошибка: {e}")
+        print(f" Ошибка: {e}")
         print("Использование: python docx_to_md_with_images.py <файл.docx> [output_dir]")
         sys.exit(1)
     except Exception as e:
-        print(f"❌ Ошибка: {e}")
+        print(f" Ошибка: {e}")
         print("Использование: python docx_to_md_with_images.py <файл.docx> [output_dir]")
         sys.exit(1)

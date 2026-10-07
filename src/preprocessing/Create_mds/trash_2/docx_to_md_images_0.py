@@ -70,28 +70,28 @@ def replace_image_tags_in_html(html, image_map):
 def docx_to_md_with_images(docx_path):
     docx_path = Path(docx_path).resolve()
     if docx_path.suffix.lower() != '.docx':
-        print("❌ Поддерживается только .docx")
+        print(" Поддерживается только .docx")
         sys.exit(1)
 
     output_dir = docx_path.parent
     md_path = output_dir / f"{docx_path.stem}.md"
 
     # Шаг 1: Извлекаем изображения
-    print("🖼️  Извлечение изображений...")
+    print("  Извлечение изображений...")
     image_map = extract_images_and_fix_refs(docx_path, output_dir)
 
     # Шаг 2: Конвертируем в HTML через mammoth
-    print("🔄 Конвертация в HTML...")
+    print(" Конвертация в HTML...")
     with open(docx_path, "rb") as docx_file:
         result = mammoth.convert_to_html(docx_file)
         html = result.value
 
     # Шаг 3: Заменяем rId на пути к изображениям
-    print("🔗 Замена ссылок на изображения...")
+    print(" Замена ссылок на изображения...")
     html = replace_image_tags_in_html(html, image_map)
 
     # Шаг 4: Конвертируем HTML → Markdown
-    print("📝 Преобразование в Markdown...")
+    print(" Преобразование в Markdown...")
     from markdownify import markdownify as md
     markdown_content = md(html, heading_style="ATX", strip=['style'])
 
@@ -99,9 +99,9 @@ def docx_to_md_with_images(docx_path):
     with open(md_path, 'w', encoding='utf-8') as f:
         f.write(markdown_content)
 
-    print(f"\n✅ Готово!")
-    print(f"📄 Markdown: {md_path}")
-    print(f"🖼️  Изображения: {output_dir / 'images'}")
+    print(f"\n Готово!")
+    print(f" Markdown: {md_path}")
+    print(f"  Изображения: {output_dir / 'images'}")
 
 
 file_docx = r"X:\Учеба_УИИ\Итоговы_Проект\Этап №2.  AI_ML  Сбор базы\Нормативная база\ПУЭ\DOCX\2.5.docx"

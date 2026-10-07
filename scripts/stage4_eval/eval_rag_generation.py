@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 Этап 4+: оценка generation / citation / groundedness на том же наборе
-вопросов, что и Hit@k (Этапы/Reports/stage4_eval_questions.json).
+вопросов, что и Hit@k (Этапы/Reports/etap4/data/stage4_eval_questions.json).
 
 Режимы:
   live   — Milvus + Ollama через src.rag.rag_service.answer
@@ -9,13 +9,13 @@
   dry-run — то же, что mock (алиас)
 
 Запуск из корня репозитория:
-  python scripts/eval_rag_generation.py
-  python scripts/eval_rag_generation.py --mode live
-  python scripts/eval_rag_generation.py --mode mock --limit 5
-  python scripts/eval_rag_generation.py --out /workspace/stage4_gen_eval_results.json
+  python scripts/stage4_eval/eval_rag_generation.py
+  python scripts/stage4_eval/eval_rag_generation.py --mode live
+  python scripts/stage4_eval/eval_rag_generation.py --mode mock --limit 5
 
 Инфра:
   python scripts/start_milvus.py
+  python scripts/start_milvus_logs.py   # снимок логов после сбоя Milvus
   python scripts/start_ollama.py --pull
 """
 from __future__ import annotations
@@ -29,15 +29,20 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-ROOT = Path(__file__).resolve().parents[1]
-REPORTS = ROOT / "Этапы" / "Reports"
-QUESTIONS_PATH = REPORTS / "stage4_eval_questions.json"
-HITK_JSON = REPORTS / "stage4_hitk_results.json"
-CHUNKED_DIR = ROOT / "data" / "chunked"
-DEFAULT_OUT = ROOT / "Этапы" / "Reports" / "stage4_gen_eval_results.json"
+from _bootstrap import setup_paths  # noqa: E402
 
-sys.path.insert(0, str(ROOT))
-sys.path.insert(0, str(ROOT / "scripts"))
+ROOT = setup_paths()
+CHUNKED_DIR = ROOT / "data" / "chunked"
+
+from report_paths import (  # noqa: E402
+    STAGE4_GEN_RESULTS,
+    STAGE4_HITK_RESULTS,
+    STAGE4_QUESTIONS,
+)
+
+QUESTIONS_PATH = STAGE4_QUESTIONS
+HITK_JSON = STAGE4_HITK_RESULTS
+DEFAULT_OUT = STAGE4_GEN_RESULTS
 sys.path.insert(0, str(ROOT / "src" / "preprocessing" / "Create_embeddings"))
 
 
@@ -241,11 +246,24 @@ def mock_retrieve_and_answer(
 
 
 def live_answer(question: str) -> dict[str, Any]:
-    from src.rag.rag_service import answer as rag_answer
+    import time
 
-    result = rag_answer(question)
-    result["mode"] = "live"
-    return result
+    from src.rag.rag_service import answer as rag_answer, close_rag_session
+
+    last_exc: Exception | None = None
+    for attempt in range(2):
+        try:
+            result = rag_answer(question, reuse_rag=True)
+            result["mode"] = "live"
+            return result
+        except RuntimeError as exc:
+            last_exc = exc
+            close_rag_session()
+            if attempt == 0 and "Milvus" in str(exc):
+                time.sleep(5)
+                continue
+            raise
+    raise last_exc or RuntimeError("live_answer failed")
 
 
 def score_one(
@@ -344,10 +362,42 @@ def aggregate(details: list[dict[str, Any]]) -> dict[str, Any]:
     }
 
 
+def _write_eval_json(
+    *,
+    out_path: Path,
+    mode: str,
+    mode_eff: str,
+    blockers: list[str],
+    hitk_map: dict[Any, bool],
+    details: list[dict[str, Any]],
+    llm_scores: list[float],
+    partial: bool = False,
+) -> None:
+    metrics = aggregate(details)
+    if llm_scores:
+        metrics["llm_judge_avg"] = round(sum(llm_scores) / len(llm_scores), 3)
+    if partial:
+        metrics["partial_run"] = True
+    out = {
+        "evaluated_at": datetime.now().strftime("%d.%m.%Y %H:%M"),
+        "mode_requested": mode,
+        "mode_effective": mode_eff,
+        "source": "eval_rag_generation.py",
+        "questions_path": str(QUESTIONS_PATH.relative_to(ROOT)),
+        "hitk_aligned": bool(hitk_map),
+        "blockers": blockers,
+        "metrics": metrics,
+        "details": details,
+    }
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    out_path.write_text(json.dumps(out, ensure_ascii=False, indent=2), encoding="utf-8")
+
+
 def run_eval(
     *,
     mode: str,
     limit: int | None,
+    start_id: int | None,
     out_path: Path,
     use_llm_judge: bool,
     use_hitk: bool,
@@ -356,6 +406,8 @@ def run_eval(
         raise RuntimeError(f"Нет файла вопросов: {QUESTIONS_PATH}")
 
     questions = json.loads(QUESTIONS_PATH.read_text(encoding="utf-8"))
+    if start_id is not None:
+        questions = [q for q in questions if int(q.get("id", 0)) >= start_id]
     if limit is not None:
         questions = questions[:limit]
 
@@ -370,7 +422,11 @@ def run_eval(
     if mode == "live":
         m_ok, o_ok = milvus_up(), ollama_up()
         if not m_ok:
-            blockers.append("Milvus недоступен (localhost:19530). Запустите: python scripts/start_milvus.py")
+            blockers.append(
+                "Milvus недоступен (localhost:19530). "
+                "Запустите: python scripts/start_milvus.py; "
+                "диагностика: python scripts/start_milvus_logs.py"
+            )
         if not o_ok:
             blockers.append("Ollama недоступен (localhost:11434). Запустите: python scripts/start_ollama.py --pull")
         if blockers:
@@ -385,82 +441,96 @@ def run_eval(
     details: list[dict[str, Any]] = []
     llm_scores: list[float] = []
 
-    for item in questions:
-        qid = item.get("id")
-        q = item["query"]
-        expected = item["expected_clause"]
-        hit5 = hitk_map.get(qid) if hitk_map else None
+    try:
+        for item in questions:
+            qid = item.get("id")
+            q = item["query"]
+            expected = item["expected_clause"]
+            hit5 = hitk_map.get(qid) if hitk_map else None
 
-        if mode_eff == "live":
-            try:
-                result = live_answer(q)
-            except Exception as exc:
-                result = {
-                    "question": q,
-                    "answer": "",
-                    "sources": [],
-                    "model": None,
-                    "mode": "live-error",
-                    "error": str(exc),
-                }
-        else:
-            result = mock_retrieve_and_answer(
-                q, expected, clause_index, hit5=hit5
+            if mode_eff == "live":
+                try:
+                    result = live_answer(q)
+                except Exception as exc:
+                    result = {
+                        "question": q,
+                        "answer": "",
+                        "sources": [],
+                        "model": None,
+                        "mode": "live-error",
+                        "error": str(exc),
+                    }
+            else:
+                result = mock_retrieve_and_answer(
+                    q, expected, clause_index, hit5=hit5
+                )
+
+            answer = result.get("answer") or ""
+            sources = result.get("sources") or []
+            scores = score_one(
+                question=q,
+                expected_clause=expected,
+                answer=answer,
+                sources=sources,
+                retrieval_hit5=hit5,
             )
 
-        answer = result.get("answer") or ""
-        sources = result.get("sources") or []
-        scores = score_one(
-            question=q,
-            expected_clause=expected,
-            answer=answer,
-            sources=sources,
-            retrieval_hit5=hit5,
-        )
+            llm_j = None
+            if use_llm_judge and mode_eff == "live":
+                llm_j = try_llm_judge(answer, [s.get("text") or "" for s in sources], q)
+                if llm_j and isinstance(llm_j.get("score"), (int, float)):
+                    llm_scores.append(float(llm_j["score"]))
 
-        llm_j = None
-        if use_llm_judge and mode_eff == "live":
-            llm_j = try_llm_judge(answer, [s.get("text") or "" for s in sources], q)
-            if llm_j and isinstance(llm_j.get("score"), (int, float)):
-                llm_scores.append(float(llm_j["score"]))
+            details.append(
+                {
+                    "id": qid,
+                    "query": q,
+                    "expected_clause": expected,
+                    "model": result.get("model"),
+                    "mode": result.get("mode", mode_eff),
+                    "answer_preview": answer[:400],
+                    "n_sources": len(sources),
+                    "scores": scores,
+                    "llm_judge": llm_j,
+                    "error": result.get("error"),
+                }
+            )
+            print(
+                f"[{qid}] cite={scores['citation']} "
+                f"g={scores['groundedness']:.2f} r={scores['relevance']:.2f} "
+                f"hit5={hit5} | {expected}"
+            )
+            _write_eval_json(
+                out_path=out_path,
+                mode=mode,
+                mode_eff=mode_eff,
+                blockers=blockers,
+                hitk_map=hitk_map,
+                details=details,
+                llm_scores=llm_scores,
+                partial=True,
+            )
+    finally:
+        if mode_eff == "live":
+            try:
+                from src.rag.rag_service import close_rag_session
 
-        details.append(
-            {
-                "id": qid,
-                "query": q,
-                "expected_clause": expected,
-                "model": result.get("model"),
-                "mode": result.get("mode", mode_eff),
-                "answer_preview": answer[:400],
-                "n_sources": len(sources),
-                "scores": scores,
-                "llm_judge": llm_j,
-                "error": result.get("error"),
-            }
-        )
-        print(
-            f"[{qid}] cite={scores['citation']} "
-            f"g={scores['groundedness']:.2f} r={scores['relevance']:.2f} "
-            f"hit5={hit5} | {expected}"
-        )
+                close_rag_session()
+            except Exception:
+                pass
 
-    metrics = aggregate(details)
-    if llm_scores:
-        metrics["llm_judge_avg"] = round(sum(llm_scores) / len(llm_scores), 3)
-
-    out = {
-        "evaluated_at": datetime.now().strftime("%d.%m.%Y %H:%M"),
-        "mode_requested": mode,
-        "mode_effective": mode_eff,
-        "source": "eval_rag_generation.py",
-        "questions_path": str(QUESTIONS_PATH.relative_to(ROOT)),
-        "hitk_aligned": bool(hitk_map),
-        "blockers": blockers,
-        "metrics": metrics,
-        "details": details,
-    }
-    out_path.parent.mkdir(parents=True, exist_ok=True)
-    out_path.write_text(json.dumps(out, ensure_ascii=False, indent=2), encoding="utf-8")
+    _write_eval_json(
+        out_path=out_path,
+        mode=mode,
+        mode_eff=mode_eff,
+        blockers=blockers,
+        hitk_map=hitk_map,
+        details=details,
+        llm_scores=llm_scores,
+        partial=False,
+    )
+    out = json.loads(out_path.read_text(encoding="utf-8"))
+    metrics = out["metrics"]
     print(f"\nМетрики: {json.dumps(metrics, ensure_ascii=False)}")
     print(f"Результаты: {out_path}")
     return out
@@ -476,10 +546,16 @@ def main() -> None:
     )
     parser.add_argument("--limit", type=int, default=None, help="Ограничить число вопросов")
     parser.add_argument(
+        "--start-id",
+        type=int,
+        default=None,
+        help="Начать с вопроса с id >= N (для дозапуска после сбоя)",
+    )
+    parser.add_argument(
         "--out",
         type=Path,
         default=None,
-        help="Путь JSON результатов (по умолчанию Этапы/Reports/stage4_gen_eval_results.json)",
+        help="Путь JSON (по умолчанию etap4/generation/stage4_gen_eval_results.json)",
     )
     parser.add_argument(
         "--no-hitk",
@@ -497,6 +573,7 @@ def main() -> None:
         run_eval(
             mode=args.mode,
             limit=args.limit,
+            start_id=args.start_id,
             out_path=out,
             use_llm_judge=args.llm_judge,
             use_hitk=not args.no_hitk,

@@ -31,6 +31,49 @@ PUE_SYSTEM = (
     "Указывай номера пунктов ПУЭ из контекста."
 )
 
+_rag_session: dict[str, Any] = {"key": None, "rag": None}
+
+
+def close_rag_session() -> None:
+    """Закрыть кэш MultimodalRAG (после пакетного eval)."""
+    rag = _rag_session.get("rag")
+    if rag is not None:
+        rag.close()
+    _rag_session["key"] = None
+    _rag_session["rag"] = None
+
+
+def _open_rag(
+    *,
+    host: str,
+    port: str,
+    collection: str,
+    text_model: str,
+    text_dim: int | None,
+    device_text: str,
+    device_clip: str,
+    reuse: bool,
+) -> MultimodalRAG:
+    key = (host, port, collection, text_model, text_dim, device_text, device_clip)
+    if reuse and _rag_session["rag"] is not None and _rag_session["key"] == key:
+        return _rag_session["rag"]
+    close_rag_session()
+    rag = MultimodalRAG(
+        vector_db_host=host,
+        vector_db_port=port,
+        collection_name=collection,
+        text_model_name=text_model,
+        text_dim=text_dim,
+        device_text=device_text,
+        device_clip=device_clip,
+        load_image_model=False,
+    )
+    rag.load_collection()
+    if reuse:
+        _rag_session["key"] = key
+        _rag_session["rag"] = rag
+    return rag
+
 
 def _format_context(hits: list[dict[str, Any]]) -> str:
     parts: list[str] = []
@@ -44,7 +87,9 @@ def _format_context(hits: list[dict[str, Any]]) -> str:
     return "\n\n".join(parts)
 
 
-def answer(question: str, *, limit: int | None = None) -> dict[str, Any]:
+def answer(
+    question: str, *, limit: int | None = None, reuse_rag: bool = False
+) -> dict[str, Any]:
     cfg = load_runtime_config()
     vdb = cfg["vector_db"]
     host = vdb["host"]
@@ -55,28 +100,30 @@ def answer(question: str, *, limit: int | None = None) -> dict[str, Any]:
     if not check_vector_db_server(host, port):
         raise RuntimeError("Milvus недоступен")
 
-    meta = MultimodalRAG.get_embedding_meta_from_collection(host, port, collection)
-    if meta:
-        text_model = meta["text_model"]
-        text_dim = meta.get("text_dim")
-    else:
-        text_model, _ = select_text_model(cfg)
-        text_model, text_dim = get_default_embedding_model()
-
     models_cfg = cfg["models"]
-    rag = MultimodalRAG(
-        vector_db_host=host,
-        vector_db_port=port,
-        collection_name=collection,
-        text_model_name=text_model,
-        text_dim=text_dim,
-        device_text=models_cfg["device_text"],
-        device_clip=models_cfg["device_clip"],
-        load_image_model=False,
-    )
-    rag.load_collection()
+    if reuse_rag and _rag_session.get("rag") is not None:
+        rag = _rag_session["rag"]
+    else:
+        meta = MultimodalRAG.get_embedding_meta_from_collection(host, port, collection)
+        if meta:
+            text_model = meta["text_model"]
+            text_dim = meta.get("text_dim")
+        else:
+            text_model, _ = select_text_model(cfg)
+            text_model, text_dim = get_default_embedding_model()
+        rag = _open_rag(
+            host=host,
+            port=port,
+            collection=collection,
+            text_model=text_model,
+            text_dim=text_dim,
+            device_text=models_cfg["device_text"],
+            device_clip=models_cfg["device_clip"],
+            reuse=reuse_rag,
+        )
     hits = rag.search_text(question, limit=search_limit)
-    rag.close()
+    if not reuse_rag:
+        rag.close()
 
     context = _format_context(hits)
     prompt = f"Контекст из ПУЭ:\n\n{context}\n\nВопрос: {question}\n\nОтвет:"

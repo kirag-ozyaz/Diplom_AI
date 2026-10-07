@@ -4,10 +4,10 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[1]
+from _bootstrap import setup_paths  # noqa: E402
+
+ROOT = setup_paths(embed=True)
 EMBED_DIR = ROOT / "src" / "preprocessing" / "Create_embeddings"
-if str(EMBED_DIR) not in sys.path:
-    sys.path.insert(0, str(EMBED_DIR))
 
 print("demo_stage4_milvus_search: старт", flush=True)
 print(

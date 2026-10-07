@@ -11,7 +11,7 @@ from model_selector import select_text_model
 
 
 def main():
-    print("🔍 Поиск в Multimodal RAG системе...")
+    print(" Поиск в Multimodal RAG системе...")
     cfg = load_runtime_config()
     vector_db = cfg["vector_db"]
     paths = cfg["paths"]
@@ -24,12 +24,12 @@ def main():
     base_data_path = str(resolve_repo_path(paths["base_data_path"]))
     default_limit = int(query_cfg["default_limit"])
 
-    print("🔌 Проверка сервера векторной БД...")
+    print(" Проверка сервера векторной БД...")
     if not check_vector_db_server(vector_db_host, vector_db_port):
-        print(f"❌ Сервер векторной БД недоступен: {vector_db_host}:{vector_db_port}")
+        print(f" Сервер векторной БД недоступен: {vector_db_host}:{vector_db_port}")
         print("   Запустите сервер (например, через docker-compose) и повторите попытку.")
         sys.exit(1)
-    print(f"✅ Сервер векторной БД доступен: {vector_db_host}:{vector_db_port}\n")
+    print(f" Сервер векторной БД доступен: {vector_db_host}:{vector_db_port}\n")
 
     # Метаданные эмбеддингов из коллекции — для поиска используем ту же модель и text_dim
     meta = MultimodalRAG.get_embedding_meta_from_collection(vector_db_host, vector_db_port, collection_name)
@@ -90,7 +90,7 @@ def main():
                 print(f"\n{i}. Score: {res['score']:.4f} | Глава: {res['chapter']}")
                 print(f"   {res['text'][:200]}...")
                 if res['has_image']:
-                    print(f"   🖼️ Изображения: {len(res['image_paths'])}")
+                    print(f"    Изображения: {len(res['image_paths'])}")
                     for img in res['image_paths'][:3]:
                         print(f"      - {os.path.basename(img)}")
         
@@ -102,7 +102,7 @@ def main():
                     print(f"\n{i}. Score: {res['score']:.4f}")
                     print(f"   {res['text'][:150]}...")
             else:
-                print("❌ Файл не найден")
+                print(" Файл не найден")
         
         elif choice == "3":
             query = input("Текстовый запрос: ")
@@ -115,14 +115,14 @@ def main():
         
         elif choice == "4":
             stats = rag.get_collection_stats()
-            print(f"\n📊 Коллекция: {stats['name']}")
+            print(f"\n Коллекция: {stats['name']}")
             print(f"   Сущностей: {stats['num_entities']}")
         
         elif choice == "5":
             break
     
     rag.close()
-    print("\n✅ Сеанс завершен")
+    print("\n Сеанс завершен")
 
 if __name__ == "__main__":
     main()

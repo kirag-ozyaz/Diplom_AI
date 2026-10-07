@@ -4,16 +4,26 @@ from __future__ import annotations
 
 import json
 from datetime import datetime
-from pathlib import Path
 from statistics import mean
 
-ROOT = Path(__file__).resolve().parents[1]
-REPORTS = ROOT / "Этапы" / "Reports"
-QUESTIONS_PATH = REPORTS / "stage4_eval_questions.json"
-RESULTS_PATH = REPORTS / "stage4_hitk_results.json"
-RUNS_PATH = REPORTS / "stage4_hitk_runs.jsonl"
-RESULTS_REL = "`Этапы/Reports/stage4_hitk_results.json`"
-RUNS_REL = "`Этапы/Reports/stage4_hitk_runs.jsonl`"
+from _bootstrap import setup_paths  # noqa: E402
+
+setup_paths()
+from report_paths import (  # noqa: E402
+    REPORTS,
+    STAGE4_HITK_RESULTS,
+    STAGE4_HITK_RUNS,
+    STAGE4_QUESTIONS,
+    md_link,
+)
+
+QUESTIONS_REL = md_link(STAGE4_QUESTIONS)
+
+QUESTIONS_PATH = STAGE4_QUESTIONS
+RESULTS_PATH = STAGE4_HITK_RESULTS
+RUNS_PATH = STAGE4_HITK_RUNS
+RESULTS_REL = md_link(STAGE4_HITK_RESULTS)
+RUNS_REL = md_link(STAGE4_HITK_RUNS)
 
 
 def _short_query(text: str, max_len: int = 58) -> str:
@@ -152,18 +162,18 @@ def build_section_52_markdown(
         )
 
     lines = [
-        "**Источник:** только последний прогон **`scripts/eval_retrieval_hitk.py`** "
+        "**Источник:** только последний прогон **`scripts/stage4_eval/eval_retrieval_hitk.py`** "
         "(Milvus + SentenceTransformer, поле `details` в JSON). **Ollama / LLM не используются.** "
         "Текст §5.3 — автоматическое форматирование чисел из JSON, не генерация ответа моделью.",
         "",
         coll_line,
-        f"Последний прогон: **{evaluated}** (`python scripts/eval_retrieval_hitk.py`).",
+        f"Последний прогон: **{evaluated}** (`python scripts/stage4_eval/eval_retrieval_hitk.py`).",
     ]
     if device_line:
         lines.append(device_line)
     lines.extend(
         [
-            f"Число запросов *N* — из `stage4_eval_questions.json`; метрики — из {RESULTS_REL}.",
+            f"Число запросов *N* — из {QUESTIONS_REL}; метрики — из {RESULTS_REL}.",
             f"Полный JSON: {RESULTS_REL}.",
             "",
             "| Метрика | Значение | Комментарий |",
@@ -171,7 +181,7 @@ def build_section_52_markdown(
             f"| Hit@1 | {format_hit_pct(counts[1], n)} | Эталонный пункт на 1-м месте |",
             f"| Hit@3 | {format_hit_pct(counts[3], n)} | Эталонный пункт в top-3 |",
             f"| Hit@5 | {format_hit_pct(counts[5], n)} | Эталонный пункт в top-5 |",
-            f"| Число запросов | **{n}** | `stage4_eval_questions.json` |",
+            f"| Число запросов | **{n}** | {QUESTIONS_REL} |",
         ]
     )
     if metrics:

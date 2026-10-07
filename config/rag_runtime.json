@@ -35,7 +35,7 @@
   },
   "ollama": {
     "host": "http://localhost:11434",
-    "model": "qwen2.5:3b",
+    "model": "qwen2.5:14b-instruct-q4_K_M",
     "timeout_sec": 120,
     "temperature": 0.2,
     "num_predict": 512

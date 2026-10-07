@@ -7,8 +7,12 @@ import re
 import sys
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[1]
-MD_PATH = ROOT / "Этапы" / "Reports" / "Readme-4.md"
+from _bootstrap import ROOT, setup_paths  # noqa: E402
+
+setup_paths()
+from report_paths import README4_MD, STAGE4_QUESTIONS, rel_from_root  # noqa: E402
+
+MD_PATH = README4_MD
 
 MARK_52_START = "<!-- stage4-eval:5.3:start -->"
 MARK_52_END = "<!-- stage4-eval:5.3:end -->"
@@ -29,7 +33,6 @@ def _replace_block(text: str, start: str, end: str, body: str) -> str:
 
 
 def refresh_readme4_eval_docs(*, sync_notebook: bool = True) -> None:
-    sys.path.insert(0, str(ROOT / "scripts"))
     from stage4_hitk_report import (  # noqa: E402
         QUESTIONS_PATH,
         RESULTS_PATH,
@@ -47,7 +50,7 @@ def refresh_readme4_eval_docs(*, sync_notebook: bool = True) -> None:
 
     if not RESULTS_PATH.is_file():
         raise SystemExit(
-            f"Нет {RESULTS_PATH.name} — сначала: python scripts/eval_retrieval_hitk.py"
+            f"Нет {RESULTS_PATH.name} — сначала: python scripts/stage4_eval/eval_retrieval_hitk.py"
         )
     results = load_results()
 
@@ -72,7 +75,7 @@ def refresh_readme4_eval_docs(*, sync_notebook: bool = True) -> None:
 
     md = re.sub(r"(\*N\* = )\d+", rf"\g<1>{n}", md, count=1)
     md = re.sub(
-        r"(\| `Этапы/Reports/stage4_eval_questions\.json` \| )\d+( тестовых вопросов)",
+        rf"(\| `{rel_from_root(STAGE4_QUESTIONS).replace('/', r'/')}` \| )\d+( тестовых вопросов)",
         rf"\g<1>{n}\2",
         md,
         count=1,
@@ -94,5 +97,5 @@ def refresh_readme4_eval_docs(*, sync_notebook: bool = True) -> None:
 
 
 if __name__ == "__main__":
-    sys.path.insert(0, str(ROOT / "scripts"))
+    setup_paths()
     refresh_readme4_eval_docs()

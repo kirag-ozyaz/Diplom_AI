@@ -17,7 +17,7 @@ from multimodal_rag import MultimodalRAG, get_default_embedding_model, check_vec
 from runtime_config import load_runtime_config, resolve_repo_path
 from model_selector import select_text_model
 
-print("✅ Библиотеки загружены", flush=True)
+print(" Библиотеки загружены", flush=True)
 
 
 def main():
@@ -32,14 +32,14 @@ def main():
     collection_name = vector_db["collection_name"]
     base_data_path = str(resolve_repo_path(paths["base_data_path"]))
 
-    print("🔌 Проверка сервера векторной БД...", flush=True)
+    print(" Проверка сервера векторной БД...", flush=True)
     if not check_vector_db_server(host, port):
-        print(f"❌ Сервер векторной БД недоступен: {host}:{port}", flush=True)
+        print(f" Сервер векторной БД недоступен: {host}:{port}", flush=True)
         print("   Запустите сервер (например, через docker-compose) и повторите попытку.", flush=True)
         sys.exit(1)
-    print(f"✅ Сервер векторной БД доступен: {host}:{port}\n", flush=True)
+    print(f" Сервер векторной БД доступен: {host}:{port}\n", flush=True)
 
-    print("📋 Чтение метаданных коллекции...", flush=True)
+    print(" Чтение метаданных коллекции...", flush=True)
     # Метаданные эмбеддингов из коллекции — для поиска используем ту же модель и text_dim
     meta = MultimodalRAG.get_embedding_meta_from_collection(host, str(port), collection_name)
     if meta:
@@ -57,7 +57,7 @@ def main():
             print(f"   Автовыбор модели: {text_model_name} ({reason})\n")
 
     # Подключение к уже существующей коллекции, без создания и без загрузки CLIP
-    print(f"📥 Загрузка embedding-модели ({text_model_name})...", flush=True)
+    print(f" Загрузка embedding-модели ({text_model_name})...", flush=True)
     rag = MultimodalRAG(
         vector_db_host=host,
         vector_db_port=str(port),
@@ -79,13 +79,13 @@ def main():
     # )
 
     # Загрузка готовой коллекции в память для поиска (не создаём новую)
-    print("📦 Загрузка коллекции Milvus в память...", flush=True)
+    print(" Загрузка коллекции Milvus в память...", flush=True)
     rag.load_collection()
 
     search_text = str(query_test_cfg["search_text"])
     test_limit = int(query_test_cfg["limit"])
-    print(f"\n🔍 Тестовый поиск...")
-    print(f"🔍 Текст для поиска: {search_text}")
+    print(f"\n Тестовый поиск...")
+    print(f" Текст для поиска: {search_text}")
     # results = rag.search_text("система заземления", limit=3)
 
     results = rag.search_text(search_text, limit=test_limit)
@@ -101,10 +101,10 @@ def main():
         else:
             print(f"   Текст: (пусто)")
         if res.get("has_image"):
-            print(f"   🖼️ Изображений: {len(res.get('image_paths') or [])}")
+            print(f"    Изображений: {len(res.get('image_paths') or [])}")
 
     rag.close()
-    print("\n✅ Тест завершён")
+    print("\n Тест завершён")
 
 
 if __name__ == "__main__":

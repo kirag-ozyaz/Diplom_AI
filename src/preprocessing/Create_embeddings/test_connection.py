@@ -15,26 +15,26 @@ def main() -> None:
 
     try:
         connections.connect(host=host, port=port)
-        print(f"✅ Успешное подключение к Milvus ({host}:{port})")
+        print(f" Успешное подключение к Milvus ({host}:{port})")
 
         databases = db.list_database()
-        print(f"📚 Базы данных: {databases}")
+        print(f" Базы данных: {databases}")
 
         # RAG-пайплайн (load_data, query) работает с базой default
         db.using_database("default")
         collections = utility.list_collections()
-        print(f"📦 Коллекции в default: {collections}")
+        print(f" Коллекции в default: {collections}")
 
         if collection_name in collections:
             coll = Collection(collection_name)
             coll.load()
             print(
-                f"✅ Коллекция '{collection_name}' найдена, "
+                f" Коллекция '{collection_name}' найдена, "
                 f"записей: {coll.num_entities}"
             )
         else:
             print(
-                f"⚠️ Коллекция '{collection_name}' не найдена в default. "
+                f" Коллекция '{collection_name}' не найдена в default. "
                 "Если в Attu она видна — проверьте, что выбрана база default."
             )
 
@@ -43,12 +43,12 @@ def main() -> None:
             db.using_database("test_db")
             test_collections = utility.list_collections()
             if test_collections:
-                print(f"ℹ️ В test_db (устаревшая тестовая БД): {test_collections}")
+                print(f" В test_db (устаревшая тестовая БД): {test_collections}")
             else:
-                print("ℹ️ База test_db пуста (можно игнорировать)")
+                print(" База test_db пуста (можно игнорировать)")
 
     except Exception as e:
-        print(f"❌ Ошибка подключения: {e}")
+        print(f" Ошибка подключения: {e}")
 
 
 if __name__ == "__main__":

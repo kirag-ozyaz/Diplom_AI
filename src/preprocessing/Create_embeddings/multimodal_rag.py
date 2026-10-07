@@ -119,10 +119,10 @@ def resolve_torch_device(device: str, purpose: str = "модели") -> str:
         if torch.cuda.is_available():
             return device.strip()
         print(
-            f"⚠️ В конфиге device_text/device_clip={device!r} для {purpose}, "
+            f" В конфиге device_text/device_clip={device!r} для {purpose}, "
             "но PyTorch установлен без CUDA — используется cpu.\n"
-            "   Для ускорения на GPU (RTX): "
-            "pip install torch torchvision --index-url https://download.pytorch.org/whl/cu124",
+            "   Для GPU: python scripts/compute_detect.py (подсказка cu124/cu128) "
+            "или start/Readme.md",
             flush=True,
         )
         return "cpu"
@@ -253,7 +253,7 @@ class MultimodalRAG:
         # 
         # Модели, которые НЕ влезут в VRAM (для справки)
         # ------------------------------------------|------|----------|----------|----------|--------------------------------
-        # intfloat/e5-mistral-7b-instruct              | 4096 | ~15 GB   | ---   | EN       | ❌ Не влезет в 6GB VRAM
+        # intfloat/e5-mistral-7b-instruct              | 4096 | ~15 GB   | ---   | EN       |  Не влезет в 6GB VRAM
         # --------------------------------------------------------------------------------------------------------------------
 
         # Рекомендации по выбору под задачу:
@@ -287,12 +287,15 @@ class MultimodalRAG:
             self.clip_model = None
             self.clip_preprocess = None
             self.clip_device = None
-            print("ℹ️ CLIP не загружается (режим только текстового поиска)")
+            print(
+                " CLIP (модель OpenCLIP ViT-B-32 для изображений) не загружается "
+                "(режим только текстового поиска)"
+            )
         
-        print("✅ MultimodalRAG инициализирован")
-        print(f"   📝 Текст: {text_model_name} на {self.text_device}")
+        print(" MultimodalRAG инициализирован")
+        print(f"    Текст: {text_model_name} на {self.text_device}")
         if load_image_model:
-            print(f"   🖼️ CLIP: {clip_model_name} на {device_clip}")
+            print(f"    CLIP: {clip_model_name} на {device_clip}")
 
     @staticmethod
     def _check_vector_db_available(host: str, port: str, timeout: float = 2.0) -> bool:
@@ -321,34 +324,36 @@ class MultimodalRAG:
         """Подключение к векторной БД. При недоступности сервера — сообщение и завершение процесса."""
         if not self._check_vector_db_available(self.vector_db_host, self.vector_db_port):
             print(
-                f"❌ Векторная БД недоступна: {self.vector_db_host}:{self.vector_db_port}\n"
+                f" Векторная БД недоступна: {self.vector_db_host}:{self.vector_db_port}\n"
                 "   Убедитесь, что сервер запущен (например, через docker-compose), и повторите попытку."
             )
-            sys.exit(1)
+            raise RuntimeError(
+                f"Векторная БД недоступна: {self.vector_db_host}:{self.vector_db_port}"
+            )
         try:
             connections.connect(host=self.vector_db_host, port=self.vector_db_port)
-            print(f"✅ Подключение к векторной БД: {self.vector_db_host}:{self.vector_db_port}")
+            print(f" Подключение к векторной БД: {self.vector_db_host}:{self.vector_db_port}")
         except Exception as e:
             print(
-                f"❌ Не удалось подключиться к векторной БД: {e}\n"
+                f" Не удалось подключиться к векторной БД: {e}\n"
                 "   Проверьте, что сервер запущен и параметры подключения верны."
             )
-            sys.exit(1)
+            raise RuntimeError(f"Не удалось подключиться к векторной БД: {e}") from e
 
     def _load_text_model(self, model_name: str, device: str):
         """Загрузка модели для текста"""
-        print(f"📥 Загрузка текстовой модели: {model_name}")
+        print(f" Загрузка текстовой модели: {model_name}")
         # Показываем прогресс скачивания (в процентах) при первом запуске.
         # HuggingFace Hub сам рисует tqdm progress-bar в консоли.
         try:
             from huggingface_hub import snapshot_download
-            print("   ⬇️ Проверка/скачивание файлов модели (HuggingFace cache)...")
+            print("    Проверка/скачивание файлов модели (HuggingFace cache)...")
             snapshot_download(repo_id=model_name)
-            print("   ✅ Файлы текстовой модели готовы (в кэше)")
+            print("    Файлы текстовой модели готовы (в кэше)")
         except Exception as e:
             # Если huggingface_hub недоступен или нет интернета — просто продолжаем,
             # SentenceTransformer сам попробует загрузить/взять из кэша.
-            print(f"   ⚠️ Не удалось показать прогресс скачивания для текста: {e}")
+            print(f"    Не удалось показать прогресс скачивания для текста: {e}")
 
         if "e5" in model_name.lower():
             warnings.warn(
@@ -361,11 +366,11 @@ class MultimodalRAG:
         with _quiet_hf_weight_load():
             self.text_model = SentenceTransformer(model_name, device=device)
         self.text_device = device
-        print("✅ Текстовая модель готова")
+        print(" Текстовая модель готова")
 
     def _load_clip_model(self, model_name: str, device: str):
         """Загрузка CLIP модели для изображений"""
-        print(f"📥 Загрузка CLIP модели: {model_name}")
+        print(f" Загрузка CLIP модели: {model_name}")
         # Пытаемся предзагрузить веса CLIP с прогресс-баром (если open_clip знает HF repo).
         try:
             from huggingface_hub import snapshot_download
@@ -375,16 +380,16 @@ class MultimodalRAG:
             cfg = open_clip.get_pretrained_cfg(model_name, pretrained='laion2b_e16') or {}
             hf_id = cfg.get("hf_hub_id") or cfg.get("hf_hub") or cfg.get("repo_id")
             if hf_id:
-                print(f"   ⬇️ Проверка/скачивание CLIP весов (HuggingFace): {hf_id}")
+                print(f"    Проверка/скачивание CLIP весов (HuggingFace): {hf_id}")
                 snapshot_download(
                     repo_id=hf_id,
                     resume_download=True,
                 )
-                print("   ✅ Файлы CLIP готовы (в кэше)")
+                print("    Файлы CLIP готовы (в кэше)")
             else:
-                print("   ℹ️ open_clip не дал hf_hub_id для этих весов — загрузка будет без процентов")
+                print("    open_clip не дал hf_hub_id для этих весов — загрузка будет без процентов")
         except Exception as e:
-            print(f"   ⚠️ Не удалось показать прогресс скачивания для CLIP: {e}")
+            print(f"    Не удалось показать прогресс скачивания для CLIP: {e}")
 
         # Используем open_clip для лучшей совместимости
         self.clip_model, _, self.clip_preprocess = open_clip.create_model_and_transforms(
@@ -394,7 +399,7 @@ class MultimodalRAG:
         self.clip_model = self.clip_model.to(device)
         self.clip_model.eval()
         self.clip_device = device
-        print("✅ CLIP модель готова")
+        print(" CLIP модель готова")
 
     def create_collection(self, drop_existing: bool = True):
         """
@@ -405,13 +410,13 @@ class MultimodalRAG:
         """
         if utility.has_collection(self.collection_name):
             if drop_existing:
-                print(f"⚠️ Коллекция '{self.collection_name}' существует. Удаляем...")
+                print(f" Коллекция '{self.collection_name}' существует. Удаляем...")
                 utility.drop_collection(self.collection_name)
             else:
-                print(f"✅ Коллекция '{self.collection_name}' уже существует")
+                print(f" Коллекция '{self.collection_name}' уже существует")
                 return
         
-        print(f"📦 Создание коллекции '{self.collection_name}'...")
+        print(f" Создание коллекции '{self.collection_name}'...")
         
         fields = [
             FieldSchema(name="id", dtype=DataType.INT64, is_primary=True, auto_id=True),
@@ -434,7 +439,7 @@ class MultimodalRAG:
         self.collection = Collection(self.collection_name, schema)
         
         # Создание индексов
-        print("📊 Создание индексов...")
+        print(" Создание индексов...")
         
         # Индекс для текста
         text_index_params = {
@@ -452,7 +457,7 @@ class MultimodalRAG:
         }
         self.collection.create_index(field_name="image_vector", index_params=image_index_params)
         
-        print("✅ Коллекция и индексы созданы")
+        print(" Коллекция и индексы созданы")
 
     def _extract_images_from_chunk(
         self,
@@ -575,7 +580,7 @@ class MultimodalRAG:
             
             return image_features.cpu().numpy()[0].tolist()
         except Exception as e:
-            print(f"⚠️ Ошибка обработки изображения {image_path}: {e}")
+            print(f" Ошибка обработки изображения {image_path}: {e}")
             return [0.0] * self.image_dim
 
     def _encode_images_batch(self, image_paths: List[str]) -> List[List[float]]:
@@ -635,14 +640,14 @@ class MultimodalRAG:
         if not jsonl_files:
             raise FileNotFoundError(f"Не найдено JSONL файлов в {jsonl_folder}")
         
-        print(f"📂 Найдено файлов: {len(jsonl_files)}")
+        print(f" Найдено файлов: {len(jsonl_files)}")
         
         total_chunks = 0
         total_images = 0
         
         for jsonl_file in jsonl_files:
             file_t0 = time.time()
-            print(f"\n📄 Обработка файла: {jsonl_file.name}")
+            print(f"\n Обработка файла: {jsonl_file.name}")
             
             # Извлекаем номер главы из имени файла (например, 7.3 из 7.3.chunked.jsonl)
             if jsonl_file.name.endswith(".chunked.jsonl"):
@@ -760,12 +765,12 @@ class MultimodalRAG:
                     ents = self.collection.num_entities
                 except Exception:
                     ents = "?"
-                print(f"✅ Файл завершён: {jsonl_file.name} | time={dt:.1f}s | сущностей в коллекции={ents}")
+                print(f" Файл завершён: {jsonl_file.name} | time={dt:.1f}s | сущностей в коллекции={ents}")
         
-        print(f"\n✅ Загрузка завершена!")
-        print(f"   📊 Всего чанков: {total_chunks}")
-        print(f"   🖼️ Всего изображений: {total_images}")
-        print(f"   📦 Сущностей в коллекции: {self.collection.num_entities}")
+        print(f"\n Загрузка завершена!")
+        print(f"    Всего чанков: {total_chunks}")
+        print(f"    Всего изображений: {total_images}")
+        print(f"    Сущностей в коллекции: {self.collection.num_entities}")
 
     async def load_from_jsonl_folder_async(
         self,
@@ -798,7 +803,7 @@ class MultimodalRAG:
         if not jsonl_files:
             raise FileNotFoundError(f"Не найдено JSONL файлов в {jsonl_folder}")
 
-        print(f"📂 Найдено файлов: {len(jsonl_files)}")
+        print(f" Найдено файлов: {len(jsonl_files)}")
 
         total_chunks = 0
         total_images = 0
@@ -806,7 +811,7 @@ class MultimodalRAG:
 
         for jsonl_file in jsonl_files:
             file_t0 = time.time()
-            print(f"\n📄 Обработка файла: {jsonl_file.name}")
+            print(f"\n Обработка файла: {jsonl_file.name}")
 
             # Извлекаем номер главы из имени файла (например, 7.3 из 7.3.chunked.jsonl)
             if jsonl_file.name.endswith(".chunked.jsonl"):
@@ -927,12 +932,12 @@ class MultimodalRAG:
                     ents = self.collection.num_entities
                 except Exception:
                     ents = "?"
-                print(f"✅ Файл завершён: {jsonl_file.name} | time={dt:.1f}s | сущностей в коллекции={ents}")
+                print(f" Файл завершён: {jsonl_file.name} | time={dt:.1f}s | сущностей в коллекции={ents}")
 
-        print(f"\n✅ Загрузка завершена!")
-        print(f"   📊 Всего чанков: {total_chunks}")
-        print(f"   🖼️ Всего изображений: {total_images}")
-        print(f"   📦 Сущностей в коллекции: {self.collection.num_entities}")
+        print(f"\n Загрузка завершена!")
+        print(f"    Всего чанков: {total_chunks}")
+        print(f"    Всего изображений: {total_images}")
+        print(f"    Сущностей в коллекции: {self.collection.num_entities}")
 
     @staticmethod
     def _parse_embedding_meta(description: str) -> Optional[Dict[str, Any]]:
@@ -960,18 +965,20 @@ class MultimodalRAG:
         """Подключение к векторной БД и чтение метаданных эмбеддингов из описания коллекции (без создания RAG)."""
         if not cls._check_vector_db_available(vector_db_host, vector_db_port):
             print(
-                f"❌ Векторная БД недоступна: {vector_db_host}:{vector_db_port}\n"
+                f" Векторная БД недоступна: {vector_db_host}:{vector_db_port}\n"
                 "   Убедитесь, что сервер запущен (например, через docker-compose), и повторите попытку."
             )
-            sys.exit(1)
+            raise RuntimeError(
+                f"Векторная БД недоступна: {vector_db_host}:{vector_db_port}"
+            )
         try:
             connections.connect(host=vector_db_host, port=vector_db_port)
         except Exception as e:
             print(
-                f"❌ Не удалось подключиться к векторной БД: {e}\n"
+                f" Не удалось подключиться к векторной БД: {e}\n"
                 "   Проверьте, что сервер запущен и параметры подключения верны."
             )
-            sys.exit(1)
+            raise RuntimeError(f"Не удалось подключиться к векторной БД: {e}") from e
         if not utility.has_collection(collection_name):
             return None
         c = Collection(collection_name)
@@ -988,17 +995,17 @@ class MultimodalRAG:
         if meta:
             if meta.get("text_dim") != self.text_dim:
                 print(
-                    f"⚠️ Внимание: коллекция создана с text_dim={meta['text_dim']}, "
+                    f" Внимание: коллекция создана с text_dim={meta['text_dim']}, "
                     f"сейчас задано {self.text_dim}. Поиск может сломаться — используйте ту же модель и text_dim."
                 )
             if meta.get("text_model") != self._text_model_name:
                 print(
-                    f"⚠️ Внимание: коллекция создана с text_model={meta['text_model']}, "
+                    f" Внимание: коллекция создана с text_model={meta['text_model']}, "
                     f"сейчас задано {self._text_model_name}. Нужна та же модель для корректного поиска."
                 )
 
         self.collection.load()
-        print("✅ Коллекция загружена в память")
+        print(" Коллекция загружена в память")
 
     def search_text(
         self,
@@ -1095,7 +1102,7 @@ class MultimodalRAG:
                     if not (r.get("text") or "").strip() and r["id"] in id_to_text:
                         r["text"] = id_to_text[r["id"]] or ""
             except Exception as e:
-                print(f"⚠️ Не удалось догрузить текст по id: {e}")
+                print(f" Не удалось догрузить текст по id: {e}")
 
         return formatted_results
 
@@ -1176,7 +1183,7 @@ class MultimodalRAG:
                     if not (r.get("text") or "").strip() and r["id"] in id_to_text:
                         r["text"] = id_to_text[r["id"]] or ""
             except Exception as e:
-                print(f"⚠️ Не удалось догрузить текст по id: {e}")
+                print(f" Не удалось догрузить текст по id: {e}")
 
         return formatted_results
 
@@ -1246,7 +1253,7 @@ class MultimodalRAG:
     def close(self):
         """Закрытие соединения с векторной БД"""
         connections.disconnect("default")
-        print("🔌 Соединение с векторной БД закрыто")
+        print(" Соединение с векторной БД закрыто")
 
 
 # Публичная функция для скриптов: from multimodal_rag import check_vector_db_server

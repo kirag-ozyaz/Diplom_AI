@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 Этап 4: оценка Hit@1 / Hit@3 / Hit@5 для семантического поиска по ПУЭ.
-Запуск из корня: python scripts/eval_retrieval_hitk.py
+Запуск из корня: python scripts/stage4_eval/eval_retrieval_hitk.py
 """
 from __future__ import annotations
 
@@ -11,13 +11,22 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[1]
+from _bootstrap import setup_paths  # noqa: E402
+
+ROOT = setup_paths(embed=True)
 EMBED_DIR = ROOT / "src" / "preprocessing" / "Create_embeddings"
-REPORTS = ROOT / "Этапы" / "Reports"
-QUESTIONS_PATH = REPORTS / "stage4_eval_questions.json"
-RESULTS_JSON = REPORTS / "stage4_hitk_results.json"
-CHART_PATH = REPORTS / "stage4_hitk_chart.png"
-REPORT_CHART_PATH = REPORTS / "stage4_hitk_report.png"
+from report_paths import (  # noqa: E402
+    REPORTS,
+    STAGE4_HITK_CHART,
+    STAGE4_HITK_REPORT_PNG,
+    STAGE4_HITK_RESULTS,
+    STAGE4_QUESTIONS,
+)
+
+QUESTIONS_PATH = STAGE4_QUESTIONS
+RESULTS_JSON = STAGE4_HITK_RESULTS
+CHART_PATH = STAGE4_HITK_CHART
+REPORT_CHART_PATH = STAGE4_HITK_REPORT_PNG
 
 sys.path.insert(0, str(EMBED_DIR))
 
@@ -127,10 +136,10 @@ def run_hitk_eval(*, refresh_readme: bool = True) -> dict:
         "metrics_percent": metrics,
         "details": details,
     }
-    REPORTS.mkdir(parents=True, exist_ok=True)
+    for d in (STAGE4_HITK_RESULTS.parent, STAGE4_HITK_CHART.parent):
+        d.mkdir(parents=True, exist_ok=True)
     RESULTS_JSON.write_text(json.dumps(out, ensure_ascii=False, indent=2), encoding="utf-8")
 
-    sys.path.insert(0, str(ROOT / "scripts"))
     from stage4_hitk_report import append_run_history  # noqa: E402
 
     append_run_history(out)
@@ -141,7 +150,6 @@ def run_hitk_eval(*, refresh_readme: bool = True) -> dict:
     print(f"Результаты: {RESULTS_JSON}")
 
     try:
-        sys.path.insert(0, str(ROOT / "scripts"))
         from plot_stage4_hitk import plot_hitk_bar_chart, plot_hitk_report  # noqa: E402
 
         plot_hitk_bar_chart(out, CHART_PATH)
@@ -157,7 +165,10 @@ def run_hitk_eval(*, refresh_readme: bool = True) -> dict:
 
             refresh_readme4_eval_docs(sync_notebook=True)
         except Exception as exc:
-            print(f"Readme-4.md не обновлён ({exc}). Вручную: python scripts/update_readme4_eval_docs.py")
+            print(
+                f"Readme-4.md не обновлён ({exc}). "
+                "Вручную: python scripts/stage4_eval/update_readme4_eval_docs.py"
+            )
 
     rag.close()
     return out

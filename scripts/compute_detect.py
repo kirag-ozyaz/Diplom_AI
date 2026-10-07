@@ -70,10 +70,18 @@ def detect_nvidia_smi() -> tuple[bool, Optional[str], Optional[float]]:
     return True, name, vram
 
 
+def _pip_cuda_index_hint(gpu_name: Optional[str]) -> str:
+    """Индекс PyTorch: cu128 для RTX 50xx и новее, иначе cu124."""
+    name = (gpu_name or "").lower()
+    if any(x in name for x in ("5060", "5070", "5080", "5090", "50 ", "blackwell")):
+        return "cu128"
+    return "cu124"
+
+
 def detect_torch_cuda() -> tuple[bool, Optional[str]]:
     try:
         import torch
-    except ImportError:
+    except (ImportError, OSError, PermissionError):
         return False, None
     if not torch.cuda.is_available():
         return False, None
@@ -101,9 +109,13 @@ def build_compute_report() -> ComputeReport:
     docker_ok, docker_nvidia = detect_docker()
 
     if smi_ok and not torch_ok:
+        pip_hint = _pip_cuda_index_hint(gpu_name)
         notes.append(
-            "GPU виден в nvidia-smi, но torch.cuda недоступен — установите PyTorch с CUDA "
-            "(см. start/Readme.md) или оставьте device_text=cpu в rag_runtime.json."
+            "GPU виден в nvidia-smi, но torch.cuda недоступен — установите PyTorch с CUDA: "
+            f"pip install torch torchvision --index-url https://download.pytorch.org/whl/{pip_hint}"
+        )
+        notes.append(
+            "После установки снова: python scripts/compute_detect.py --apply-config"
         )
     if smi_ok and docker_ok and not docker_nvidia:
         notes.append(
@@ -160,6 +172,53 @@ def apply_embedding_device_to_config(config_path: Path, device: str) -> None:
     config_path.write_text(json.dumps(cfg, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
 
+def print_runtime_summary(report: ComputeReport, *, title: str = "Режим вычислений (GPU/CPU)") -> None:
+    print(f"=== {title} ===")
+    gpu_line = ""
+    if report.nvidia_smi and report.gpu_name:
+        gpu_line = f" ({report.gpu_name}"
+        if report.vram_gb is not None:
+            gpu_line += f", {report.vram_gb} GB"
+        gpu_line += ")"
+    print(
+        f"Embeddings: device_text={report.embedding_device_recommended}"
+        + (f", PyTorch CUDA: {report.torch_cuda_device}" if report.torch_cuda else ", PyTorch: CPU")
+        + gpu_line
+    )
+    print(
+        f"Ollama: compose={report.ollama_compose_mode.upper()}, "
+        f"модель={report.ollama_model_recommended}"
+    )
+    for note in report.notes:
+        print(f"  • {note}")
+
+
+def ensure_runtime_config(
+    *,
+    config_path: Path | None = None,
+    apply: bool = True,
+    print_report: bool = True,
+) -> ComputeReport:
+    """
+    Детект GPU/CPU, опционально синхронизация config/rag_runtime.json с рекомендациями.
+    Вызывается при старте Milvus/Ollama и из start_report_docker.py.
+    """
+    cfg_path = config_path or (ROOT / "config" / "rag_runtime.json")
+    report = build_compute_report()
+    if print_report:
+        print_runtime_summary(report)
+    if apply:
+        apply_embedding_device_to_config(cfg_path, report.embedding_device_recommended)
+        ollama_written = apply_ollama_model_to_config(
+            cfg_path, report.ollama_model_recommended, only_if_auto=True
+        )
+        if print_report:
+            print(f"Конфиг: {cfg_path.name} -> device_text={report.embedding_device_recommended}")
+            if ollama_written:
+                print(f"Конфиг: {cfg_path.name} -> ollama.model={report.ollama_model_recommended}")
+    return report
+
+
 def apply_ollama_model_to_config(
     config_path: Path, model: str, *, only_if_auto: bool = True
 ) -> bool:
@@ -187,39 +246,35 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    report = build_compute_report()
-    payload: dict[str, Any] = asdict(report)
-    payload["ollama_dir"] = str(OLLAMA_DIR)
-
     if args.json:
+        report = build_compute_report()
+        if args.apply_config:
+            cfg_path = ROOT / "config" / "rag_runtime.json"
+            apply_embedding_device_to_config(cfg_path, report.embedding_device_recommended)
+            apply_ollama_model_to_config(
+                cfg_path, report.ollama_model_recommended, only_if_auto=True
+            )
+        payload: dict[str, Any] = asdict(report)
+        payload["ollama_dir"] = str(OLLAMA_DIR)
         print(json.dumps(payload, ensure_ascii=False, indent=2))
-    else:
-        print("=== Проверка CUDA / GPU ===")
-        print(f"nvidia-smi:        {report.nvidia_smi}" + (f" ({report.gpu_name}, {report.vram_gb} GB)" if report.gpu_name else ""))
-        print(f"PyTorch CUDA:      {report.torch_cuda}" + (f" ({report.torch_cuda_device})" if report.torch_cuda_device else ""))
-        print(f"Docker:            {report.docker_available}")
-        print(f"Docker NVIDIA:     {report.docker_nvidia_runtime}")
-        print(f"Embedding (реком.): device_text = {report.embedding_device_recommended}")
-        print(f"Ollama compose:    {report.ollama_compose_mode} → {report.ollama_compose_files}")
-        print(f"Ollama LLM (реком.): {report.ollama_model_recommended}")
-        print(f"  ({report.ollama_model_reason})")
-        for note in report.notes:
-            print(f"  • {note}")
+        return
 
     if args.apply_config:
-        cfg_path = ROOT / "config" / "rag_runtime.json"
-        apply_embedding_device_to_config(cfg_path, report.embedding_device_recommended)
-        ollama_written = apply_ollama_model_to_config(
-            cfg_path, report.ollama_model_recommended, only_if_auto=True
-        )
-        if not args.json:
-            print(f"Обновлён {cfg_path}: device_text={report.embedding_device_recommended}")
-            if ollama_written:
-                print(f"Обновлён {cfg_path}: ollama.model={report.ollama_model_recommended}")
-            else:
-                print(
-                    "ollama.model не изменён (auto_select_ollama_model=false в rag_runtime.json)"
-                )
+        ensure_runtime_config(apply=True, print_report=True)
+        return
+
+    report = build_compute_report()
+    print("=== Проверка CUDA / GPU ===")
+    print(f"nvidia-smi:        {report.nvidia_smi}" + (f" ({report.gpu_name}, {report.vram_gb} GB)" if report.gpu_name else ""))
+    print(f"PyTorch CUDA:      {report.torch_cuda}" + (f" ({report.torch_cuda_device})" if report.torch_cuda_device else ""))
+    print(f"Docker:            {report.docker_available}")
+    print(f"Docker NVIDIA:     {report.docker_nvidia_runtime}")
+    print(f"Embedding (реком.): device_text = {report.embedding_device_recommended}")
+    print(f"Ollama compose:    {report.ollama_compose_mode} -> {report.ollama_compose_files}")
+    print(f"Ollama LLM (реком.): {report.ollama_model_recommended}")
+    print(f"  ({report.ollama_model_reason})")
+    for note in report.notes:
+        print(f"  • {note}")
 
 
 if __name__ == "__main__":

@@ -277,7 +277,7 @@ def copy_images_from_markdown(md_path: Path, output_dir: Path, content: str) -> 
         # Абсолютные пути считаем внешними ресурсами: не копируем, но логируем.
         rel_path = Path(raw_path)
         if rel_path.is_absolute() or not rel_path.parts:
-            print(f"ℹ️ Обнаружен абсолютный путь к изображению (не копируется): {raw_path}")
+            print(f" Обнаружен абсолютный путь к изображению (не копируется): {raw_path}")
             continue
 
         first_part = rel_path.parts[0]
@@ -294,35 +294,35 @@ def copy_images_from_markdown(md_path: Path, output_dir: Path, content: str) -> 
         dst_path = output_dir / rel_path
 
         if not src_path.exists():
-            print(f"⚠️ Изображение не найдено и будет пропущено: {src_path}")
+            print(f" Изображение не найдено и будет пропущено: {src_path}")
             continue
 
         dst_path.parent.mkdir(parents=True, exist_ok=True)
 
         try:
             shutil.copy2(src_path, dst_path)
-            print(f"📸 Скопировано изображение: {src_path} -> {dst_path}")
+            print(f" Скопировано изображение: {src_path} -> {dst_path}")
         except Exception as e:
-            print(f"❌ Ошибка копирования изображения '{src_path}' в '{dst_path}': {e}")
+            print(f" Ошибка копирования изображения '{src_path}' в '{dst_path}': {e}")
 
 
 def generate_chunked_file(md_path, output_dir):
     md_path = Path(md_path).resolve()
 
     if md_path.suffix.lower() != '.md':
-        print(f"❌ Ошибка: Файл '{md_path}' не является .md файлом.")
+        print(f" Ошибка: Файл '{md_path}' не является .md файлом.")
         sys.exit(1)
 
     output_dir = Path(output_dir).resolve()
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    print(f"📂 Обработка файла '{md_path.name}'")
+    print(f" Обработка файла '{md_path.name}'")
 
     try:
         with open(md_path, 'r', encoding='utf-8') as f:
             content = f.read()
     except Exception as e:
-        print(f"❌ Ошибка чтения файла '{md_path.name}': {e}")
+        print(f" Ошибка чтения файла '{md_path.name}': {e}")
         sys.exit(1)
 
     # Копирование изображений, на которые есть ссылки в markdown
@@ -330,14 +330,14 @@ def generate_chunked_file(md_path, output_dir):
 
     chunks = chunk_document(content, md_path.name)
 
-    print(f"🔍 Найдено чанков в '{md_path.name}': {len(chunks)}")
+    print(f" Найдено чанков в '{md_path.name}': {len(chunks)}")
 
     output_filename = f"{md_path.stem}.chunked.jsonl"
     output_path = output_dir / output_filename
 
     try:
         if len(chunks) == 0:
-            print(f"⚠️ Внимание: Не найдено ни одного чанка в '{md_path.name}'. Файл не будет создан.")
+            print(f" Внимание: Не найдено ни одного чанка в '{md_path.name}'. Файл не будет создан.")
             return None
 
         with open(output_path, 'w', encoding='utf-8') as f:
@@ -345,12 +345,12 @@ def generate_chunked_file(md_path, output_dir):
                 json_line = json.dumps(chunk, ensure_ascii=False)
                 f.write(json_line + '\n')
 
-        print(f"✅ Успешно создано {len(chunks)} чанков из '{md_path.name}'.")
-        print(f"💾 Результат сохранен: {output_path}")
+        print(f" Успешно создано {len(chunks)} чанков из '{md_path.name}'.")
+        print(f" Результат сохранен: {output_path}")
         return str(output_path)
 
     except Exception as e:
-        print(f"❌ Ошибка записи файла: {e}")
+        print(f" Ошибка записи файла: {e}")
         sys.exit(1)
 
 
@@ -391,14 +391,14 @@ if __name__ == "__main__":
 
         chunked_content = generate_chunked_file(input_dir_arg, output_dir)
     except FileNotFoundError as e:
-        print(f"❌ Ошибка: {e}")
+        print(f" Ошибка: {e}")
         print("Использование: python md_to_chunked.py <файл.md> [output_dir]")
         sys.exit(1)
     except NotADirectoryError as e:
-        print(f"❌ Ошибка: {e}")
+        print(f" Ошибка: {e}")
         print("Использование: python md_to_chunked.py <файл.md> [output_dir]")
         sys.exit(1)
     except Exception as e:
-        print(f"❌ Ошибка: {e}")
+        print(f" Ошибка: {e}")
         print("Использование: python md_to_chunked.py <файл.md> [output_dir]")
         sys.exit(1)

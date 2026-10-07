@@ -13,10 +13,7 @@ ROOT = Path(__file__).resolve().parents[1]
 OLLAMA_DIR = ROOT / "infra" / "docker" / "Dockerfile.ollama"
 
 sys.path.insert(0, str(ROOT / "scripts"))
-from compute_detect import (  # noqa: E402
-    apply_ollama_model_to_config,
-    build_compute_report,
-)
+from compute_detect import build_compute_report, ensure_runtime_config  # noqa: E402
 
 
 def _ollama_model_for_run(report) -> str:
@@ -36,24 +33,26 @@ def main() -> None:
     parser.add_argument("--check-only", action="store_true", help="Только проверка, без docker compose")
     parser.add_argument("--pull", action="store_true", help="После старта: ollama pull модели из конфига")
     parser.add_argument(
+        "--no-apply-config",
+        action="store_true",
+        help="Не обновлять config/rag_runtime.json (device_text, ollama.model)",
+    )
+    parser.add_argument(
         "--apply-config",
         action="store_true",
-        help="Записать рекомендуемую ollama.model в config/rag_runtime.json (если auto_select_ollama_model)",
+        help="(устарело, по умолчанию включено) Синхронизировать rag_runtime.json",
     )
     args = parser.parse_args()
 
-    report = build_compute_report()
-    print(f"Режим Ollama: {report.ollama_compose_mode.upper()}")
-    print(f"LLM (рекомендация): {report.ollama_model_recommended} — {report.ollama_model_reason}")
-    for note in report.notes:
-        print(f"  {note}")
-
-    cfg_path = ROOT / "config" / "rag_runtime.json"
-    if args.apply_config:
-        if apply_ollama_model_to_config(cfg_path, report.ollama_model_recommended):
-            print(f"Обновлён {cfg_path}: ollama.model={report.ollama_model_recommended}")
-        else:
-            print("ollama.model не изменён (auto_select_ollama_model=false)")
+    apply_cfg = not args.no_apply_config
+    if apply_cfg:
+        report = ensure_runtime_config(apply=True, print_report=True)
+    else:
+        report = build_compute_report()
+        print(f"Режим Ollama: {report.ollama_compose_mode.upper()}")
+        print(f"LLM (рекомендация): {report.ollama_model_recommended} — {report.ollama_model_reason}")
+        for note in report.notes:
+            print(f"  {note}")
 
     if args.check_only:
         return

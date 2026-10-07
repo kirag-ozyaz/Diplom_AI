@@ -24,9 +24,9 @@ def _user_ns() -> dict:
     return globals()
 
 
-def _load_eval_module(scripts_dir: Path):
+def _load_eval_module(stage4_dir: Path):
     name = "eval_retrieval_hitk"
-    path = scripts_dir / "eval_retrieval_hitk.py"
+    path = stage4_dir / "eval_retrieval_hitk.py"
     if name in sys.modules:
         return importlib.reload(sys.modules[name])
     spec = importlib.util.spec_from_file_location(name, path)
@@ -39,9 +39,11 @@ def _load_eval_module(scripts_dir: Path):
 
 def run_eval(reports: Path, root: Path, *, refresh_readme: bool = True) -> dict[str, Any]:
     scripts = root / "scripts"
-    if str(scripts) not in sys.path:
-        sys.path.insert(0, str(scripts))
-    eval_mod = _load_eval_module(scripts)
+    stage4 = scripts / "stage4_eval"
+    for p in (scripts, stage4):
+        if str(p) not in sys.path:
+            sys.path.insert(0, str(p))
+    eval_mod = _load_eval_module(stage4)
     results = eval_mod.run_hitk_eval(refresh_readme=refresh_readme)
     _user_ns()[_SESSION_KEY] = results
     return results
@@ -68,7 +70,7 @@ def ensure_results(
         run_eval(reports, root, refresh_readme=refresh_readme)
     elif _SESSION_KEY not in ns and results_path.is_file():
         print(
-            "⚠️ Прогон в этой сессии не выполнялся — показ данных с диска. "
+            "Прогон в этой сессии не выполнялся — показ данных с диска. "
             "Для нового прогона: ячейка §5.2 или force_eval=True здесь."
         )
 
@@ -91,19 +93,27 @@ def render_section_53(
     from IPython.display import Markdown, display
 
     scripts = root / "scripts"
-    if str(scripts) not in sys.path:
-        sys.path.insert(0, str(scripts))
+    stage4 = scripts / "stage4_eval"
+    for p in (scripts, stage4):
+        if str(p) not in sys.path:
+            sys.path.insert(0, str(p))
 
-    results_path = results_path or (reports / "stage4_hitk_results.json")
-    chart_path = reports / "stage4_hitk_chart.png"
-    report_path = reports / "stage4_hitk_report.png"
+    from report_paths import (
+        STAGE4_HITK_CHART,
+        STAGE4_HITK_REPORT_PNG,
+        STAGE4_HITK_RESULTS,
+    )
+
+    results_path = results_path or STAGE4_HITK_RESULTS
+    chart_path = STAGE4_HITK_CHART
+    report_path = STAGE4_HITK_REPORT_PNG
 
     report_name = "stage4_hitk_report"
     if report_name in sys.modules:
         report_mod = importlib.reload(sys.modules[report_name])
     else:
         spec_r = importlib.util.spec_from_file_location(
-            report_name, scripts / "stage4_hitk_report.py"
+            report_name, stage4 / "stage4_hitk_report.py"
         )
         report_mod = importlib.util.module_from_spec(spec_r)
         sys.modules[report_name] = report_mod
@@ -128,7 +138,7 @@ def render_section_53(
     if plot_name in sys.modules:
         plot_mod = importlib.reload(sys.modules[plot_name])
     else:
-        spec = importlib.util.spec_from_file_location(plot_name, scripts / "plot_stage4_hitk.py")
+        spec = importlib.util.spec_from_file_location(plot_name, stage4 / "plot_stage4_hitk.py")
         plot_mod = importlib.util.module_from_spec(spec)
         sys.modules[plot_name] = plot_mod
         assert spec.loader is not None

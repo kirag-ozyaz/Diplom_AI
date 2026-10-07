@@ -8,8 +8,18 @@ import re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-MD_PATH = ROOT / "Этапы/Reports/Readme-4.md"
-NB_PATH = ROOT / "Этапы/Reports/Readme-4 (ver. 2).ipynb"
+import sys
+
+sys.path.insert(0, str(ROOT / "scripts"))
+from report_paths import (  # noqa: E402
+    README4_MD,
+    README4_NB,
+    STAGE4_HITK_CHART,
+    rel_from_root,
+)
+
+MD_PATH = README4_MD
+NB_PATH = README4_NB
 
 
 def md_to_source(text: str) -> list[str]:
@@ -36,14 +46,17 @@ def extract_appendices_for_notebook(md: str) -> str:
         raise SystemExit("Readme-4.md: ## Приложения not found")
     body = md[m.start() :].strip()
     body = re.split(r"\n---\n\n\*Отчёт подготовлен", body, maxsplit=1)[0].strip()
+    nb_rel = rel_from_root(README4_NB)
+    md_rel = rel_from_root(README4_MD)
     body = body.replace(
-        "- Ноутбук этап 4 (ver. 2): `Этапы/Reports/Readme-4 (ver. 2).ipynb`\n",
-        "- Исполняемый отчёт: `Этапы/Reports/Readme-4 (ver. 2).ipynb` (этот ноутбук)\n"
-        "- Текст для Word: `Этапы/Reports/Readme-4.md`\n",
+        f"- Ноутбук этап 4 (ver. 2): `{nb_rel}`\n",
+        f"- Исполняемый отчёт: `{nb_rel}` (этот ноутбук)\n"
+        f"- Текст для Word: `{md_rel}`\n",
     )
+    chart_rel = rel_from_root(STAGE4_HITK_CHART)
     return (
         body
-        + "\n\n*График для сдачи: `stage4_hitk_chart.png` или вывод ячейки раздела 5.*"
+        + f"\n\n*График для сдачи: `{chart_rel}` или вывод ячейки раздела 5.*"
     )
 
 
@@ -133,14 +146,16 @@ def main() -> None:
         if m_end:
             footer_tail = m_end.group(1).strip()
 
+    from report_paths import STAGE4_HITK_REPORT_PNG, STAGE4_HITK_RESULTS, md_link
+
     sec5_after_code = footer_tail or (
-        "Полный JSON: `Этапы/Reports/stage4_hitk_results.json`. "
-        "PNG: `stage4_hitk_chart.png`, `stage4_hitk_report.png`."
+        f"Полный JSON: {md_link(STAGE4_HITK_RESULTS)}. "
+        f"PNG: {md_link(STAGE4_HITK_CHART)}, {md_link(STAGE4_HITK_REPORT_PNG)}."
     )
 
     sec6 = sections[6]
     extra_rows = (
-        "| `scripts/demo_stage4_milvus_search.py` | Демо семантического поиска (§6 ноутбука) |\n"
+        "| `scripts/stage4_eval/demo_stage4_milvus_search.py` | Демо семантического поиска (§6 ноутбука) |\n"
         "| `scripts/test_rag_ollama.py` | Полный RAG (Milvus + Ollama) |\n"
         "| `scripts/sync_readme4_notebook.py` | Обновить текст ячеек ноутбука из `Readme-4.md` |\n"
     )

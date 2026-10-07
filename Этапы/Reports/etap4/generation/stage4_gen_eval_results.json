@@ -1,0 +1,1845 @@
+{
+  "evaluated_at": "08.10.2026 01:18",
+  "mode_requested": "live",
+  "mode_effective": "live",
+  "source": "eval_rag_generation.py",
+  "questions_path": "Этапы\\Reports\\etap4\\data\\stage4_eval_questions.json",
+  "hitk_aligned": true,
+  "blockers": [],
+  "metrics": {
+    "n_questions": 73,
+    "citation_rate": 79.5,
+    "citation_in_answer_rate": 78.1,
+    "citation_in_context_rate": 79.5,
+    "groundedness_avg": 0.92,
+    "relevance_avg": 0.801,
+    "llm_judge_avg": null
+  },
+  "details": [
+    {
+      "id": 1,
+      "query": "На какое максимальное напряжение распространяются правила устройства электроустановок?",
+      "expected_clause": "1.1.1",
+      "model": "qwen2.5:14b-instruct-q4_K_M",
+      "mode": "live",
+      "answer_preview": "Правила устройства электроустановок (ПУЭ) распространяются на электроустановки напряжением до 1 кВ и выше. Однако конкретные требования могут различаться в зависимости от напряжения и типа электроустановки. Например, для электроустановок напряжением до 1 кВ и выше 1 кВ предусмотрены различные меры защиты и заземления (пункты 1.7.1 и 1.7.2). Таким образом, максимальное напряжение, о котором упомина",
+      "n_sources": 5,
+      "scores": {
+        "citation_in_answer": false,
+        "citation_in_context": false,
+        "citation": false,
+        "groundedness": 1.0,
+        "groundedness_detail": {
+          "supported": 4,
+          "total": 4,
+          "method": "token_overlap"
+        },
+        "relevance": 0.0,
+        "relevance_reason": "no_clause_signal",
+        "retrieval_hit5": false
+      },
+      "llm_judge": null,
+      "error": null
+    },
+    {
+      "id": 2,
+      "query": "Дай определение электроустановки по ПУЭ",
+      "expected_clause": "1.1.3",
+      "model": "qwen2.5:14b-instruct-q4_K_M",
+      "mode": "live",
+      "answer_preview": "В предоставленном контексте нет прямого определения электроустановки. Однако, из пункта 1.1.1 можно сделать вывод, что ПУЭ распространяются на электроустановки постоянного и переменного тока определенного напряжения. Для точного определения электроустановки следует обратиться к соответствующему пункту ПУЭ, который не представлен в данном контексте.",
+      "n_sources": 5,
+      "scores": {
+        "citation_in_answer": false,
+        "citation_in_context": false,
+        "citation": false,
+        "groundedness": 1.0,
+        "groundedness_detail": {
+          "supported": 1,
+          "total": 1,
+          "method": "refusal_ok"
+        },
+        "relevance": 0.5,
+        "relevance_reason": "honest_refusal_miss",
+        "retrieval_hit5": false
+      },
+      "llm_judge": null,
+      "error": null
+    },
+    {
+      "id": 3,
+      "query": "Чем отличаются открытые и закрытые электроустановки?",
+      "expected_clause": "1.1.4",
+      "model": "qwen2.5:14b-instruct-q4_K_M",
+      "mode": "live",
+      "answer_preview": "Открытые или наружные электроустановки не защищены зданием от атмосферных воздействий. Электроустановки, защищенные только навесами, сетчатыми ограждениями и т.п., рассматриваются как наружные (ПУЭ, пункт 1.1.4).\n\nЗакрытые или внутренние электроустановки размещаются внутри здания, защищающего их от атмосферных воздействий (ПУЭ, пункт 1.1.4).",
+      "n_sources": 5,
+      "scores": {
+        "citation_in_answer": true,
+        "citation_in_context": true,
+        "citation": true,
+        "groundedness": 1.0,
+        "groundedness_detail": {
+          "supported": 3,
+          "total": 3,
+          "method": "token_overlap"
+        },
+        "relevance": 1.0,
+        "relevance_reason": "clause_in_answer",
+        "retrieval_hit5": true
+      },
+      "llm_judge": null,
+      "error": null
+    },
+    {
+      "id": 4,
+      "query": "Учитывает ли ПУЭ планово-предупредительные испытания и ремонты при эксплуатации?",
+      "expected_clause": "1.1.2",
+      "model": "qwen2.5:14b-instruct-q4_K_M",
+      "mode": "live",
+      "answer_preview": "Да, ПУЭ учитывает проведение планово-предупредительных и профилактических испытаний, ремонтов электроустановок и их электрооборудования при эксплуатации. Это указано в пункте 1.1.2 ПУЭ.",
+      "n_sources": 5,
+      "scores": {
+        "citation_in_answer": true,
+        "citation_in_context": true,
+        "citation": true,
+        "groundedness": 1.0,
+        "groundedness_detail": {
+          "supported": 2,
+          "total": 2,
+          "method": "token_overlap"
+        },
+        "relevance": 1.0,
+        "relevance_reason": "clause_in_answer",
+        "retrieval_hit5": true
+      },
+      "llm_judge": null,
+      "error": null
+    },
+    {
+      "id": 5,
+      "query": "Определение сырых помещений по относительной влажности",
+      "expected_clause": "1.1.8",
+      "model": "qwen2.5:14b-instruct-q4_K_M",
+      "mode": "live",
+      "answer_preview": "Сырые помещения - это помещения, в которых относительная влажность воздуха превышает 75%. Это указано в пункте 1.1.8 Правил устройства электроустановок (ПУЭ).",
+      "n_sources": 5,
+      "scores": {
+        "citation_in_answer": true,
+        "citation_in_context": true,
+        "citation": true,
+        "groundedness": 0.5,
+        "groundedness_detail": {
+          "supported": 1,
+          "total": 2,
+          "method": "token_overlap"
+        },
+        "relevance": 1.0,
+        "relevance_reason": "clause_in_answer",
+        "retrieval_hit5": true
+      },
+      "llm_judge": null,
+      "error": null
+    },
+    {
+      "id": 6,
+      "query": "Кто такой квалифицированный обслуживающий персонал электроустановок?",
+      "expected_clause": "1.1.14",
+      "model": "qwen2.5:14b-instruct-q4_K_M",
+      "mode": "live",
+      "answer_preview": "Квалифицированный обслуживающий персонал электроустановок — это специально подготовленные работники, прошедшие проверку знаний в объеме, обязательном для данной работы (должности), и имеющие группу по электробезопасности, предусмотренную действующими правилами охраны труда при эксплуатации электроустановок (ПУЭ, пункт 1.1.14).",
+      "n_sources": 5,
+      "scores": {
+        "citation_in_answer": true,
+        "citation_in_context": true,
+        "citation": true,
+        "groundedness": 1.0,
+        "groundedness_detail": {
+          "supported": 1,
+          "total": 1,
+          "method": "token_overlap"
+        },
+        "relevance": 1.0,
+        "relevance_reason": "clause_in_answer",
+        "retrieval_hit5": true
+      },
+      "llm_judge": null,
+      "error": null
+    },
+    {
+      "id": 7,
+      "query": "Определение заземления и зануления",
+      "expected_clause": "1.7.1",
+      "model": "qwen2.5:14b-instruct-q4_K_M",
+      "mode": "live",
+      "answer_preview": "В предоставленном контексте нет прямого определения понятий \"заземление\" и \"зануление\". Однако, из пунктов ПУЭ можно сделать выводы о том, как эти понятия применяются в различных условиях. Например:\n\n- Пункт 7.3.134 требует зануления (заземления) электрооборудования в взрывоопасных зонах, что подразумевает применение нулевых защитных (заземляющих) проводников.\n- Пункт 7.3.138 указывает на использо",
+      "n_sources": 5,
+      "scores": {
+        "citation_in_answer": false,
+        "citation_in_context": false,
+        "citation": false,
+        "groundedness": 1.0,
+        "groundedness_detail": {
+          "supported": 1,
+          "total": 1,
+          "method": "refusal_ok"
+        },
+        "relevance": 0.5,
+        "relevance_reason": "honest_refusal_miss",
+        "retrieval_hit5": false
+      },
+      "llm_judge": null,
+      "error": null
+    },
+    {
+      "id": 8,
+      "query": "Что такое система TN в электроустановках?",
+      "expected_clause": "1.7.2",
+      "model": "qwen2.5:14b-instruct-q4_K_M",
+      "mode": "live",
+      "answer_preview": "Система $TN$ в электроустановках — это система, в которой нейтраль источника питания заземлена, а нулевой защитный проводник ($PE$) обеспечивает связь между заземленной нейтралью и заземляющими устройствами электроустановки. В электроустановках напряжением до 1 кВ жилых, общественных и промышленных зданий и наружных установок, как правило, применяется питание от источника с глухозаземленной нейтра",
+      "n_sources": 5,
+      "scores": {
+        "citation_in_answer": false,
+        "citation_in_context": false,
+        "citation": false,
+        "groundedness": 1.0,
+        "groundedness_detail": {
+          "supported": 3,
+          "total": 3,
+          "method": "token_overlap"
+        },
+        "relevance": 0.0,
+        "relevance_reason": "no_clause_signal",
+        "retrieval_hit5": false
+      },
+      "llm_judge": null,
+      "error": null
+    },
+    {
+      "id": 9,
+      "query": "Система IT — определение",
+      "expected_clause": "1.7.3",
+      "model": "qwen2.5:14b-instruct-q4_K_M",
+      "mode": "live",
+      "answer_preview": "Система $IT$ — это система, связанная через трансформатор с сетью напряжением выше 1 кВ, которая должна быть защищена пробивным предохранителем от опасности, возникающей при повреждении изоляции между обмотками высшего и низшего напряжений трансформатора. Пробивной предохранитель должен быть установлен в нейтрали или фазе на стороне низкого напряжения каждого трансформатора. (Пункт 1.7.63 ПУЭ)",
+      "n_sources": 5,
+      "scores": {
+        "citation_in_answer": false,
+        "citation_in_context": false,
+        "citation": false,
+        "groundedness": 1.0,
+        "groundedness_detail": {
+          "supported": 3,
+          "total": 3,
+          "method": "token_overlap"
+        },
+        "relevance": 0.0,
+        "relevance_reason": "no_clause_signal",
+        "retrieval_hit5": false
+      },
+      "llm_judge": null,
+      "error": null
+    },
+    {
+      "id": 10,
+      "query": "Нулевой защитный проводник и нулевой рабочий проводник",
+      "expected_clause": "1.7.103",
+      "model": "qwen2.5:14b-instruct-q4_K_M",
+      "mode": "live",
+      "answer_preview": "Нулевой защитный проводник и нулевой рабочий проводник могут совмещать функции в одном проводнике ($PEN$-проводник) в многофазных цепях системы $TN$, если соблюдены условия, указанные в пункте 1.7.131 ПУЭ. Однако, согласно пункту 1.7.132 ПУЭ, в цепях однофазного и постоянного тока функции нулевого защитного и нулевого рабочего проводников не должны совмещаться.",
+      "n_sources": 5,
+      "scores": {
+        "citation_in_answer": false,
+        "citation_in_context": false,
+        "citation": false,
+        "groundedness": 1.0,
+        "groundedness_detail": {
+          "supported": 2,
+          "total": 2,
+          "method": "token_overlap"
+        },
+        "relevance": 0.0,
+        "relevance_reason": "no_clause_signal",
+        "retrieval_hit5": false
+      },
+      "llm_judge": null,
+      "error": null
+    },
+    {
+      "id": 11,
+      "query": "Защитное отключение",
+      "expected_clause": "1.7.83",
+      "model": "qwen2.5:14b-instruct-q4_K_M",
+      "mode": "live",
+      "answer_preview": "Защитное отключение, согласно ПУЭ, определяется как автоматическое размыкание цепи одного или нескольких фазных проводников (и, если требуется, нулевого рабочего проводника), выполняемое в целях электробезопасности (пункт 1.7.38).",
+      "n_sources": 5,
+      "scores": {
+        "citation_in_answer": false,
+        "citation_in_context": false,
+        "citation": false,
+        "groundedness": 1.0,
+        "groundedness_detail": {
+          "supported": 1,
+          "total": 1,
+          "method": "token_overlap"
+        },
+        "relevance": 0.0,
+        "relevance_reason": "no_clause_signal",
+        "retrieval_hit5": false
+      },
+      "llm_judge": null,
+      "error": null
+    },
+    {
+      "id": 12,
+      "query": "Что означает глухозаземленная нейтраль?",
+      "expected_clause": "1.7.5",
+      "model": "qwen2.5:14b-instruct-q4_K_M",
+      "mode": "live",
+      "answer_preview": "Глухозаземленная нейтраль - это нейтраль трансформатора или генератора, присоединенная непосредственно к заземляющему устройству. Глухозаземленным может быть также вывод источника однофазного переменного тока или полюс источника постоянного тока в двухпроводных сетях, а также средняя точка в трехпроводных сетях постоянного тока. (ПУЭ, пункт 1.7.5)",
+      "n_sources": 5,
+      "scores": {
+        "citation_in_answer": true,
+        "citation_in_context": true,
+        "citation": true,
+        "groundedness": 1.0,
+        "groundedness_detail": {
+          "supported": 3,
+          "total": 3,
+          "method": "token_overlap"
+        },
+        "relevance": 1.0,
+        "relevance_reason": "clause_in_answer",
+        "retrieval_hit5": true
+      },
+      "llm_judge": null,
+      "error": null
+    },
+    {
+      "id": 13,
+      "query": "Какие испытания должно пройти новое электрооборудование до 500 кВ?",
+      "expected_clause": "1.8.1",
+      "model": "qwen2.5:14b-instruct-q4_K_M",
+      "mode": "live",
+      "answer_preview": "Новоустанавливаемое электрооборудование до 500 кВ должно пройти приемо-сдаточные испытания в соответствии с требованиями ПУЭ. Эти испытания рекомендуется проводить в нормальных условиях окружающей среды, указанных в государственных стандартах. В случае если оборудование не охвачено нормами ПУЭ, следует руководствоваться инструкциями заводов-изготовителей. (Пункт 1.8.1)",
+      "n_sources": 5,
+      "scores": {
+        "citation_in_answer": true,
+        "citation_in_context": true,
+        "citation": true,
+        "groundedness": 1.0,
+        "groundedness_detail": {
+          "supported": 3,
+          "total": 3,
+          "method": "token_overlap"
+        },
+        "relevance": 1.0,
+        "relevance_reason": "clause_in_answer",
+        "retrieval_hit5": true
+      },
+      "llm_judge": null,
+      "error": null
+    },
+    {
+      "id": 14,
+      "query": "Дай определение электропроводки",
+      "expected_clause": "2.1.2",
+      "model": "qwen2.5:14b-instruct-q4_K_M",
+      "mode": "live",
+      "answer_preview": "Электропроводкой согласно ПУЭ (пункт 2.1.2) называется совокупность проводов и кабелей с относящимися к ним креплениями, поддерживающими защитными конструкциями и деталями, установленными в соответствии с настоящими Правилами.",
+      "n_sources": 5,
+      "scores": {
+        "citation_in_answer": true,
+        "citation_in_context": true,
+        "citation": true,
+        "groundedness": 1.0,
+        "groundedness_detail": {
+          "supported": 1,
+          "total": 1,
+          "method": "token_overlap"
+        },
+        "relevance": 1.0,
+        "relevance_reason": "clause_in_answer",
+        "retrieval_hit5": true
+      },
+      "llm_judge": null,
+      "error": null
+    },
+    {
+      "id": 15,
+      "query": "Что такое лоток в электропроводке?",
+      "expected_clause": "2.1.11",
+      "model": "qwen2.5:14b-instruct-q4_K_M",
+      "mode": "live",
+      "answer_preview": "Лоток в электропроводке — это открытая конструкция, предназначенная для прокладки на ней проводов и кабелей (пункт 2.1.11). Лоток не обеспечивает защиту от внешних механических повреждений проложенных на нем проводов и кабелей.",
+      "n_sources": 5,
+      "scores": {
+        "citation_in_answer": true,
+        "citation_in_context": true,
+        "citation": true,
+        "groundedness": 1.0,
+        "groundedness_detail": {
+          "supported": 2,
+          "total": 2,
+          "method": "token_overlap"
+        },
+        "relevance": 1.0,
+        "relevance_reason": "clause_in_answer",
+        "retrieval_hit5": true
+      },
+      "llm_judge": null,
+      "error": null
+    },
+    {
+      "id": 16,
+      "query": "На какие кабельные линии распространяется глава 2.3 ПУЭ?",
+      "expected_clause": "2.3.1",
+      "model": "qwen2.5:14b-instruct-q4_K_M",
+      "mode": "live",
+      "answer_preview": "Глава 2.3 ПУЭ распространяется на кабельные силовые линии до 220 кВ, а также линии, выполняемые контрольными кабелями (пункт 2.3.1).",
+      "n_sources": 5,
+      "scores": {
+        "citation_in_answer": true,
+        "citation_in_context": true,
+        "citation": true,
+        "groundedness": 1.0,
+        "groundedness_detail": {
+          "supported": 1,
+          "total": 1,
+          "method": "token_overlap"
+        },
+        "relevance": 1.0,
+        "relevance_reason": "clause_in_answer",
+        "retrieval_hit5": true
+      },
+      "llm_judge": null,
+      "error": null
+    },
+    {
+      "id": 17,
+      "query": "Что называется аппаратом защиты в главах про защиту сетей?",
+      "expected_clause": "3.1.2",
+      "model": "qwen2.5:14b-instruct-q4_K_M",
+      "mode": "live",
+      "answer_preview": "Аппаратом защиты называется аппарат, автоматически отключающий защищаемую электрическую цепь при ненормальных режимах (пункт 3.1.2). В качестве таких аппаратов защиты должны применяться автоматические выключатели или предохранители, а при необходимости для обеспечения требований быстродействия, чувствительности или селективности допускается применение устройств защиты с использованием выносных рел",
+      "n_sources": 5,
+      "scores": {
+        "citation_in_answer": true,
+        "citation_in_context": true,
+        "citation": true,
+        "groundedness": 1.0,
+        "groundedness_detail": {
+          "supported": 2,
+          "total": 2,
+          "method": "token_overlap"
+        },
+        "relevance": 1.0,
+        "relevance_reason": "clause_in_answer",
+        "retrieval_hit5": true
+      },
+      "llm_judge": null,
+      "error": null
+    },
+    {
+      "id": 18,
+      "query": "Селективность защиты и защита от токов короткого замыкания в сетях",
+      "expected_clause": "3.1.8",
+      "model": "qwen2.5:14b-instruct-q4_K_M",
+      "mode": "live",
+      "answer_preview": "Селективность защиты и защита от токов короткого замыкания в сетях регламентируется следующими пунктами Правил устройства электроустановок (ПУЭ):\n\n1. **Пункт 3.1.8** устанавливает, что электрические сети должны иметь защиту от токов короткого замыкания, обеспечивающую наименьшее время отключения и требования селективности. Защита должна обеспечивать отключение поврежденного участка при КЗ в конце ",
+      "n_sources": 5,
+      "scores": {
+        "citation_in_answer": true,
+        "citation_in_context": true,
+        "citation": true,
+        "groundedness": 1.0,
+        "groundedness_detail": {
+          "supported": 8,
+          "total": 8,
+          "method": "token_overlap"
+        },
+        "relevance": 1.0,
+        "relevance_reason": "clause_in_answer",
+        "retrieval_hit5": true
+      },
+      "llm_judge": null,
+      "error": null
+    },
+    {
+      "id": 19,
+      "query": "Какие сети внутри помещений должны быть защищены от перегрузки?",
+      "expected_clause": "3.1.10",
+      "model": "qwen2.5:14b-instruct-q4_K_M",
+      "mode": "live",
+      "answer_preview": "Согласно пункту 3.1.10 Правил устройства электроустановок (ПУЭ), сети внутри помещений, которые должны быть защищены от перегрузки, включают:\n\n1. Сети внутри помещений, выполненные открыто проложенными проводниками с горючей наружной оболочкой или изоляцией.\n2. Осветительные сети в жилых и общественных зданиях, в торговых помещениях, служебно-бытовых помещениях промышленных предприятий, а также в ",
+      "n_sources": 5,
+      "scores": {
+        "citation_in_answer": true,
+        "citation_in_context": true,
+        "citation": true,
+        "groundedness": 1.0,
+        "groundedness_detail": {
+          "supported": 6,
+          "total": 6,
+          "method": "token_overlap"
+        },
+        "relevance": 1.0,
+        "relevance_reason": "clause_in_answer",
+        "retrieval_hit5": true
+      },
+      "llm_judge": null,
+      "error": null
+    },
+    {
+      "id": 20,
+      "query": "На какие установки распространяется глава 3.2 о релейной защите?",
+      "expected_clause": "3.2.1",
+      "model": "qwen2.5:14b-instruct-q4_K_M",
+      "mode": "live",
+      "answer_preview": "Глава 3.2 Правил устройства электроустановок (ПУЭ) распространяется на устройства релейной защиты элементов электрической части энергосистем, промышленных и других электроустановок выше 1 кВ. В частности, указаны генераторы, трансформаторы (автотрансформаторы), блоки генератор - трансформатор, линии электропередачи, шины и синхронные компенсаторы (пункт 3.2.1).",
+      "n_sources": 5,
+      "scores": {
+        "citation_in_answer": true,
+        "citation_in_context": true,
+        "citation": true,
+        "groundedness": 1.0,
+        "groundedness_detail": {
+          "supported": 2,
+          "total": 2,
+          "method": "token_overlap"
+        },
+        "relevance": 1.0,
+        "relevance_reason": "clause_in_answer",
+        "retrieval_hit5": true
+      },
+      "llm_judge": null,
+      "error": null
+    },
+    {
+      "id": 21,
+      "query": "На что распространяется глава 4.1 про распределительные устройства и НКУ?",
+      "expected_clause": "4.1.1",
+      "model": "qwen2.5:14b-instruct-q4_K_M",
+      "mode": "live",
+      "answer_preview": "Глава 4.1 Правил устройства электроустановок (ПУЭ) распространяется на распределительные устройства (РУ) и низковольтные комплектные устройства (НКУ) до 1 кВ переменного тока и до 1,5 кВ постоянного тока, устанавливаемые в помещениях и на открытом воздухе и выполняемые в виде щитов распределительных, управления, релейных, пультов, шкафов, шинных выводов, сборок. Дополнительные требования к РУ спец",
+      "n_sources": 5,
+      "scores": {
+        "citation_in_answer": true,
+        "citation_in_context": true,
+        "citation": true,
+        "groundedness": 1.0,
+        "groundedness_detail": {
+          "supported": 2,
+          "total": 2,
+          "method": "token_overlap"
+        },
+        "relevance": 1.0,
+        "relevance_reason": "clause_in_answer",
+        "retrieval_hit5": true
+      },
+      "llm_judge": null,
+      "error": null
+    },
+    {
+      "id": 22,
+      "query": "На какие электромашинные помещения распространяется глава 5.1?",
+      "expected_clause": "5.1.1",
+      "model": "qwen2.5:14b-instruct-q4_K_M",
+      "mode": "live",
+      "answer_preview": "Глава 5.1 Правил устройства электроустановок (ПУЭ) распространяется на электромашинные помещения, которые должны соответствовать определенным требованиям, включая классификацию по СНиП Госстроя России (пункт 5.1.4) и оборудование телефонной связью и пожарной сигнализацией (пункт 5.1.5). Если мощность наибольшей установленной машины или преобразователя менее 500 кВт, выполнение некоторых требований",
+      "n_sources": 5,
+      "scores": {
+        "citation_in_answer": true,
+        "citation_in_context": true,
+        "citation": true,
+        "groundedness": 1.0,
+        "groundedness_detail": {
+          "supported": 2,
+          "total": 2,
+          "method": "token_overlap"
+        },
+        "relevance": 1.0,
+        "relevance_reason": "clause_in_answer",
+        "retrieval_hit5": true
+      },
+      "llm_judge": null,
+      "error": null
+    },
+    {
+      "id": 23,
+      "query": "На какие установки электрического освещения распространяется глава 6.1?",
+      "expected_clause": "6.1.1",
+      "model": "qwen2.5:14b-instruct-q4_K_M",
+      "mode": "live",
+      "answer_preview": "Глава 6.1 Правил устройства электроустановок (ПУЭ) распространяется на установки электрического освещения зданий, помещений, наружного освещения городов, поселков и сельских населенных пунктов, территорий предприятий и учреждений, а также на установки оздоровительного ультрафиолетового облучения длительного действия, световые рекламы, световые знаки и иллюминационные установки (пункт 6.1.1).",
+      "n_sources": 5,
+      "scores": {
+        "citation_in_answer": true,
+        "citation_in_context": true,
+        "citation": true,
+        "groundedness": 1.0,
+        "groundedness_detail": {
+          "supported": 1,
+          "total": 1,
+          "method": "token_overlap"
+        },
+        "relevance": 1.0,
+        "relevance_reason": "clause_in_answer",
+        "retrieval_hit5": true
+      },
+      "llm_judge": null,
+      "error": null
+    },
+    {
+      "id": 24,
+      "query": "На электроустановки каких зданий распространяется глава 7.1?",
+      "expected_clause": "7.1.1",
+      "model": "qwen2.5:14b-instruct-q4_K_M",
+      "mode": "live",
+      "answer_preview": "На электроустановки следующих типов зданий распространяется глава 7.1:\n\n- Жилые здания, перечисленные в СНиП 2.08.01-89 \"Жилые здания\".\n- Общественные здания, перечисленные в СНиП 2.08.02-89 \"Общественные здания и сооружения\", за исключением зданий и помещений, перечисленных в гл. 7.2.\n- Административные и бытовые здания, перечисленные в СНиП 2.09.04-87 \"Административные и бытовые здания\".\n- Уника",
+      "n_sources": 5,
+      "scores": {
+        "citation_in_answer": true,
+        "citation_in_context": true,
+        "citation": true,
+        "groundedness": 1.0,
+        "groundedness_detail": {
+          "supported": 7,
+          "total": 7,
+          "method": "token_overlap"
+        },
+        "relevance": 1.0,
+        "relevance_reason": "clause_in_answer",
+        "retrieval_hit5": true
+      },
+      "llm_judge": null,
+      "error": null
+    },
+    {
+      "id": 25,
+      "query": "На какие электроустановки распространяется глава 7.3 о взрывоопасных зонах?",
+      "expected_clause": "7.3.1",
+      "model": "qwen2.5:14b-instruct-q4_K_M",
+      "mode": "live",
+      "answer_preview": "Глава 7.3 Правил устройства электроустановок (ПУЭ) распространяется на электроустановки, размещаемые во взрывоопасных зонах внутри и вне помещений. Это указано в пункте 7.3.1 ПУЭ.",
+      "n_sources": 5,
+      "scores": {
+        "citation_in_answer": true,
+        "citation_in_context": true,
+        "citation": true,
+        "groundedness": 0.5,
+        "groundedness_detail": {
+          "supported": 1,
+          "total": 2,
+          "method": "token_overlap"
+        },
+        "relevance": 1.0,
+        "relevance_reason": "clause_in_answer",
+        "retrieval_hit5": true
+      },
+      "llm_judge": null,
+      "error": null
+    },
+    {
+      "id": 26,
+      "query": "Что такое электропомещения по ПУЭ?",
+      "expected_clause": "1.1.5",
+      "model": "qwen2.5:14b-instruct-q4_K_M",
+      "mode": "live",
+      "answer_preview": "По ПУЭ, электропомещения - это помещения или отгороженные (например, сетками) части помещения, в которых расположено электрооборудование, доступное только для квалифицированного обслуживающего персонала. Это определено в пункте 1.1.5 ПУЭ.",
+      "n_sources": 5,
+      "scores": {
+        "citation_in_answer": true,
+        "citation_in_context": true,
+        "citation": true,
+        "groundedness": 0.5,
+        "groundedness_detail": {
+          "supported": 1,
+          "total": 2,
+          "method": "token_overlap"
+        },
+        "relevance": 1.0,
+        "relevance_reason": "clause_in_answer",
+        "retrieval_hit5": true
+      },
+      "llm_judge": null,
+      "error": null
+    },
+    {
+      "id": 27,
+      "query": "Какие помещения считаются сухими по относительной влажности?",
+      "expected_clause": "1.1.6",
+      "model": "qwen2.5:14b-instruct-q4_K_M",
+      "mode": "live",
+      "answer_preview": "Согласно пункту 1.1.6 Правил устройства электроустановок (ПУЭ), сухие помещения - это помещения, в которых относительная влажность воздуха не превышает 60%.",
+      "n_sources": 5,
+      "scores": {
+        "citation_in_answer": true,
+        "citation_in_context": true,
+        "citation": true,
+        "groundedness": 1.0,
+        "groundedness_detail": {
+          "supported": 1,
+          "total": 1,
+          "method": "token_overlap"
+        },
+        "relevance": 1.0,
+        "relevance_reason": "clause_in_answer",
+        "retrieval_hit5": true
+      },
+      "llm_judge": null,
+      "error": null
+    },
+    {
+      "id": 28,
+      "query": "Определение влажных помещений по ПУЭ",
+      "expected_clause": "1.1.7",
+      "model": "qwen2.5:14b-instruct-q4_K_M",
+      "mode": "live",
+      "answer_preview": "Влажные помещения - это помещения, в которых относительная влажность воздуха более 60%, но не превышает 75% (пункт 1.1.7 ПУЭ).",
+      "n_sources": 5,
+      "scores": {
+        "citation_in_answer": true,
+        "citation_in_context": true,
+        "citation": true,
+        "groundedness": 1.0,
+        "groundedness_detail": {
+          "supported": 1,
+          "total": 1,
+          "method": "token_overlap"
+        },
+        "relevance": 1.0,
+        "relevance_reason": "clause_in_answer",
+        "retrieval_hit5": true
+      },
+      "llm_judge": null,
+      "error": null
+    },
+    {
+      "id": 29,
+      "query": "Что такое особо сырые помещения?",
+      "expected_clause": "1.1.9",
+      "model": "qwen2.5:14b-instruct-q4_K_M",
+      "mode": "live",
+      "answer_preview": "Особо сырые помещения - это помещения, в которых относительная влажность воздуха близка к 100% (потолок, стены, пол и предметы, находящиеся в помещении, покрыты влагой). Это определение содержится в пункте 1.1.9 Правил устройства электроустановок.",
+      "n_sources": 5,
+      "scores": {
+        "citation_in_answer": true,
+        "citation_in_context": true,
+        "citation": true,
+        "groundedness": 0.5,
+        "groundedness_detail": {
+          "supported": 1,
+          "total": 2,
+          "method": "token_overlap"
+        },
+        "relevance": 1.0,
+        "relevance_reason": "clause_in_answer",
+        "retrieval_hit5": true
+      },
+      "llm_judge": null,
+      "error": null
+    },
+    {
+      "id": 30,
+      "query": "Система TT — определение",
+      "expected_clause": "1.7.4",
+      "model": "qwen2.5:14b-instruct-q4_K_M",
+      "mode": "live",
+      "answer_preview": "В предоставленном контексте нет определения системы TT. Пункты ПУЭ, приведённые здесь, описывают другие системы заземления, такие как TN и TN-S, но не включают в себя описание системы TT.",
+      "n_sources": 5,
+      "scores": {
+        "citation_in_answer": false,
+        "citation_in_context": true,
+        "citation": true,
+        "groundedness": 1.0,
+        "groundedness_detail": {
+          "supported": 1,
+          "total": 1,
+          "method": "refusal_ok"
+        },
+        "relevance": 0.0,
+        "relevance_reason": "no_clause_signal",
+        "retrieval_hit5": true
+      },
+      "llm_judge": null,
+      "error": null
+    },
+    {
+      "id": 31,
+      "query": "Заземляющее устройство электроустановки",
+      "expected_clause": "1.7.55",
+      "model": "qwen2.5:14b-instruct-q4_K_M",
+      "mode": "live",
+      "answer_preview": "Заземляющее устройство электроустановки включает в себя заземлитель и заземляющие проводники (пункт 1.7.19). В контексте ПУЭ заземляющее устройство используется для обеспечения электробезопасности, соединяя заземлитель с различными проводящими частями электроустановки (пункт 1.7.28). Для подстанций напряжением 6-10/0,4 кВ должно быть выполнено одно общее заземляющее устройство, к которому присоеди",
+      "n_sources": 5,
+      "scores": {
+        "citation_in_answer": false,
+        "citation_in_context": false,
+        "citation": false,
+        "groundedness": 1.0,
+        "groundedness_detail": {
+          "supported": 3,
+          "total": 3,
+          "method": "token_overlap"
+        },
+        "relevance": 0.0,
+        "relevance_reason": "no_clause_signal",
+        "retrieval_hit5": false
+      },
+      "llm_judge": null,
+      "error": null
+    },
+    {
+      "id": 32,
+      "query": "Определение токоведущей части электроустановки",
+      "expected_clause": "1.7.8",
+      "model": "qwen2.5:14b-instruct-q4_K_M",
+      "mode": "live",
+      "answer_preview": "Токоведущая часть электроустановки - это проводящая часть, находящаяся в процессе работы под рабочим напряжением, включая нулевой рабочий проводник, но не включая $PEN$-проводник. Это определение дано в пункте 1.7.8 Правил устройства электроустановок.",
+      "n_sources": 5,
+      "scores": {
+        "citation_in_answer": true,
+        "citation_in_context": true,
+        "citation": true,
+        "groundedness": 0.5,
+        "groundedness_detail": {
+          "supported": 1,
+          "total": 2,
+          "method": "token_overlap"
+        },
+        "relevance": 1.0,
+        "relevance_reason": "clause_in_answer",
+        "retrieval_hit5": true
+      },
+      "llm_judge": null,
+      "error": null
+    },
+    {
+      "id": 33,
+      "query": "Определение открытой проводящей части",
+      "expected_clause": "1.7.9",
+      "model": "qwen2.5:14b-instruct-q4_K_M",
+      "mode": "live",
+      "answer_preview": "Определение открытой проводящей части приведено в пункте 1.7.9 ПУЭ:\n\n\"Открытая проводящая часть - доступная прикосновению проводящая часть электроустановки, нормально не находящаяся под напряжением, но которая может оказаться под напряжением при повреждении основной изоляции.\"",
+      "n_sources": 5,
+      "scores": {
+        "citation_in_answer": true,
+        "citation_in_context": true,
+        "citation": true,
+        "groundedness": 0.5,
+        "groundedness_detail": {
+          "supported": 1,
+          "total": 2,
+          "method": "token_overlap"
+        },
+        "relevance": 1.0,
+        "relevance_reason": "clause_in_answer",
+        "retrieval_hit5": true
+      },
+      "llm_judge": null,
+      "error": null
+    },
+    {
+      "id": 34,
+      "query": "Что такое сторонняя проводящая часть по ПУЭ?",
+      "expected_clause": "1.7.10",
+      "model": "qwen2.5:14b-instruct-q4_K_M",
+      "mode": "live",
+      "answer_preview": "Сторонняя проводящая часть по ПУЭ — это проводящая часть, не являющаяся частью электроустановки (пункт 1.7.10).",
+      "n_sources": 5,
+      "scores": {
+        "citation_in_answer": true,
+        "citation_in_context": true,
+        "citation": true,
+        "groundedness": 1.0,
+        "groundedness_detail": {
+          "supported": 1,
+          "total": 1,
+          "method": "token_overlap"
+        },
+        "relevance": 1.0,
+        "relevance_reason": "clause_in_answer",
+        "retrieval_hit5": true
+      },
+      "llm_judge": null,
+      "error": null
+    },
+    {
+      "id": 35,
+      "query": "Основная система уравнивания потенциалов",
+      "expected_clause": "1.7.76",
+      "model": "qwen2.5:14b-instruct-q4_K_M",
+      "mode": "live",
+      "answer_preview": "Основная система уравнивания потенциалов включает в себя использование проводников, сечение которых должно соответствовать требованиям пункта 1.7.137 ПУЭ. В частности, сечение таких проводников должно быть не менее половины наибольшего сечения защитного проводника электроустановки, при условии, что оно не превышает 25 мм² по меди или равноценное из других материалов. В любом случае минимальные зна",
+      "n_sources": 5,
+      "scores": {
+        "citation_in_answer": false,
+        "citation_in_context": false,
+        "citation": false,
+        "groundedness": 1.0,
+        "groundedness_detail": {
+          "supported": 3,
+          "total": 3,
+          "method": "token_overlap"
+        },
+        "relevance": 0.0,
+        "relevance_reason": "no_clause_signal",
+        "retrieval_hit5": false
+      },
+      "llm_judge": null,
+      "error": null
+    },
+    {
+      "id": 36,
+      "query": "Дополнительная система уравнивания потенциалов",
+      "expected_clause": "1.7.77",
+      "model": "qwen2.5:14b-instruct-q4_K_M",
+      "mode": "live",
+      "answer_preview": "Дополнительная система уравнивания потенциалов должна соединять между собой все одновременно доступные прикосновению открытые проводящие части стационарного электрооборудования и сторонние проводящие части, включая металлические части строительных конструкций здания, а также нулевые защитные проводники в системе $TN$ и защитные заземляющие проводники в системах $IT$ и $TT$, включая защитные провод",
+      "n_sources": 5,
+      "scores": {
+        "citation_in_answer": false,
+        "citation_in_context": false,
+        "citation": false,
+        "groundedness": 1.0,
+        "groundedness_detail": {
+          "supported": 4,
+          "total": 4,
+          "method": "token_overlap"
+        },
+        "relevance": 0.0,
+        "relevance_reason": "no_clause_signal",
+        "retrieval_hit5": false
+      },
+      "llm_judge": null,
+      "error": null
+    },
+    {
+      "id": 37,
+      "query": "Защита от поражения электрическим током в электроустановках",
+      "expected_clause": "1.7.80",
+      "model": "qwen2.5:14b-instruct-q4_K_M",
+      "mode": "live",
+      "answer_preview": "Защита от поражения электрическим током в электроустановках должна включать меры защиты как в нормальном режиме, так и в случае повреждения изоляции. В нормальном режиме применяются меры защиты от прямого прикосновения, такие как основная изоляция токоведущих частей, ограждения и оболочки, установка барьеров, размещение вне зоны досягаемости и применение сверхнизкого (малого) напряжения (пункт 1.7",
+      "n_sources": 5,
+      "scores": {
+        "citation_in_answer": false,
+        "citation_in_context": false,
+        "citation": false,
+        "groundedness": 1.0,
+        "groundedness_detail": {
+          "supported": 5,
+          "total": 5,
+          "method": "token_overlap"
+        },
+        "relevance": 0.0,
+        "relevance_reason": "no_clause_signal",
+        "retrieval_hit5": false
+      },
+      "llm_judge": null,
+      "error": null
+    },
+    {
+      "id": 38,
+      "query": "Безопасное напряжение по ПУЭ",
+      "expected_clause": "1.7.82",
+      "model": "qwen2.5:14b-instruct-q4_K_M",
+      "mode": "live",
+      "answer_preview": "По ПУЭ защиту при косвенном прикосновении следует выполнять во всех случаях, если напряжение в электроустановке превышает 50 В переменного и 120 В постоянного тока (пункт 1.7.53). В помещениях с повышенной опасностью, особо опасных и в наружных установках выполнение защиты при косвенном прикосновении может потребоваться при более низких напряжениях, например, 25 В переменного и 60 В постоянного то",
+      "n_sources": 5,
+      "scores": {
+        "citation_in_answer": false,
+        "citation_in_context": false,
+        "citation": false,
+        "groundedness": 1.0,
+        "groundedness_detail": {
+          "supported": 2,
+          "total": 2,
+          "method": "token_overlap"
+        },
+        "relevance": 0.0,
+        "relevance_reason": "no_clause_signal",
+        "retrieval_hit5": false
+      },
+      "llm_judge": null,
+      "error": null
+    },
+    {
+      "id": 39,
+      "query": "Какое устройство называется приемником электрической энергии (электроприемником), согласно Правилам устройства электроустановок?",
+      "expected_clause": "1.2.7",
+      "model": "qwen2.5:14b-instruct-q4_K_M",
+      "mode": "live",
+      "answer_preview": "Приемник электрической энергии (электроприемник) - это аппарат, агрегат и др., предназначенный для преобразования электрической энергии в другой вид энергии, согласно пункту 1.2.7 ПУЭ.",
+      "n_sources": 5,
+      "scores": {
+        "citation_in_answer": true,
+        "citation_in_context": true,
+        "citation": true,
+        "groundedness": 1.0,
+        "groundedness_detail": {
+          "supported": 1,
+          "total": 1,
+          "method": "token_overlap"
+        },
+        "relevance": 1.0,
+        "relevance_reason": "clause_in_answer",
+        "retrieval_hit5": true
+      },
+      "llm_judge": null,
+      "error": null
+    },
+    {
+      "id": 40,
+      "query": "Какое сечение должен иметь заземляющий проводник, присоединяющий заземлитель рабочего (функционального) заземления к главной заземляющей шине в электроустановках напряжением до 1 кВ, изготовленный из алюминия, согласно Правилам устройства электроустановок?",
+      "expected_clause": "1.7.117",
+      "model": "qwen2.5:14b-instruct-q4_K_M",
+      "mode": "live",
+      "answer_preview": "Согласно пункту 1.7.117 Правил устройства электроустановок, заземляющий проводник, изготовленный из алюминия и присоединяющий заземлитель рабочего (функционального) заземления к главной заземляющей шине в электроустановках напряжением до 1 кВ, должен иметь сечение не менее 16 мм².",
+      "n_sources": 5,
+      "scores": {
+        "citation_in_answer": true,
+        "citation_in_context": true,
+        "citation": true,
+        "groundedness": 1.0,
+        "groundedness_detail": {
+          "supported": 1,
+          "total": 1,
+          "method": "token_overlap"
+        },
+        "relevance": 1.0,
+        "relevance_reason": "clause_in_answer",
+        "retrieval_hit5": true
+      },
+      "llm_judge": null,
+      "error": null
+    },
+    {
+      "id": 41,
+      "query": "Каким должно быть минимальное сечение медных защитных проводников, не входящих в состав кабеля или проложенных не в общей оболочке (трубе, коробе, на одном лотке) с фазными проводниками, при отсутствии защиты, согласно Правилам устройства электроустановок?",
+      "expected_clause": "1.7.127",
+      "model": "qwen2.5:14b-instruct-q4_K_M",
+      "mode": "live",
+      "answer_preview": "Минимальное сечение медных защитных проводников, не входящих в состав кабеля или проложенных не в общей оболочке (трубе, коробе, на одном лотке) с фазными проводниками, при отсутствии защиты должно быть не менее 4 мм², согласно пункту 1.7.127 ПУЭ.",
+      "n_sources": 5,
+      "scores": {
+        "citation_in_answer": true,
+        "citation_in_context": true,
+        "citation": true,
+        "groundedness": 1.0,
+        "groundedness_detail": {
+          "supported": 1,
+          "total": 1,
+          "method": "token_overlap"
+        },
+        "relevance": 1.0,
+        "relevance_reason": "clause_in_answer",
+        "retrieval_hit5": true
+      },
+      "llm_judge": null,
+      "error": null
+    },
+    {
+      "id": 42,
+      "query": "Каким образом обозначаются проводники защитного заземления, а также нулевые защитные проводники в электроустановках напряжением до 1 кВ с глухозаземленной нейтралью, согласно Правилам устройства электроустановок?",
+      "expected_clause": "1.1.29",
+      "model": "qwen2.5:14b-instruct-q4_K_M",
+      "mode": "live",
+      "answer_preview": "В предоставленном контексте нет информации об обозначении проводников защитного заземления и нулевых защитных проводников в электроустановках напряжением до 1 кВ с глухозаземленной нейтралью.",
+      "n_sources": 5,
+      "scores": {
+        "citation_in_answer": false,
+        "citation_in_context": false,
+        "citation": false,
+        "groundedness": 1.0,
+        "groundedness_detail": {
+          "supported": 1,
+          "total": 1,
+          "method": "refusal_ok"
+        },
+        "relevance": 0.5,
+        "relevance_reason": "honest_refusal_miss",
+        "retrieval_hit5": false
+      },
+      "llm_judge": null,
+      "error": null
+    },
+    {
+      "id": 43,
+      "query": "Какое определение соответствует термину \"защитное заземление\", согласно Правилам устройства электроустановок?",
+      "expected_clause": "1.7.29",
+      "model": "qwen2.5:14b-instruct-q4_K_M",
+      "mode": "live",
+      "answer_preview": "Термин \"защитное заземление\" определен в пункте 1.7.29 ПУЭ как \"заземление, выполняемое в целях электробезопасности\".",
+      "n_sources": 5,
+      "scores": {
+        "citation_in_answer": true,
+        "citation_in_context": true,
+        "citation": true,
+        "groundedness": 1.0,
+        "groundedness_detail": {
+          "supported": 1,
+          "total": 1,
+          "method": "token_overlap"
+        },
+        "relevance": 1.0,
+        "relevance_reason": "clause_in_answer",
+        "retrieval_hit5": true
+      },
+      "llm_judge": null,
+      "error": null
+    },
+    {
+      "id": 44,
+      "query": "Какое сечение должен иметь заземляющий проводник, присоединяющий заземлитель рабочего (функционального) заземления к главной заземляющей шине в электроустановках напряжением до 1 кВ, изготовленный из стали, согласно Правилам устройства электроустановок?",
+      "expected_clause": "1.7.117",
+      "model": "qwen2.5:14b-instruct-q4_K_M",
+      "mode": "live",
+      "answer_preview": "Согласно пункту 1.7.117 Правил устройства электроустановок, заземляющий проводник, изготовленный из стали, присоединяющий заземлитель рабочего (функционального) заземления к главной заземляющей шине в электроустановках напряжением до 1 кВ, должен иметь сечение не менее 75 мм².",
+      "n_sources": 5,
+      "scores": {
+        "citation_in_answer": true,
+        "citation_in_context": true,
+        "citation": true,
+        "groundedness": 1.0,
+        "groundedness_detail": {
+          "supported": 1,
+          "total": 1,
+          "method": "token_overlap"
+        },
+        "relevance": 1.0,
+        "relevance_reason": "clause_in_answer",
+        "retrieval_hit5": true
+      },
+      "llm_judge": null,
+      "error": null
+    },
+    {
+      "id": 45,
+      "query": "Каким должно быть напряжение холостого хода источника сварочного тока установок плазменной обработки при номинальном напряжении сети для установок ручной резки, сварки или наплавки, согласно Правилам устройства электроустановок?",
+      "expected_clause": "7.6.57",
+      "model": "qwen2.5:14b-instruct-q4_K_M",
+      "mode": "live",
+      "answer_preview": "Напряжение холостого хода источника сварочного тока установок плазменной обработки при номинальном напряжении сети для установок ручной резки, сварки или наплавки должно быть не выше 180 В, согласно пункту 7.6.57 ПУЭ.",
+      "n_sources": 5,
+      "scores": {
+        "citation_in_answer": true,
+        "citation_in_context": true,
+        "citation": true,
+        "groundedness": 1.0,
+        "groundedness_detail": {
+          "supported": 1,
+          "total": 1,
+          "method": "token_overlap"
+        },
+        "relevance": 1.0,
+        "relevance_reason": "clause_in_answer",
+        "retrieval_hit5": true
+      },
+      "llm_judge": null,
+      "error": null
+    },
+    {
+      "id": 46,
+      "query": "Какое оборудование называется потребителем электрической энергии, согласно Правилам устройства электроустановок?",
+      "expected_clause": "1.2.8",
+      "model": "qwen2.5:14b-instruct-q4_K_M",
+      "mode": "live",
+      "answer_preview": "Потребитель электрической энергии - это электроприемник или группа электроприемников, объединенных технологическим процессом и размещающихся на определенной территории. Это определение содержится в пункте 1.2.8 ПУЭ.",
+      "n_sources": 5,
+      "scores": {
+        "citation_in_answer": true,
+        "citation_in_context": true,
+        "citation": true,
+        "groundedness": 0.5,
+        "groundedness_detail": {
+          "supported": 1,
+          "total": 2,
+          "method": "token_overlap"
+        },
+        "relevance": 1.0,
+        "relevance_reason": "clause_in_answer",
+        "retrieval_hit5": true
+      },
+      "llm_judge": null,
+      "error": null
+    },
+    {
+      "id": 47,
+      "query": "Что может быть применено для защиты при косвенном прикосновении в цепях, питающих переносные электроприемники, согласно Правилам устройства электроустановок?",
+      "expected_clause": "1.7.62",
+      "model": "qwen2.5:14b-instruct-q4_K_M",
+      "mode": "live",
+      "answer_preview": "Для защиты при косвенном прикосновении в цепях, питающих переносные электроприемники, согласно Правилам устройства электроустановок, могут быть применены устройства защитного отключения (УЗО) с номинальным отключающим дифференциальным током не более 30 мА (пункт 1.7.151). Допускается применение переносного электроинструмента, оборудованного УЗО-вилками.",
+      "n_sources": 5,
+      "scores": {
+        "citation_in_answer": false,
+        "citation_in_context": false,
+        "citation": false,
+        "groundedness": 1.0,
+        "groundedness_detail": {
+          "supported": 2,
+          "total": 2,
+          "method": "token_overlap"
+        },
+        "relevance": 0.0,
+        "relevance_reason": "no_clause_signal",
+        "retrieval_hit5": false
+      },
+      "llm_judge": null,
+      "error": null
+    },
+    {
+      "id": 48,
+      "query": "Каким должно быть минимальное сечение медных проводников основной системы уравнивания потенциалов, согласно Правилам устройства электроустановок?",
+      "expected_clause": "1.7.137",
+      "model": "qwen2.5:14b-instruct-q4_K_M",
+      "mode": "live",
+      "answer_preview": "Минимальное сечение медных проводников основной системы уравнивания потенциалов должно быть не менее 6 мм², согласно пункту 1.7.137 ПУЭ.",
+      "n_sources": 5,
+      "scores": {
+        "citation_in_answer": true,
+        "citation_in_context": true,
+        "citation": true,
+        "groundedness": 1.0,
+        "groundedness_detail": {
+          "supported": 1,
+          "total": 1,
+          "method": "token_overlap"
+        },
+        "relevance": 1.0,
+        "relevance_reason": "clause_in_answer",
+        "retrieval_hit5": true
+      },
+      "llm_judge": null,
+      "error": null
+    },
+    {
+      "id": 49,
+      "query": "Какое определение соответствует термину \"глухозаземленная нейтраль\", согласно Правилам устройства электроустановок?",
+      "expected_clause": "1.7.5",
+      "model": "qwen2.5:14b-instruct-q4_K_M",
+      "mode": "live",
+      "answer_preview": "Термин \"глухозаземленная нейтраль\" определен в пункте 1.7.5 ПУЭ как нейтраль трансформатора или генератора, присоединенная непосредственно к заземляющему устройству. Глухозаземленным может быть также вывод источника однофазного переменного тока или полюс источника постоянного тока в двухпроводных сетях, а также средняя точка в трехпроводных сетях постоянного тока.",
+      "n_sources": 5,
+      "scores": {
+        "citation_in_answer": true,
+        "citation_in_context": true,
+        "citation": true,
+        "groundedness": 1.0,
+        "groundedness_detail": {
+          "supported": 2,
+          "total": 2,
+          "method": "token_overlap"
+        },
+        "relevance": 1.0,
+        "relevance_reason": "clause_in_answer",
+        "retrieval_hit5": true
+      },
+      "llm_judge": null,
+      "error": null
+    },
+    {
+      "id": 50,
+      "query": "Какое напряжение должно применяться для питания переносных светильников в помещениях с повышенной опасностью и особо опасных помещениях, согласно Правилам устройства электроустановок?",
+      "expected_clause": "6.1.17",
+      "model": "qwen2.5:14b-instruct-q4_K_M",
+      "mode": "live",
+      "answer_preview": "Для питания переносных светильников в помещениях с повышенной опасностью и особо опасных помещениях должно применяться напряжение не выше 50 В, согласно пункту 6.1.17 ПУЭ.",
+      "n_sources": 5,
+      "scores": {
+        "citation_in_answer": true,
+        "citation_in_context": true,
+        "citation": true,
+        "groundedness": 1.0,
+        "groundedness_detail": {
+          "supported": 1,
+          "total": 1,
+          "method": "token_overlap"
+        },
+        "relevance": 1.0,
+        "relevance_reason": "clause_in_answer",
+        "retrieval_hit5": true
+      },
+      "llm_judge": null,
+      "error": null
+    },
+    {
+      "id": 51,
+      "query": "Каким должно быть минимальное сечение алюминиевых проводников основной системы уравнивания потенциалов, согласно Правилам устройства электроустановок?",
+      "expected_clause": "1.7.137",
+      "model": "qwen2.5:14b-instruct-q4_K_M",
+      "mode": "live",
+      "answer_preview": "Согласно пункту 1.7.137 Правил устройства электроустановок, минимальное сечение алюминиевых проводников основной системы уравнивания потенциалов должно быть не менее 16 мм².",
+      "n_sources": 5,
+      "scores": {
+        "citation_in_answer": true,
+        "citation_in_context": true,
+        "citation": true,
+        "groundedness": 1.0,
+        "groundedness_detail": {
+          "supported": 1,
+          "total": 1,
+          "method": "token_overlap"
+        },
+        "relevance": 1.0,
+        "relevance_reason": "clause_in_answer",
+        "retrieval_hit5": true
+      },
+      "llm_judge": null,
+      "error": null
+    },
+    {
+      "id": 52,
+      "query": "Какое определение соответствует термину \"защита от прямого прикосновения\", согласно Правилам устройства электроустановок?",
+      "expected_clause": "1.7.13",
+      "model": "qwen2.5:14b-instruct-q4_K_M",
+      "mode": "live",
+      "answer_preview": "Термин \"защита от прямого прикосновения\" определен в пункте 1.7.13 ПУЭ как \"защита для предотвращения прикосновения к токоведущим частям, находящимся под напряжением\".",
+      "n_sources": 5,
+      "scores": {
+        "citation_in_answer": true,
+        "citation_in_context": true,
+        "citation": true,
+        "groundedness": 1.0,
+        "groundedness_detail": {
+          "supported": 1,
+          "total": 1,
+          "method": "token_overlap"
+        },
+        "relevance": 1.0,
+        "relevance_reason": "clause_in_answer",
+        "retrieval_hit5": true
+      },
+      "llm_judge": null,
+      "error": null
+    },
+    {
+      "id": 53,
+      "query": "Каким должно быть минимальное сечение стальных проводников основной системы уравнивания потенциалов, согласно Правилам устройства электроустановок?",
+      "expected_clause": "1.7.137",
+      "model": "qwen2.5:14b-instruct-q4_K_M",
+      "mode": "live",
+      "answer_preview": "Согласно пункту 1.7.137 ПУЭ, минимальное сечение стальных проводников основной системы уравнивания потенциалов должно быть не менее 50 мм².",
+      "n_sources": 5,
+      "scores": {
+        "citation_in_answer": true,
+        "citation_in_context": true,
+        "citation": true,
+        "groundedness": 1.0,
+        "groundedness_detail": {
+          "supported": 1,
+          "total": 1,
+          "method": "token_overlap"
+        },
+        "relevance": 1.0,
+        "relevance_reason": "clause_in_answer",
+        "retrieval_hit5": true
+      },
+      "llm_judge": null,
+      "error": null
+    },
+    {
+      "id": 54,
+      "query": "Каким образом классифицируются помещения в отношении опасности поражения людей электрическим током, согласно Правилам устройства электроустановок?",
+      "expected_clause": "1.1.13",
+      "model": "qwen2.5:14b-instruct-q4_K_M",
+      "mode": "live",
+      "answer_preview": "Помещения в отношении опасности поражения людей электрическим током классифицируются следующим образом:\n\n1) Помещения без повышенной опасности, в которых отсутствуют условия, создающие повышенную или особую опасность (п. 1.1.13).\n\n2) Помещения с повышенной опасностью, характеризующиеся наличием одного из условий, создающих повышенную опасность (п. 1.1.13).\n\n3) Особо опасные помещения, характеризую",
+      "n_sources": 5,
+      "scores": {
+        "citation_in_answer": true,
+        "citation_in_context": true,
+        "citation": true,
+        "groundedness": 1.0,
+        "groundedness_detail": {
+          "supported": 5,
+          "total": 5,
+          "method": "token_overlap"
+        },
+        "relevance": 1.0,
+        "relevance_reason": "clause_in_answer",
+        "retrieval_hit5": true
+      },
+      "llm_judge": null,
+      "error": null
+    },
+    {
+      "id": 55,
+      "query": "Какое определение соответствует термину \"защита при косвенном прикосновении\", согласно Правилам устройства электроустановок?",
+      "expected_clause": "1.7.14",
+      "model": "qwen2.5:14b-instruct-q4_K_M",
+      "mode": "live",
+      "answer_preview": "Термин \"защита при косвенном прикосновении\" определен в пункте 1.7.14 ПУЭ как защита от поражения электрическим током при прикосновении к открытым проводящим частям, оказавшимися под напряжением при повреждении изоляции.",
+      "n_sources": 5,
+      "scores": {
+        "citation_in_answer": true,
+        "citation_in_context": true,
+        "citation": true,
+        "groundedness": 1.0,
+        "groundedness_detail": {
+          "supported": 1,
+          "total": 1,
+          "method": "token_overlap"
+        },
+        "relevance": 1.0,
+        "relevance_reason": "clause_in_answer",
+        "retrieval_hit5": true
+      },
+      "llm_judge": null,
+      "error": null
+    },
+    {
+      "id": 56,
+      "query": "Какое оборудование должно использоваться при присоединении переносной или передвижной электросварочной установки непосредственно к стационарной электрической сети, согласно Правилам устройства электроустановок?",
+      "expected_clause": "7.6.24",
+      "model": "qwen2.5:14b-instruct-q4_K_M",
+      "mode": "live",
+      "answer_preview": "При присоединении переносной или передвижной электросварочной установки непосредственно к стационарной электрической сети должно использоваться коммутационное и защитное оборудование (аппарат) с разборными или разъемными контактными соединениями. Обязательно наличие блокировки, исключающей возможность размыкания и замыкания этих соединений при включенном положении коммутационного аппарата. Это ука",
+      "n_sources": 5,
+      "scores": {
+        "citation_in_answer": true,
+        "citation_in_context": true,
+        "citation": true,
+        "groundedness": 0.667,
+        "groundedness_detail": {
+          "supported": 2,
+          "total": 3,
+          "method": "token_overlap"
+        },
+        "relevance": 1.0,
+        "relevance_reason": "clause_in_answer",
+        "retrieval_hit5": true
+      },
+      "llm_judge": null,
+      "error": null
+    },
+    {
+      "id": 57,
+      "query": "На каком расстоянии от сварочного поста должен располагаться однопостовой источник сварочного тока, согласно Правилам устройства электроустановок?",
+      "expected_clause": "7.6.19",
+      "model": "qwen2.5:14b-instruct-q4_K_M",
+      "mode": "live",
+      "answer_preview": "Однопостовой источник сварочного тока, как правило, должен располагаться не далее 15 м от сварочного поста, согласно пункту 7.6.19 ПУЭ.",
+      "n_sources": 5,
+      "scores": {
+        "citation_in_answer": true,
+        "citation_in_context": true,
+        "citation": true,
+        "groundedness": 1.0,
+        "groundedness_detail": {
+          "supported": 1,
+          "total": 1,
+          "method": "token_overlap"
+        },
+        "relevance": 1.0,
+        "relevance_reason": "clause_in_answer",
+        "retrieval_hit5": true
+      },
+      "llm_judge": null,
+      "error": null
+    },
+    {
+      "id": 58,
+      "query": "Какие помещения называются сырыми, согласно Правилам устройства электроустановок?",
+      "expected_clause": "1.1.8",
+      "model": "qwen2.5:14b-instruct-q4_K_M",
+      "mode": "live",
+      "answer_preview": "Сырыми помещения называются помещения, в которых относительная влажность воздуха превышает 75%. Это указано в пункте 1.1.8 ПУЭ.",
+      "n_sources": 5,
+      "scores": {
+        "citation_in_answer": true,
+        "citation_in_context": true,
+        "citation": true,
+        "groundedness": 0.5,
+        "groundedness_detail": {
+          "supported": 1,
+          "total": 2,
+          "method": "token_overlap"
+        },
+        "relevance": 1.0,
+        "relevance_reason": "clause_in_answer",
+        "retrieval_hit5": true
+      },
+      "llm_judge": null,
+      "error": null
+    },
+    {
+      "id": 59,
+      "query": "Какое определение соответствует термину \"заземлитель\", согласно Правилам устройства электроустановок?",
+      "expected_clause": "1.7.15",
+      "model": "qwen2.5:14b-instruct-q4_K_M",
+      "mode": "live",
+      "answer_preview": "Термин \"заземлитель\" определен в пункте 1.7.15 ПУЭ как \"проводящая часть или совокупность соединенных между собой проводящих частей, находящихся в электрическом контакте с землей непосредственно или через промежуточную проводящую среду\".",
+      "n_sources": 5,
+      "scores": {
+        "citation_in_answer": true,
+        "citation_in_context": true,
+        "citation": true,
+        "groundedness": 1.0,
+        "groundedness_detail": {
+          "supported": 1,
+          "total": 1,
+          "method": "token_overlap"
+        },
+        "relevance": 1.0,
+        "relevance_reason": "clause_in_answer",
+        "retrieval_hit5": true
+      },
+      "llm_judge": null,
+      "error": null
+    },
+    {
+      "id": 60,
+      "query": "Какой максимально допустимой длины должен быть гибкий кабель, соединяющий источник сварочного тока и коммутационный аппарат, согласно Правилам устройства электроустановок?",
+      "expected_clause": "7.6.25",
+      "model": "qwen2.5:14b-instruct-q4_K_M",
+      "mode": "live",
+      "answer_preview": "Максимально допустимая длина гибкого кабеля, соединяющего источник сварочного тока и коммутационный аппарат, не должна превышать 15 м, согласно пункту 7.6.25 ПУЭ.",
+      "n_sources": 5,
+      "scores": {
+        "citation_in_answer": true,
+        "citation_in_context": true,
+        "citation": true,
+        "groundedness": 1.0,
+        "groundedness_detail": {
+          "supported": 1,
+          "total": 1,
+          "method": "token_overlap"
+        },
+        "relevance": 1.0,
+        "relevance_reason": "clause_in_answer",
+        "retrieval_hit5": true
+      },
+      "llm_judge": null,
+      "error": null
+    },
+    {
+      "id": 61,
+      "query": "В каком случае допускается располагать сварочные посты во взрыво- и пожароопасных зонах, согласно Правилам устройства электроустановок?",
+      "expected_clause": "7.6.35",
+      "model": "qwen2.5:14b-instruct-q4_K_M",
+      "mode": "live",
+      "answer_preview": "Сварочные посты допускается располагать во взрыво- и пожароопасных зонах только в период производства временных электросварочных работ, выполняемых с соблюдением требований, изложенных в типовой инструкции по организации безопасного ведения огневых работ на взрыво- и взрывопожароопасных объектах, утвержденной Госгортехнадзором России (пункт 7.6.35).",
+      "n_sources": 5,
+      "scores": {
+        "citation_in_answer": true,
+        "citation_in_context": true,
+        "citation": true,
+        "groundedness": 1.0,
+        "groundedness_detail": {
+          "supported": 1,
+          "total": 1,
+          "method": "token_overlap"
+        },
+        "relevance": 1.0,
+        "relevance_reason": "clause_in_answer",
+        "retrieval_hit5": true
+      },
+      "llm_judge": null,
+      "error": null
+    },
+    {
+      "id": 62,
+      "query": "Какие помещения относятся к влажным, согласно Правилам устройства электроустановок?",
+      "expected_clause": "1.1.7",
+      "model": "qwen2.5:14b-instruct-q4_K_M",
+      "mode": "live",
+      "answer_preview": "Влажные помещения - это помещения, в которых относительная влажность воздуха более 60%, но не превышает 75% (пункт 1.1.7).",
+      "n_sources": 5,
+      "scores": {
+        "citation_in_answer": true,
+        "citation_in_context": true,
+        "citation": true,
+        "groundedness": 1.0,
+        "groundedness_detail": {
+          "supported": 1,
+          "total": 1,
+          "method": "token_overlap"
+        },
+        "relevance": 1.0,
+        "relevance_reason": "clause_in_answer",
+        "retrieval_hit5": true
+      },
+      "llm_judge": null,
+      "error": null
+    },
+    {
+      "id": 63,
+      "query": "Какое определение соответствует термину \"искусственный заземлитель\", согласно Правилам устройства электроустановок?",
+      "expected_clause": "1.7.16",
+      "model": "qwen2.5:14b-instruct-q4_K_M",
+      "mode": "live",
+      "answer_preview": "Термин \"искусственный заземлитель\" определен в пункте 1.7.16 ПУЭ как \"заземлитель, специально выполняемый для целей заземления\".",
+      "n_sources": 5,
+      "scores": {
+        "citation_in_answer": true,
+        "citation_in_context": true,
+        "citation": true,
+        "groundedness": 1.0,
+        "groundedness_detail": {
+          "supported": 1,
+          "total": 1,
+          "method": "token_overlap"
+        },
+        "relevance": 1.0,
+        "relevance_reason": "clause_in_answer",
+        "retrieval_hit5": true
+      },
+      "llm_judge": null,
+      "error": null
+    },
+    {
+      "id": 64,
+      "query": "При каком напряжении шкафы комплектных устройств и корпуса сварочного оборудования (машин), имеющие неизолированные токоведущие части, должны быть оснащены блокировкой, обеспечивающей при открывании дверей (дверец) отключение от электрической сети устройств, находящихся внутри шкафа (корпуса), согласно Правилам устройства электроустановок?",
+      "expected_clause": "7.6.27",
+      "model": "qwen2.5:14b-instruct-q4_K_M",
+      "mode": "live",
+      "answer_preview": "Шкафы комплектных устройств и корпуса сварочного оборудования (машин), имеющие неизолированные токоведущие части, должны быть оснащены блокировкой, обеспечивающей при открывании дверей (дверец) отключение от электрической сети устройств, находящихся внутри шкафа (корпуса), если напряжение выше 50 В переменного или выше 110 В постоянного тока. Это указано в пункте 7.6.27 ПУЭ.",
+      "n_sources": 5,
+      "scores": {
+        "citation_in_answer": true,
+        "citation_in_context": true,
+        "citation": true,
+        "groundedness": 0.5,
+        "groundedness_detail": {
+          "supported": 1,
+          "total": 2,
+          "method": "token_overlap"
+        },
+        "relevance": 1.0,
+        "relevance_reason": "clause_in_answer",
+        "retrieval_hit5": true
+      },
+      "llm_judge": null,
+      "error": null
+    },
+    {
+      "id": 65,
+      "query": "Какие требования предъявляются к отдельному помещению для электросварочных установок, согласно Правилам устройства электроустановок?",
+      "expected_clause": "7.6.37",
+      "model": "qwen2.5:14b-instruct-q4_K_M",
+      "mode": "live",
+      "answer_preview": "Площадь отдельного помещения для электросварочных установок должна быть не менее 10 м², причем площадь, свободная от оборудования и материалов, должна составлять не менее 3 м² на каждый сварочный пост. Это указано в пункте 7.6.37 ПУЭ.",
+      "n_sources": 5,
+      "scores": {
+        "citation_in_answer": true,
+        "citation_in_context": true,
+        "citation": true,
+        "groundedness": 0.5,
+        "groundedness_detail": {
+          "supported": 1,
+          "total": 2,
+          "method": "token_overlap"
+        },
+        "relevance": 1.0,
+        "relevance_reason": "clause_in_answer",
+        "retrieval_hit5": true
+      },
+      "llm_judge": null,
+      "error": null
+    },
+    {
+      "id": 66,
+      "query": "Какие помещения называются сухими, согласно Правилам устройства электроустановок?",
+      "expected_clause": "1.1.6",
+      "model": "qwen2.5:14b-instruct-q4_K_M",
+      "mode": "live",
+      "answer_preview": "Согласно Правилам устройства электроустановок, сухие помещения - это помещения, в которых относительная влажность воздуха не превышает 60%. Если в таких помещениях отсутствуют условия, указанные в пунктах 1.1.10-1.1.12, они называются нормальными (пункт 1.1.6).",
+      "n_sources": 5,
+      "scores": {
+        "citation_in_answer": true,
+        "citation_in_context": true,
+        "citation": true,
+        "groundedness": 1.0,
+        "groundedness_detail": {
+          "supported": 2,
+          "total": 2,
+          "method": "token_overlap"
+        },
+        "relevance": 1.0,
+        "relevance_reason": "clause_in_answer",
+        "retrieval_hit5": true
+      },
+      "llm_judge": null,
+      "error": null
+    },
+    {
+      "id": 67,
+      "query": "Какое определение соответствует термину \"естественный заземлитель\", согласно Правилам устройства электроустановок?",
+      "expected_clause": "1.7.17",
+      "model": "qwen2.5:14b-instruct-q4_K_M",
+      "mode": "live",
+      "answer_preview": "Термин \"естественный заземлитель\" определен в пункте 1.7.17 ПУЭ как \"сторонняя проводящая часть, находящаяся в электрическом контакте с землей непосредственно или через промежуточную проводящую среду, используемая для целей заземления\".",
+      "n_sources": 5,
+      "scores": {
+        "citation_in_answer": true,
+        "citation_in_context": true,
+        "citation": true,
+        "groundedness": 1.0,
+        "groundedness_detail": {
+          "supported": 1,
+          "total": 1,
+          "method": "token_overlap"
+        },
+        "relevance": 1.0,
+        "relevance_reason": "clause_in_answer",
+        "retrieval_hit5": true
+      },
+      "llm_judge": null,
+      "error": null
+    },
+    {
+      "id": 68,
+      "query": "Какое сопротивление должно иметь в любое время года заземляющее устройство, которое выполняется с соблюдением требований к его сопротивлению, согласно Правилам устройства электроустановок?",
+      "expected_clause": "1.7.101",
+      "model": "qwen2.5:14b-instruct-q4_K_M",
+      "mode": "live",
+      "answer_preview": "Согласно пункту 1.7.163 Правил устройства электроустановок, значение сопротивления заземляющего устройства не должно превышать 25 Ом при выполнении его с соблюдением требований к его сопротивлению.",
+      "n_sources": 5,
+      "scores": {
+        "citation_in_answer": false,
+        "citation_in_context": false,
+        "citation": false,
+        "groundedness": 1.0,
+        "groundedness_detail": {
+          "supported": 1,
+          "total": 1,
+          "method": "token_overlap"
+        },
+        "relevance": 0.0,
+        "relevance_reason": "no_clause_signal",
+        "retrieval_hit5": false
+      },
+      "llm_judge": null,
+      "error": null
+    },
+    {
+      "id": 69,
+      "query": "Каким должно быть напряжение холостого хода источника сварочного тока установок плазменной обработки при номинальном напряжении сети для установок автоматической резки, напыления и плазменно-механической обработки, согласно Правилам устройства электроустановок?",
+      "expected_clause": "7.6.57",
+      "model": "qwen2.5:14b-instruct-q4_K_M",
+      "mode": "live",
+      "answer_preview": "Напряжение холостого хода источника сварочного тока установок плазменной обработки при номинальном напряжении сети для установок автоматической резки, напыления и плазменно-механической обработки должно быть не выше 500 В, согласно пункту 7.6.57 ПУЭ.",
+      "n_sources": 5,
+      "scores": {
+        "citation_in_answer": true,
+        "citation_in_context": true,
+        "citation": true,
+        "groundedness": 1.0,
+        "groundedness_detail": {
+          "supported": 1,
+          "total": 1,
+          "method": "token_overlap"
+        },
+        "relevance": 1.0,
+        "relevance_reason": "clause_in_answer",
+        "retrieval_hit5": true
+      },
+      "llm_judge": null,
+      "error": null
+    },
+    {
+      "id": 70,
+      "query": "Каким образом должны быть обозначены нулевые рабочие (нейтральные) проводники в электроустановках, согласно Правилам устройства электроустановок?",
+      "expected_clause": "1.1.29",
+      "model": "qwen2.5:14b-instruct-q4_K_M",
+      "mode": "live",
+      "answer_preview": "Нулевые рабочие (нейтральные) проводники в электроустановках должны иметь буквенное обозначение **N** и голубой цвет. Это указано в пункте 1.1.29 ПУЭ.",
+      "n_sources": 5,
+      "scores": {
+        "citation_in_answer": true,
+        "citation_in_context": true,
+        "citation": true,
+        "groundedness": 0.5,
+        "groundedness_detail": {
+          "supported": 1,
+          "total": 2,
+          "method": "token_overlap"
+        },
+        "relevance": 1.0,
+        "relevance_reason": "clause_in_answer",
+        "retrieval_hit5": true
+      },
+      "llm_judge": null,
+      "error": null
+    },
+    {
+      "id": 71,
+      "query": "Какое определение соответствует термину \"заземление\", согласно Правилам устройства электроустановок?",
+      "expected_clause": "1.7.28",
+      "model": "qwen2.5:14b-instruct-q4_K_M",
+      "mode": "live",
+      "answer_preview": "Термин \"заземление\" определен в пункте 1.7.28 Правил устройства электроустановок как \"преднамеренное электрическое соединение какой-либо точки сети, электроустановки или оборудования с заземляющим устройством\".",
+      "n_sources": 5,
+      "scores": {
+        "citation_in_answer": true,
+        "citation_in_context": true,
+        "citation": true,
+        "groundedness": 1.0,
+        "groundedness_detail": {
+          "supported": 1,
+          "total": 1,
+          "method": "token_overlap"
+        },
+        "relevance": 1.0,
+        "relevance_reason": "clause_in_answer",
+        "retrieval_hit5": true
+      },
+      "llm_judge": null,
+      "error": null
+    },
+    {
+      "id": 72,
+      "query": "Какие дополнительные мероприятия при сооружении искусственных заземлителей в районах с большим удельным сопротивлением земли рекомендуется осуществлять в районах многолетней мерзлоты, согласно Правилам устройства электроустановок?",
+      "expected_clause": "1.7.107",
+      "model": "qwen2.5:14b-instruct-q4_K_M",
+      "mode": "live",
+      "answer_preview": "В районах многолетней мерзлоты, помимо рекомендаций, приведенных в пункте 1.7.106, следует:\n\n1) помещать заземлители в непромерзающие водоемы и талые зоны;\n2) использовать обсадные трубы скважин;\n3) в дополнение к углубленным заземлителям применять протяженные заземлители на глубине около 0,5 м, предназначенные для работы в летнее время при оттаивании поверхностного слоя земли;\n4) создавать искусс",
+      "n_sources": 5,
+      "scores": {
+        "citation_in_answer": true,
+        "citation_in_context": true,
+        "citation": true,
+        "groundedness": 1.0,
+        "groundedness_detail": {
+          "supported": 6,
+          "total": 6,
+          "method": "token_overlap"
+        },
+        "relevance": 1.0,
+        "relevance_reason": "clause_in_answer",
+        "retrieval_hit5": true
+      },
+      "llm_judge": null,
+      "error": null
+    },
+    {
+      "id": 73,
+      "query": "Каким должно быть напряжение холостого хода источника сварочного тока установок плазменной обработки при номинальном напряжении сети для установок полуавтоматической резки или напыления, согласно Правилам устройства электроустановок?",
+      "expected_clause": "7.6.57",
+      "model": "qwen2.5:14b-instruct-q4_K_M",
+      "mode": "live",
+      "answer_preview": "Напряжение холостого хода источника сварочного тока установок плазменной обработки при номинальном напряжении сети для установок полуавтоматической резки или напыления должно быть не выше 300 В, согласно пункту 7.6.57 ПУЭ.",
+      "n_sources": 5,
+      "scores": {
+        "citation_in_answer": true,
+        "citation_in_context": true,
+        "citation": true,
+        "groundedness": 1.0,
+        "groundedness_detail": {
+          "supported": 1,
+          "total": 1,
+          "method": "token_overlap"
+        },
+        "relevance": 1.0,
+        "relevance_reason": "clause_in_answer",
+        "retrieval_hit5": true
+      },
+      "llm_judge": null,
+      "error": null
+    }
+  ]
+}

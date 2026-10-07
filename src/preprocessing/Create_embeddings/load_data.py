@@ -9,7 +9,7 @@ from runtime_config import load_runtime_config, resolve_repo_path
 from model_selector import select_text_model
 
 def main():
-    print("🚀 Запуск загрузки данных в Multimodal RAG...")
+    print(" Запуск загрузки данных в Multimodal RAG...")
     cfg = load_runtime_config()
     vector_db = cfg["vector_db"]
     paths = cfg["paths"]
@@ -77,7 +77,7 @@ def main():
     
     # Статистика и метаданные эмбеддингов (для поиска использовать те же text_model_name и text_dim)
     stats = rag.get_collection_stats()
-    print(f"\n📊 Статистика коллекции:")
+    print(f"\n Статистика коллекции:")
     print(f"   Название: {stats['name']}")
     print(f"   Сущностей: {stats['num_entities']}")
     print(f"   Поля: {stats['schema']}")
@@ -86,7 +86,7 @@ def main():
         print(f"   Метаданные эмбеддингов: text_model={meta['text_model']}, text_dim={meta['text_dim']}")
     
     # Тестовый поиск
-    # print("\n🔍 Тестовый поиск...")
+    # print("\n Тестовый поиск...")
     # results = rag.search_text("система заземления", limit=3)
     #
     # for i, res in enumerate(results, 1):
@@ -99,10 +99,10 @@ def main():
     #     else:
     #         print(f"   Текст: (пусто)")
     #     if res.get('has_image'):
-    #         print(f"   🖼️ Изображений: {len(res.get('image_paths') or [])}")
+    #         print(f"    Изображений: {len(res.get('image_paths') or [])}")
     
     rag.close()
-    print("\n✅ Загрузка завершена успешно!")
+    print("\n Загрузка завершена успешно!")
 
 if __name__ == "__main__":
     main()
