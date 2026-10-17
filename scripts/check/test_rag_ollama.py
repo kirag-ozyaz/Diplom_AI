@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Тест полного RAG: Milvus + Ollama. Запуск: python scripts/test_rag_ollama.py [вопрос]"""
+"""Тест полного RAG: Milvus + Ollama. Запуск: python scripts/check/test_rag_ollama.py [вопрос]"""
 from __future__ import annotations
 
 import sys

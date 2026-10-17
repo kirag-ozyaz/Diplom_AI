@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 Проверка Ollama: API, модель из config/rag_runtime.json, пробный ответ.
-Запуск из корня: python scripts/test_ollama.py
+Запуск из корня: python scripts/check/test_ollama.py
 """
 from __future__ import annotations
 

@@ -121,7 +121,7 @@ def resolve_torch_device(device: str, purpose: str = "модели") -> str:
         print(
             f" В конфиге device_text/device_clip={device!r} для {purpose}, "
             "но PyTorch установлен без CUDA — используется cpu.\n"
-            "   Для GPU: python scripts/compute_detect.py (подсказка cu124/cu128) "
+            "   Для GPU: python scripts/infra/compute_detect.py (подсказка cu124/cu128) "
             "или start/Readme.md",
             flush=True,
         )

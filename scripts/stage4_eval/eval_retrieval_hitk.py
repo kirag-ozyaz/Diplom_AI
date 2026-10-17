@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 """
 Этап 4: оценка Hit@1 / Hit@3 / Hit@5 для семантического поиска по ПУЭ.
-Запуск из корня: python scripts/stage4_eval/eval_retrieval_hitk.py
+Контрольные вопросы — реестр JSON (поле n_questions, массив questions).
+Запуск из корневого каталога проекта:
+  python scripts/stage4_eval/eval_retrieval_hitk.py
 """
 from __future__ import annotations
 
@@ -68,14 +70,16 @@ def run_hitk_eval(*, refresh_readme: bool = True) -> dict:
 
     if not check_vector_db_server(host, port):
         raise RuntimeError(
-            "Milvus недоступен. Запустите: python scripts/start_milvus.py "
+            "Milvus недоступен. Запустите: python scripts/infra/start_milvus.py "
             "или docker-ячейку ноутбука (§5.1)."
         )
 
     if not QUESTIONS_PATH.is_file():
         raise RuntimeError(f"Нет файла вопросов: {QUESTIONS_PATH}")
 
-    questions = json.loads(QUESTIONS_PATH.read_text(encoding="utf-8"))
+    from eval_questions_io import load_eval_questions  # noqa: E402
+
+    questions = load_eval_questions(QUESTIONS_PATH)
     meta = MultimodalRAG.get_embedding_meta_from_collection(host, port, collection)
     if meta:
         text_model = meta["text_model"]

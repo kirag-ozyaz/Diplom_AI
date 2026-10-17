@@ -2,7 +2,7 @@
 
 Данный каталог объединяет скрипты **оценки** прототипа RAG по Правилам устройства электроустановок (ПУЭ): измерение качества **поиска фрагментов** (метрики Hit@1, Hit@3, Hit@5) и качества **генерации ответа** языковой моделью (цитирование нормы, опора на контекст, релевантность). Скрипты запуска контейнеров Docker (Milvus, Ollama) расположены на уровень выше — в каталоге `scripts/`.
 
-Все команды ниже выполняются **из корня репозитория**. Рекомендуется активировать виртуальное окружение:
+Все команды ниже выполняются **из корневого каталога проекта** (каталог с `scripts/`, `config/`, `Этапы/`). Рекомендуется активировать виртуальное окружение:
 
 ```powershell
 .\.venv\Scripts\Activate.ps1
@@ -28,14 +28,18 @@
 | `run_hitk.ps1` | Запуск `eval_retrieval_hitk.py` |
 | `run_generation.ps1` | Запуск `eval_rag_generation.py` с параметрами |
 | `run_all.ps1` | Последовательный запуск: инфраструктура → Hit@k → generation (live) |
+| `eval_rag_performance.py` | Эксплуатационные метрики (задержка, TTFT, пропускная способность) |
+| `eval_rag_llm_judge.py` | Оценка генерации методом LLM-as-a-Judge (faithfulness, relevancy, context recall) |
+| `run_perf_and_judge.ps1` | Последовательный запуск performance и LLM-judge |
+| `print_run_done.py` | Сообщение об окончании цепочки прогонов |
 
 **Дополнительные материалы проекта:**
 
 - теория метрики Hit@k — `manual/Hit_at_k.md`;
 - текст отчёта этапа 4 — `Этапы/Reports/etap4/Readme-4.md`;
 - исполняемый ноутбук — `Этапы/Reports/etap4/Readme-4 (ver. 2).ipynb`;
-- единые пути к артефактам в коде — `scripts/report_paths.py`;
-- пояснение к прогону generation — `Этапы/Reports/etap4/generation/Etap4-gen-metrics.md`.
+- единые пути к артефактам в коде — `scripts/lib/report_paths.py`;
+- пояснение к прогону generation — `scripts/stage4_eval/results/generation/Etap4-gen-metrics.md`.
 
 ---
 
@@ -43,13 +47,50 @@
 
 На четвёртом этапе дипломного проекта требуется показать **рабочий контур RAG** и **первую количественную оценку** его компонентов.
 
-**Retrieval (Hit@k).** Для каждого тестового вопроса выполняется один семантический поиск в Milvus. Успех для Hit@k означает, что среди первых *k* найденных фрагментов в тексте чанка встречается номер эталонного пункта ПУЭ (`Clause`), заданный в файле вопросов. Языковая модель Ollama в этом прогоне **не используется**: оценивается только этап поиска.
+**Retrieval (Hit@k).** Для каждого контрольного вопроса — один семантический поиск в Milvus. Успех: эталонный пункт ПУЭ (`Clause`) встречается в top-*k* чанков. Ollama **не используется**.
 
-**Generation.** После retrieval (или в режиме имитации без Docker) формируется ответ модели по найденному контексту. Скрипт `eval_rag_generation.py` считает долю ответов с корректным цитированием, среднюю «заземлённость» ответа на контекст (groundedness) и релевантность эталонному пункту. Для осмысленной live-оценки должны быть доступны и Milvus (порт 19530), и Ollama (порт 11434).
+**Generation (`eval_rag_generation.py`).** Полный RAG (режим `live`) или имитация (`mock`). Метрики: **citation rate** (доля с эталонным пунктом в ответе/контексте), **groundedness** (опора ответа на контекст), **relevance** (соответствие эталону). Опционально `--llm-judge`.
 
-**Результаты** сохраняются в `Этапы/Reports/etap4/` (подкаталоги `retrieval/` и `generation/`) и используются в отчёте Word, в markdown и в ноутбуке.
+**Эксплуатация (`eval_rag_performance.py`).** Нагрузочный прогон к Ollama: **TTFT**, **TPS**, задержка (средняя, p95, p99), **RPS**, **availability**.
 
-Тестовые вопросы и эталонные пункты: `Этапы/Reports/etap4/data/stage4_eval_questions.json`. Формулировки вопросов можно готовить по билетам электробезопасности (см. `manual/tests24_electro_safety.md`, данные в `data/tests24/`).
+**LLM-as-a-Judge (`eval_rag_llm_judge.py`).** Судья (модель из конфигурации) выставляет **faithfulness**, **answer relevancy**, **context recall** по каждому вопросу. См. ограничение методики в `scripts/stage4_eval/Сводка_метрик_этапа_4.md`.
+
+**Сводка всех слоёв и последние сохранённые значения:** `scripts/stage4_eval/Сводка_метрик_этапа_4.md`; таблица для Word — §5.4 в `Этапы/Reports/etap4/Readme-4.md`.
+
+**Результаты** — в `scripts/stage4_eval/results/retrieval/` и `generation/`.
+
+### Реестр контрольных вопросов (300 записей)
+
+Основной файл для Hit@k, generation, performance и LLM-judge:
+
+`data/rag_eval_questions/eval_questions.json`
+
+Структура — **реестр** (не плоский массив):
+
+| Поле верхнего уровня | Назначение |
+|----------------------|------------|
+| `title` | Название набора |
+| `source_file` | Исходный документ или путь к нему |
+| `n_questions` | Число контрольных вопросов (сейчас **300**) |
+| `questions` | Массив записей |
+
+| Поле в записи `questions[]` | Назначение |
+|-------------------------------|------------|
+| `id` | Порядковый номер в наборе |
+| `registry_id` | Стабильный идентификатор (например `Q-001`) |
+| `query` | Текст вопроса |
+| `expected_clause` | Эталонный пункт ПУЭ (поле Clause в индексе) |
+| `section` | Раздел ПУЭ (для отчётов и срезов) |
+
+Дополнительные копии и снимки (архив, не подменяют основной файл без явного решения):
+
+| Файл | Назначение |
+|------|------------|
+| `eval_questions_pue300.json` | Полный реестр 300 вопросов (источник — markdown-набор ПУЭ) |
+| `eval_questions_74.json` | Снимок раннего набора (~74 вопроса) |
+| `eval_questions_base38.json` | Базовые 38 вопросов |
+
+Чтение и запись реестра в коде: `eval_questions_io.py`. Дополнительные формулировки можно готовить по билетам электробезопасности (`manual/tests24_electro_safety.md`, `data/tests24/`); скрипт `build_stage4_eval_questions.py` **перезаписывает** основной файл при `--merge-base` и не должен запускаться поверх уже утверждённого набора из 300 вопросов без указания другого пути `-o`.
 
 ---
 
@@ -125,7 +166,7 @@ docker compose ps
 | `-MilvusOnlyHitk` | После Hit@k этап generation не выполняется |
 | `-SnapshotMilvusLogs` | В конце (или при ошибке infra/Hit@k/generation) вызвать `start_milvus_logs.py` |
 
-Отдельно `python scripts/start_milvus.py` и ручная цепочка Python нужны только если вы **не** используете PowerShell-сценарии. Если generation оборвался на середине (в JSON есть `error`, Milvus «упал»), но `run_all` уже завершился с кодом 0 — снимок логов вручную: `python scripts/start_milvus_logs.py` (см. `infra/milvus/Storage.md`).
+Отдельно `python scripts/infra/start_milvus.py` и ручная цепочка Python нужны только если вы **не** используете PowerShell-сценарии. Если generation оборвался на середине (в JSON есть `error`, Milvus «упал»), но `run_all` уже завершился с кодом 0 — снимок логов вручную: `python scripts/infra/start_milvus_logs.py` (см. `infra/milvus/Storage.md`).
 
 ---
 
@@ -159,7 +200,7 @@ python scripts\stage4_eval\eval_retrieval_hitk.py
 
 По завершении успешного прогона:
 
-- создаются или обновляются `stage4_hitk_results.json`, `stage4_hitk_chart.png`, `stage4_hitk_report.png` в `Этапы/Reports/etap4/retrieval/`;
+- создаются или обновляются `stage4_hitk_results.json`, `stage4_hitk_chart.png`, `stage4_hitk_report.png` в `scripts/stage4_eval/results/retrieval/`;
 - в `stage4_hitk_runs.jsonl` добавляется запись истории;
 - в `Этапы/Reports/etap4/Readme-4.md` обновляется блок §5.3.
 
@@ -225,15 +266,17 @@ python scripts\stage4_eval\demo_stage4_milvus_search.py
 
 | Назначение | Путь |
 |------------|------|
-| Тестовые вопросы и эталоны Clause | `Этапы/Reports/etap4/data/stage4_eval_questions.json` |
-| Последний прогон Hit@k (JSON) | `Этапы/Reports/etap4/retrieval/stage4_hitk_results.json` |
-| История всех прогонов Hit@k | `Этапы/Reports/etap4/retrieval/stage4_hitk_runs.jsonl` |
-| Столбчатая диаграмма Hit@k | `Этапы/Reports/etap4/retrieval/stage4_hitk_chart.png` |
-| Сводный график для Word | `Этапы/Reports/etap4/retrieval/stage4_hitk_report.png` |
-| Метрики generation | `Этапы/Reports/etap4/generation/stage4_gen_eval_results.json` |
-| Текстовое пояснение к generation | `Этапы/Reports/etap4/generation/Etap4-gen-metrics.md` |
+| Реестр контрольных вопросов (300) | `data/rag_eval_questions/eval_questions.json` |
+| Последний прогон Hit@k (JSON) | `scripts/stage4_eval/results/retrieval/stage4_hitk_results.json` |
+| История всех прогонов Hit@k | `scripts/stage4_eval/results/retrieval/stage4_hitk_runs.jsonl` |
+| Столбчатая диаграмма Hit@k | `scripts/stage4_eval/results/retrieval/stage4_hitk_chart.png` |
+| Сводный график для Word | `scripts/stage4_eval/results/retrieval/stage4_hitk_report.png` |
+| Метрики generation | `scripts/stage4_eval/results/generation/stage4_gen_eval_results.json` |
+| Эксплуатационные метрики (performance) | `scripts/stage4_eval/results/generation/stage4_performance_metrics.json` |
+| Метрики LLM-as-a-Judge | `scripts/stage4_eval/results/generation/stage4_llm_judge_metrics.json` |
+| Текстовое пояснение к generation | `scripts/stage4_eval/results/generation/Etap4-gen-metrics.md` |
 
-В файле generation имеет смысл проверить поля `mode_effective`, `blockers`, `metrics.n_questions` и `metrics.partial_run` (при значении `true` обработаны не все вопросы набора).
+В файле generation имеет смысл проверить поля `mode_effective`, `blockers`, `metrics.n_questions` и `metrics.partial_run` (при значении `true` обработаны не все 300 контрольных вопросов). Текст отчёта для диплома: `Этапы/Reports/etap4/Readme-4.md` (числа — из JSON в `results/`).
 
 ---
 
@@ -241,7 +284,7 @@ python scripts\stage4_eval\demo_stage4_milvus_search.py
 
 | Скрипт | Назначение |
 |--------|------------|
-| `report_paths.py` | Константы путей к артефактам этапа 4 |
+| `scripts/lib/report_paths.py` | Константы путей к артефактам этапа 4 |
 | `start_milvus.py`, `start_milvus_logs.py`, `start_ollama.py`, `start_report_docker.py` | Milvus/Ollama: запуск compose и снимок логов Milvus |
 | `compute_detect.py` | Выбор GPU/CPU и запись `rag_runtime.json` |
 | `test_cudo.ps1` | Проверка CUDA, Docker NVIDIA runtime и Ollama |
@@ -269,7 +312,7 @@ python scripts\stage4_eval\demo_stage4_milvus_search.py
 
 Ниже приведены эквивалентные по смыслу последовательности: **пошаговые команды Python** (наглядно для отчёта и отладки) и **сценарии PowerShell** из этого каталога (удобно для повторяемого запуска).
 
-### Способ 1 — команды Python (из корня репозитория)
+### Способ 1 — команды Python (из корневого каталога проекта)
 
 Рекомендуемая последовательность для полного набора метрик retrieval и generation в режиме live:
 
@@ -306,17 +349,19 @@ powershell -ExecutionPolicy Bypass -File scripts\stage4_eval\run_generation.ps1 
 powershell -ExecutionPolicy Bypass -File scripts\stage4_eval\run_all.ps1 -MilvusOnlyHitk
 ```
 
-Сценарии PowerShell внутри переходят в корень репозитория и вызывают интерпретатор из `.venv`, если он установлен.
+Сценарии PowerShell внутри переходят в корневой каталог проекта и вызывают интерпретатор из `.venv`, если он установлен.
+
+После расширения набора до 300 вопросов для актуализации сводного отчёта выполните полный прогон Hit@k, generation, при необходимости `run_perf_and_judge.ps1`, затем обновите §5.4 в `Readme-4.md` числами из JSON-артефактов.
 
 ---
 
 ## Краткая схема контура
 
 ```
-Тестовый вопрос (JSON)
+Контрольный вопрос (реестр JSON)
     → эмбеддинг (SentenceTransformer, CUDA/CPU)
     → Milvus, search_text, top-k
     → [Hit@k: сравнение с Clause в чанках]
     → [Generation live: контекст + Ollama → ответ и метрики citation/groundedness/relevance]
-    → артефакты в Этапы/Reports/etap4/
+    → артефакты в scripts/stage4_eval/results/
 ```

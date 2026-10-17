@@ -14,7 +14,7 @@ volumes:
 ### Когда нужен `pull`
 
 - **Первый раз** после установки или после смены модели в `config/rag_runtime.json` (сейчас у вас `qwen2.5:14b-instruct-q4_K_M`).
-- Явно: `python scripts/start_ollama.py --pull` или `docker exec ollama ollama pull <имя>`.
+- Явно: `python scripts/infra/start_ollama.py --pull` или `docker exec ollama ollama pull <имя>`.
 
 Флаг **`--pull` не обязателен при каждом старте**, если модель уже есть в томе. Его имеет смысл использовать, когда хотите гарантированно подтянуть/обновить веса.
 

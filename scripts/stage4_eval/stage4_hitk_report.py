@@ -173,7 +173,8 @@ def build_section_52_markdown(
         lines.append(device_line)
     lines.extend(
         [
-            f"Число запросов *N* — из {QUESTIONS_REL}; метрики — из {RESULTS_REL}.",
+            f"Число запросов *N* — поле `n_questions` в реестре {QUESTIONS_REL}; "
+            f"метрики прогона — из {RESULTS_REL}.",
             f"Полный JSON: {RESULTS_REL}.",
             "",
             "| Метрика | Значение | Комментарий |",
@@ -202,7 +203,8 @@ def build_section_52_markdown(
     lines.append(format_run_history_markdown(load_run_history(8)))
     lines.append("")
     lines.append(
-        "После изменения вопросов в JSON снова выполните eval — блок обновится автоматически."
+        "После изменения реестра контрольных вопросов снова выполните прогон оценки — "
+        "блок обновится автоматически."
     )
     return "\n".join(lines)
 
@@ -251,5 +253,7 @@ def load_results(path: Path | None = None) -> dict:
 
 
 def load_questions(path: Path | None = None) -> list[dict]:
+    from eval_questions_io import load_eval_questions  # noqa: E402
+
     p = path or QUESTIONS_PATH
-    return json.loads(p.read_text(encoding="utf-8"))
+    return load_eval_questions(p)

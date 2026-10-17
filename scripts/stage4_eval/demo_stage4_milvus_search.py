@@ -33,7 +33,7 @@ def main() -> int:
     if not check_vector_db_server(host, port):
         print(
             f"Milvus недоступен ({host}:{port}). "
-            "Запустите: python scripts/start_report_docker.py",
+            "Запустите: python scripts/infra/start_report_docker.py",
             file=sys.stderr,
         )
         return 1

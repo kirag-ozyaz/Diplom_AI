@@ -161,22 +161,30 @@ energy_norms_bot/
 │   │   └── Нормативная база/
 │   ├── extracted/                      # Извлеченный текст в Markdown (*.md + image_*/)
 │   ├── chunked/                        # Сегментированные данные (*.jsonl + image_*/)
-│   └── embeddings/                     # Векторная база данных Milvus
+│   ├── embeddings/                     # Тома Milvus (если не в Docker volume)
+│   ├── rag_eval_questions/             # Реестр вопросов для eval этапа 4 (eval_questions.json)
+│   └── tests24/                        # JSON билетов ЭБ (источник для сборки вопросов)
 ├── config/                             # Runtime-конфигурация RAG и профили моделей
 │   ├── rag_runtime.json                # Хост Milvus, пути, устройства, load_data/query
 │   └── model_profiles.json             # Профили GPU, overrides, каталог кандидатов моделей
-├── scripts/
-│   └── update_model_profiles.py        # Обновление candidates в model_profiles.json (HF + Ollama)
+├── scripts/                            # См. scripts/README.md
+│   ├── lib/                            # report_paths.py, notebook_bootstrap.py
+│   ├── infra/                          # Milvus/Ollama, compute_detect, update_model_profiles.py
+│   ├── reports/                        # sync_readme4_notebook.py
+│   ├── check/                          # test_ollama, CUDA, smoke RAG
+│   ├── stage4_eval/                    # Hit@k, generation, judge; results/retrieval|generation/
+│   └── tests24/                        # fetch_bilet, build_stage4_eval_questions
+├── manual/                             # Методичка RAG, Hit@k, books/ (см. manual/README.md)
 ├── start/
 │   └── Readme.md                       # ★ Пошаговый запуск проекта (с нуля до query/бота)
-├── Этапы/
-│   └── Reports/                        # Отчеты по этапам проекта
-│       ├── Readme-1.md                 # Отчет: Этап 1 (DOCX → MD)
-│       ├── Readme-2.md                 # Отчет: Этап 2 (MD → Chunks)
-│       ├── Readme-3.md                 # Отчет: Этап 3 (Chunks → Embeddings)
-│       └── Readme-3.ipynb              # Jupyter notebook для Этапа 3
-├── Информация/                         # Справочные материалы
-├── Тема/                               # Материалы по теме проекта
+├── Этапы/                              # Только отчёты (см. Этапы/README.md)
+│   └── Reports/
+│       ├── etap1/ … etap4/             # Readme-*.md / ноутбук этапа 3–4
+│       └── trash/                      # Устаревшие версии
+├── Диплом/                             # Тема и ТЗ платформы (не отчёты)
+│   ├── тема/                           # Формулировка, иллюстрации
+│   └── ТЗ/                             # PDF/DOCX, шаблоны сдачи
+├── Информация/                         # Справочные материалы курса
 ├── .gitignore
 └── Readme.md                           # Описание проекта (этот файл)
 ```
@@ -252,7 +260,7 @@ docker compose up -d
 Профили авто-выбора модели по GPU лежат в `config/model_profiles.json`:
 - `profiles` — набор профилей по VRAM (`rtx2060_baseline`, `mid_gpu`, `high_gpu`)
 - `gpu_name_overrides` — привязка конкретной видеокарты к профилю (например, RTX 2060 → `all-MiniLM-L6-v2`)
-- `candidates` — каталог embedding/LLM-моделей (обновляется скриптом `scripts/update_model_profiles.py`)
+- `candidates` — каталог embedding/LLM-моделей (обновляется скриптом `scripts/infra/update_model_profiles.py`)
 
 **Автовыбор embedding-модели** (`model_selector.py`):
 1. `auto_select_text_model=false` → берётся `models.text_model_name`
@@ -263,9 +271,9 @@ docker compose up -d
 
 **Обновление каталога моделей:**
 ```bash
-python scripts/update_model_profiles.py
+python scripts/infra/update_model_profiles.py
 # или с лимитами:
-python scripts/update_model_profiles.py --max-hf-per-query 5 --max-ollama-models 20
+python scripts/infra/update_model_profiles.py --max-hf-per-query 5 --max-ollama-models 20
 ```
 Скрипт дополняет `candidates` моделями из Hugging Face API, Ollama и `embedding_config.json`, не удаляя закреплённые (`pinned`) записи.
 
@@ -385,7 +393,7 @@ python -m src.bot
 | `src/preprocessing/Create_chunkeds/` | Сегментация Markdown → чанки (JSONL) с метаданными ПУЭ |
 | `src/preprocessing/Create_embeddings/` | Multimodal RAG: эмбеддинги, Milvus, поиск; runtime-конфиг и автовыбор модели |
 | `config/` | `rag_runtime.json` — параметры окружения; `model_profiles.json` — профили GPU |
-| `scripts/update_model_profiles.py` | Обновление каталога embedding/LLM-моделей в `model_profiles.json` |
+| `scripts/infra/update_model_profiles.py` | Обновление каталога embedding/LLM-моделей в `model_profiles.json` |
 
 ---
 
@@ -572,12 +580,12 @@ python -m src.bot
 
 ---
 
-### 4. scripts/update_model_profiles.py
+### 4. scripts/infra/update_model_profiles.py
 
 | Функция | Описание |
 |---------|----------|
 | `update_model_profiles(max_hf_per_query, max_ollama_models)` | Обновляет блок `candidates` в `config/model_profiles.json`: собирает модели из `embedding_config.json`, Hugging Face API, Ollama; сохраняет pinned-модели; записывает `candidate_refresh.updated_at_utc`. |
-| `main()` | CLI: `--max-hf-per-query`, `--max-ollama-models`. Запуск: `python scripts/update_model_profiles.py`. |
+| `main()` | CLI: `--max-hf-per-query`, `--max-ollama-models`. Запуск: `python scripts/infra/update_model_profiles.py`. |
 
 ---
 

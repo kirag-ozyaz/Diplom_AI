@@ -7,10 +7,10 @@ import json
 import re
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
 import sys
 
-sys.path.insert(0, str(ROOT / "scripts"))
+sys.path.insert(0, str(ROOT / "scripts" / "lib"))
 from report_paths import (  # noqa: E402
     README4_MD,
     README4_NB,
@@ -99,7 +99,7 @@ def main() -> None:
         "**Как пользоваться.** (1) Bootstrap. (2) Docker / Milvus. "
         "(3) Раздел 5: **§5.2** прогон → **§5.3** таблица/Plotly (или §5.3 с `force_eval=True`). "
         "(4) Раздел 6 — demo Milvus. (5) **§7** — code-ячейка выводов после §5.2. "
-        "Текст: `Readme-4.md` → `python scripts/sync_readme4_notebook.py`."
+        "Текст: `Readme-4.md` → `python scripts/reports/sync_readme4_notebook.py`."
     )
 
     sec5 = sections[5]
@@ -156,8 +156,8 @@ def main() -> None:
     sec6 = sections[6]
     extra_rows = (
         "| `scripts/stage4_eval/demo_stage4_milvus_search.py` | Демо семантического поиска (§6 ноутбука) |\n"
-        "| `scripts/test_rag_ollama.py` | Полный RAG (Milvus + Ollama) |\n"
-        "| `scripts/sync_readme4_notebook.py` | Обновить текст ячеек ноутбука из `Readme-4.md` |\n"
+        "| `scripts/check/test_rag_ollama.py` | Полный RAG (Milvus + Ollama) |\n"
+        "| `scripts/reports/sync_readme4_notebook.py` | Обновить текст ячеек ноутбука из `Readme-4.md` |\n"
     )
     sec6_nb = sec6.replace(
         "| Файл | Назначение |\n|------|------------|\n",

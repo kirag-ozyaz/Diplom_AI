@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 Запуск Ollama в Docker с выбором GPU или CPU compose.
-Из корня: python scripts/start_ollama.py [--pull] [--check-only]
+Из корня: python scripts/infra/start_ollama.py [--pull] [--check-only]
 """
 from __future__ import annotations
 
@@ -9,10 +9,13 @@ import subprocess
 import sys
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[1]
+_INFRA = Path(__file__).resolve().parent
+_SCRIPTS = _INFRA.parent
+ROOT = _SCRIPTS.parent
 OLLAMA_DIR = ROOT / "infra" / "docker" / "Dockerfile.ollama"
 
-sys.path.insert(0, str(ROOT / "scripts"))
+for _p in (_SCRIPTS / "lib", _INFRA):
+    sys.path.insert(0, str(_p))
 from compute_detect import build_compute_report, ensure_runtime_config  # noqa: E402
 
 

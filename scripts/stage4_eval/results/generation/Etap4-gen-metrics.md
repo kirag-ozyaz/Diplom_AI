@@ -3,7 +3,7 @@
 **Дата прогона:** 07.10.2026 00:10  
 **Режим:** `mock` (запрошен `mock`)  
 **Скрипт:** `scripts/stage4_eval/eval_rag_generation.py`  
-**Набор:** тот же файл вопросов, что Hit@k (`Этапы/Reports/etap4/data/stage4_eval_questions.json`)  
+**Набор:** тот же реестр контрольных вопросов, что и для Hit@k — **300** записей (`data/rag_eval_questions/eval_questions.json`, поле `n_questions`)  
 **Выравнивание по Hit@5:** True (из `stage4_hitk_results.json`)
 
 ## Инфраструктура
@@ -14,15 +14,15 @@
 | Milvus (`:19530`) | недоступен |
 | Ollama (`:11434`) | недоступен |
 
-Попытка `python scripts/start_milvus.py` / `start_ollama.py` — блокируется отсутствием Docker.  
+Попытка `python scripts/infra/start_milvus.py` / `start_ollama.py` — блокируется отсутствием Docker.  
 Поэтому выполнен **mock**-прогон (не live RAG).
 
 ### Как запустить live у себя
 
 ```bash
 cd Diplom_AI
-python scripts/start_milvus.py
-python scripts/start_ollama.py --pull
+python scripts/infra/start_milvus.py
+python scripts/infra/start_ollama.py --pull
 python scripts/stage4_eval/eval_rag_generation.py --mode live \
   --out /workspace/stage4_gen_eval_results.json --llm-judge
 ```
@@ -33,7 +33,9 @@ Mock / dry-run (без Docker):
 python scripts/stage4_eval/eval_rag_generation.py --mode mock
 ```
 
-## Метрики (mock, N=25)
+## Метрики (mock, устаревший прогон N=25)
+
+*Ниже — сохранённый черновой прогон на 25 вопросах. После перехода на реестр из 300 вопросов выполните `eval_rag_generation.py` заново и обновите этот раздел.*
 
 | Метрика | Значение | Смысл |
 |---------|----------|--------|
@@ -58,12 +60,12 @@ Mock **симулирует** generation с опорой на Hit@5 из уже 
 |------|------------|
 | `scripts/stage4_eval/eval_rag_generation.py` | скрипт оценки |
 | `/workspace/stage4_gen_eval_results.json` | результаты этого прогона |
-| `/workspace/Diplom_AI/Этапы/Reports/stage4_gen_eval_results.json` | копия в дереве репо (локально, **не запушено**) |
+| `scripts/stage4_eval/results/generation/stage4_gen_eval_results.json` | актуальный путь результатов в каталоге проекта |
 | `/workspace/Etap4-gen-metrics.md` | эта сводка |
 
 ## Blockers для live
 
-1. Нет Docker на agent box → нельзя поднять Milvus/Ollama через `scripts/start_*.py`.
+1. Нет Docker на agent box → нельзя поднять Milvus/Ollama через `scripts/infra/start_*.py`.
 2. Порты 19530 / 11434 закрыты.
 3. Без live embeddings + LLM нельзя получить реальные ответы `rag_service.answer()`.
 

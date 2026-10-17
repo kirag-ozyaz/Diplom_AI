@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 Проверка CUDA / GPU для проекта: эмбеддинги (PyTorch) и Ollama (Docker).
-Запуск из корня: python scripts/compute_detect.py [--json]
+Запуск из корня: python scripts/infra/compute_detect.py [--json]
 """
 from __future__ import annotations
 
@@ -115,7 +115,7 @@ def build_compute_report() -> ComputeReport:
             f"pip install torch torchvision --index-url https://download.pytorch.org/whl/{pip_hint}"
         )
         notes.append(
-            "После установки снова: python scripts/compute_detect.py --apply-config"
+            "После установки снова: python scripts/infra/compute_detect.py --apply-config"
         )
     if smi_ok and docker_ok and not docker_nvidia:
         notes.append(

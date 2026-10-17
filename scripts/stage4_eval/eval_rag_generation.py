@@ -1,22 +1,22 @@
 # -*- coding: utf-8 -*-
 """
 Этап 4+: оценка generation / citation / groundedness на том же наборе
-вопросов, что и Hit@k (Этапы/Reports/etap4/data/stage4_eval_questions.json).
+вопросов, что и Hit@k (data/rag_eval_questions/eval_questions.json).
 
 Режимы:
   live   — Milvus + Ollama через src.rag.rag_service.answer
   mock   — офлайн: контекст из data/chunked/*.jsonl (и опционально hit@k JSON)
   dry-run — то же, что mock (алиас)
 
-Запуск из корня репозитория:
+Запуск из корневого каталога проекта:
   python scripts/stage4_eval/eval_rag_generation.py
   python scripts/stage4_eval/eval_rag_generation.py --mode live
   python scripts/stage4_eval/eval_rag_generation.py --mode mock --limit 5
 
 Инфра:
-  python scripts/start_milvus.py
-  python scripts/start_milvus_logs.py   # снимок логов после сбоя Milvus
-  python scripts/start_ollama.py --pull
+  python scripts/infra/start_milvus.py
+  python scripts/infra/start_milvus_logs.py   # снимок логов после сбоя Milvus
+  python scripts/infra/start_ollama.py --pull
 """
 from __future__ import annotations
 
@@ -405,7 +405,9 @@ def run_eval(
     if not QUESTIONS_PATH.is_file():
         raise RuntimeError(f"Нет файла вопросов: {QUESTIONS_PATH}")
 
-    questions = json.loads(QUESTIONS_PATH.read_text(encoding="utf-8"))
+    from eval_questions_io import load_eval_questions  # noqa: E402
+
+    questions = load_eval_questions(QUESTIONS_PATH)
     if start_id is not None:
         questions = [q for q in questions if int(q.get("id", 0)) >= start_id]
     if limit is not None:
@@ -424,11 +426,11 @@ def run_eval(
         if not m_ok:
             blockers.append(
                 "Milvus недоступен (localhost:19530). "
-                "Запустите: python scripts/start_milvus.py; "
-                "диагностика: python scripts/start_milvus_logs.py"
+                "Запустите: python scripts/infra/start_milvus.py; "
+                "диагностика: python scripts/infra/start_milvus_logs.py"
             )
         if not o_ok:
-            blockers.append("Ollama недоступен (localhost:11434). Запустите: python scripts/start_ollama.py --pull")
+            blockers.append("Ollama недоступен (localhost:11434). Запустите: python scripts/infra/start_ollama.py --pull")
         if blockers:
             print("LIVE недоступен, переключаюсь на mock:\n  - " + "\n  - ".join(blockers))
             mode_eff = "mock"
@@ -555,7 +557,7 @@ def main() -> None:
         "--out",
         type=Path,
         default=None,
-        help="Путь JSON (по умолчанию etap4/generation/stage4_gen_eval_results.json)",
+        help="Путь JSON (по умолчанию scripts/stage4_eval/results/generation/stage4_gen_eval_results.json)",
     )
     parser.add_argument(
         "--no-hitk",

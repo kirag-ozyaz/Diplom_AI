@@ -3,9 +3,9 @@
 Снять логи контейнеров Milvus в infra/milvus/logs/<дата-время>/.
 
 Из корня репозитория:
-  python scripts/start_milvus_logs.py
-  python scripts/start_milvus_logs.py --since 6h
-  python scripts/start_milvus_logs.py --tail 500
+  python scripts/infra/start_milvus_logs.py
+  python scripts/infra/start_milvus_logs.py --since 6h
+  python scripts/infra/start_milvus_logs.py --tail 500
 """
 from __future__ import annotations
 
@@ -15,7 +15,11 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
-from notebook_bootstrap import find_project_root
+_SCRIPTS = Path(__file__).resolve().parents[1]
+import sys
+
+sys.path.insert(0, str(_SCRIPTS / "lib"))
+from notebook_bootstrap import find_project_root  # noqa: E402
 
 MILVUS_CONTAINERS = (
     "milvus-standalone",

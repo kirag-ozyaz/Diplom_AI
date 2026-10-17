@@ -3,7 +3,7 @@
   "mode_requested": "live",
   "mode_effective": "live",
   "source": "eval_rag_generation.py",
-  "questions_path": "Этапы\\Reports\\etap4\\data\\stage4_eval_questions.json",
+  "questions_path": "Этапы\\Reports\\etap4\\data\\eval_questions.json",
   "hitk_aligned": true,
   "blockers": [],
   "metrics": {

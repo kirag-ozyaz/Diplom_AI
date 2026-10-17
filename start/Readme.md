@@ -2,8 +2,37 @@
 
 Единая инструкция: от установки окружения до поиска по базе и (опционально) Telegram-бота.
 
-> **Краткий путь** (если данные уже подготовлены и Milvus запущен): шаги **0 → 1 → 2 → 4 → 5 → 6 → 7**.  
-> **Полный путь** (с нуля): все шаги **0–9**.
+Ниже два уровня нумерации:
+
+- **Шаги 0–9** — порядок команд в этой инструкции (окружение, Docker, скрипты).
+- **Этапы диплома 1–4** — что сдавать в `Этапы/Reports/`; каждый этап = цепочка шагов из этой же инструкции.
+
+> **Краткий путь** (чанки уже есть, Milvus запущен): **0 → 1 → 2 → 4 → 5 → 6 → 7** (этапы **3–4** без пересборки данных).  
+> **Полный путь** (с нуля): **0–9** (включая этапы **1–2** в шаге 3).
+
+---
+
+## Этапы диплома (1–4): что прогонять
+
+Перед любым этапом один раз: **шаги 0–2** (venv, `requirements.txt`, `config/rag_runtime.json`).
+
+| Этап | Задача | Прогон (команды) | Отчёт / артефакт |
+|------|--------|------------------|------------------|
+| **1** | DOCX → Markdown | **Шаг 3.2** — `Create_mds/generator.py -r` | `Этапы/Reports/etap1/Readme-1.md` |
+| **2** | Markdown → чанки JSONL | **Шаг 3.3** — `Create_chunkeds/generator.py -r` | `Этапы/Reports/etap2/Readme-2.md` |
+| **3** | Чанки → Milvus (эмбеддинги) | **Шаги 4 → 5 → 6** — Milvus, `test_connection.py`, `load_data.py`; для сдачи — ноутбук | `Этапы/Reports/etap3/Readme-3 (ver. 4).ipynb` |
+| **4** | RAG: поиск + LLM + метрики | **Шаги 4–8** (Milvus, `load_data`, `query` / `query_test`, Ollama) + блок **«Метрики этапа 4»** ниже | `Этапы/Reports/etap4/Readme-4.md`, ноутбук `Readme-4 (ver. 2).ipynb` |
+
+**Этап 4 — типовой порядок метрик** (подробно: `scripts/stage4_eval/README.md`):
+
+1. Milvus и (для generation) Ollama — шаги 4 и 8 или `python scripts\infra\start_report_docker.py`.
+2. Hit@k: `python scripts\stage4_eval\eval_retrieval_hitk.py` или `scripts\stage4_eval\run_hitk.ps1`.
+3. Generation (live): `run_generation.ps1` / `eval_rag_generation.py --mode live`.
+4. Performance + LLM-judge: `run_perf_and_judge.ps1`.
+5. Всё подряд: `scripts\stage4_eval\run_all.ps1`.
+6. Обновить §5.3 в отчёте: `python scripts\stage4_eval\update_readme4_eval_docs.py` (после Hit@k).
+
+Исполняемый отчёт этапа 4 — ячейки ноутбука `Readme-4 (ver. 2).ipynb` (те же сервисы и скрипты, что в мануале stage4_eval).
 
 ---
 
@@ -15,7 +44,12 @@
 | Ollama LLM (подробно) | `infra/docker/Dockerfile.ollama/README.md` |
 | Конфиг RAG | `config/rag_runtime.json` |
 | Профили GPU / модели | `config/model_profiles.json` |
-| Общее описание проекта | `Readme.md` (корень) |
+| Общее описание проекта | `Readme.md` (корень), дерево каталогов — § «Структура проекта» |
+| Тема и ТЗ платформы | `Диплом/` (`тема/`, `ТЗ/`) |
+| Отчёты по этапам | `Этапы/Reports/` |
+| Отчёт этапа 4 (RAG) | `Этапы/Reports/etap4/Readme-4.md` |
+| Вопросы eval этапа 4 | `data/rag_eval_questions/eval_questions.json` |
+| Метрики eval этапа 4 | `scripts/stage4_eval/results/` |
 
 ---
 
@@ -262,8 +296,8 @@ python src\preprocessing\Create_embeddings\query_test.py
 **Проверка CUDA и выбор compose (GPU / CPU):**
 
 ```powershell
-python scripts\compute_detect.py
-python scripts\compute_detect.py --apply-config
+python scripts\infra\compute_detect.py
+python scripts\infra\compute_detect.py --apply-config
 ```
 
 При старте **Milvus / Ollama / start_report_docker** конфиг `rag_runtime.json` синхронизируется автоматически (`device_text`, при `auto_select_ollama_model` — `ollama.model`).
@@ -271,7 +305,7 @@ python scripts\compute_detect.py --apply-config
 **Запуск Ollama** (автовыбор compose и модели LLM):
 
 ```powershell
-python scripts\start_ollama.py --pull
+python scripts\infra\start_ollama.py --pull
 ```
 
 Ручной вариант:
@@ -311,8 +345,8 @@ curl http://localhost:11434/api/tags
 **Проверка Ollama и RAG (из корня проекта):**
 
 ```powershell
-python scripts\test_ollama.py
-python scripts\test_rag_ollama.py "Что такое нулевой защитный проводник?"
+python scripts\check\test_ollama.py
+python scripts\check\test_rag_ollama.py "Что такое нулевой защитный проводник?"
 ```
 
 Модель LLM задаётся в `config/rag_runtime.json` → секция `ollama` (должна совпадать с `ollama pull`).
@@ -359,7 +393,7 @@ data/raw (DOCX)
 
 ## Метрики этапа 4 (Hit@k + generation)
 
-Пошаговый мануал и PowerShell-обёртки: **`scripts/stage4_eval/README.md`**.
+См. таблицу **«Этапы диплома (1–4)»** в начале файла. Пошаговый мануал и PowerShell-обёртки: **`scripts/stage4_eval/README.md`**.
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File scripts\stage4_eval\run_all.ps1
@@ -380,5 +414,5 @@ cd infra\milvus; docker compose down -v; docker compose up -d; cd ..\..
 docker logs -f ollama
 
 # Обновить каталог embedding-моделей
-python scripts\update_model_profiles.py
+python scripts\infra\update_model_profiles.py
 ```

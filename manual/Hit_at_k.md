@@ -20,7 +20,7 @@
 
 **Hit@k = (1 / N) · Σ hit@k(q)**
 
-В прототипе: *N* — число записей в `stage4_eval_questions.json`, один эталонный пункт ПУЭ (`Clause`) на вопрос, *k* ∈ {1, 3, 5}.
+В прототипе: *N* — значение поля `n_questions` в реестре `eval_questions.json` (контрольный набор **300** вопросов), один эталонный пункт ПУЭ (`Clause`) на вопрос, *k* ∈ {1, 3, 5}.
 
 | Метрика | Смысл |
 |---------|--------|
@@ -87,7 +87,7 @@ https://arxiv.org/abs/2005.11401
 
 Скрипт: `python scripts/stage4_eval/eval_retrieval_hitk.py` (см. `scripts/stage4_eval/README.md`).
 
-1. Вопрос из `Этапы/Reports/etap4/data/stage4_eval_questions.json` (формулировки можно брать из билетов Tests24 — см. `manual/tests24_electro_safety.md`, сырые JSON в `data/tests24/`).
+1. Вопрос из реестра `data/rag_eval_questions/eval_questions.json` (массив `questions`; дополнительные формулировки — из билетов Tests24, см. `manual/tests24_electro_safety.md`).
 2. Один вызов `search_text` (лимит ≥ 5).
 3. Успех, если в поле `text` одного из первых *k* чанков есть номер пункта (`1.1.4`, `п. 1.1.4`, `Пункт 1.1.4`).
 

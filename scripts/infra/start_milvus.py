@@ -1,6 +1,6 @@
 """Запуск Milvus standalone: docker compose up -d в infra/milvus.
 
-Диагностика после сбоя: scripts/start_milvus_logs.py (см. infra/milvus/Storage.md).
+Диагностика после сбоя: scripts/infra/start_milvus_logs.py (см. infra/milvus/Storage.md).
 """
 from __future__ import annotations
 
@@ -8,9 +8,13 @@ import subprocess
 import sys
 from pathlib import Path
 
-from notebook_bootstrap import find_project_root
+_INFRA = Path(__file__).resolve().parent
+_SCRIPTS = _INFRA.parent
+for _p in (_SCRIPTS / "lib", _INFRA):
+    sys.path.insert(0, str(_p))
+from notebook_bootstrap import find_project_root  # noqa: E402
 
-SCRIPTS_DIR = Path(__file__).resolve().parent
+SCRIPTS_DIR = _INFRA
 
 
 def start_milvus(*, root: Path | None = None, skip_compute_bootstrap: bool = False) -> int:

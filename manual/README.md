@@ -18,6 +18,7 @@
 | `Hit_at_k.md` | Hit@k: определение, формула, связь с Recall@k, применение в проекте |
 | `OpenCLIP_ViT-B-32.md` | CLIP/OpenCLIP ViT-B-32: роль в `multimodal_rag`, Milvus `image_vector`, `load_image_model` |
 | `tests24_electro_safety.md` | Внешние билеты ЭБ: [tests24.ru](https://tests24.ru/), [tests24.su](https://tests24.su/test-24/elektrobezopasnost/), скрипты `scripts/tests24/` |
+| `rclone.md` | Rclone: установка, `gdrive_kirag_3:project_rag`, **`rclone-backup.bat`** / **`rclone-restore.bat`** / **`rclone-sync.bat`**, фильтры из `.gitignore` |
 
 ---
 

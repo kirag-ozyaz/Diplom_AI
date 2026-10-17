@@ -1,9 +1,14 @@
 # -*- coding: utf-8 -*-
 """
-Сборка stage4_eval_questions.json из выгрузок Tests24 (только вопросы по ПУЭ).
+Сборка реестра контрольных вопросов из выгрузок Tests24 (только формулировки по ПУЭ).
+
+Выход — JSON-реестр (title, n_questions, questions[]), см. eval_questions_io.write_eval_registry.
 
   python scripts/tests24/build_stage4_eval_questions.py
-  python scripts/tests24/build_stage4_eval_questions.py --merge-base  # 38 базовых + tests24
+  python scripts/tests24/build_stage4_eval_questions.py --merge-base -o путь/к/файлу.json
+
+По умолчанию целевой файл — eval_questions.json. Не перезаписывайте основной
+набор из 300 вопросов без явного указания -o.
 """
 from __future__ import annotations
 
@@ -17,9 +22,14 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from paths import TESTS24_DATA  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(ROOT / "scripts" / "lib"))
+sys.path.insert(0, str(ROOT / "scripts" / "stage4_eval"))
+from eval_questions_io import load_eval_questions, write_eval_registry  # noqa: E402
+from report_paths import STAGE4_QUESTIONS, STAGE4_QUESTIONS_BASE38  # noqa: E402
+
 EXTRACTED = ROOT / "data" / "extracted"
-OUT_DEFAULT = ROOT / "Этапы" / "Reports" / "etap4" / "data" / "stage4_eval_questions.json"
-BASE_38 = ROOT / "Этапы" / "Reports" / "etap4" / "data" / "stage4_eval_questions_base38.json"
+OUT_DEFAULT = STAGE4_QUESTIONS
+BASE_38 = STAGE4_QUESTIONS_BASE38
 
 PUE_MARKER = re.compile(
     r"согласно\s+Правилам\s+устройства\s+электроустановок",
@@ -199,7 +209,7 @@ def main() -> None:
         "--output",
         type=Path,
         default=OUT_DEFAULT,
-        help="Куда записать stage4_eval_questions.json",
+        help="Куда записать eval_questions.json",
     )
     ap.add_argument(
         "--merge-base",
@@ -218,9 +228,15 @@ def main() -> None:
 
     payload: list[dict] = []
     if args.merge_base and BASE_38.is_file():
-        base = json.loads(BASE_38.read_text(encoding="utf-8"))
+        base = load_eval_questions(BASE_38)
         payload.extend(
-            {"id": x["id"], "query": x["query"], "expected_clause": x["expected_clause"]}
+            {
+                "id": x["id"],
+                "registry_id": x.get("registry_id") or f"Q-{x['id']:03d}",
+                "query": x["query"],
+                "expected_clause": x["expected_clause"],
+                "section": x.get("section") or "Базовый набор (base38)",
+            }
             for x in base
         )
         base_keys = {
@@ -234,8 +250,10 @@ def main() -> None:
             payload.append(
                 {
                     "id": next_id,
+                    "registry_id": f"Q-{next_id:03d}",
                     "query": it["query"],
                     "expected_clause": it["expected_clause"],
+                    "section": "Tests24.ru",
                 }
             )
             base_keys.add(key)
@@ -245,15 +263,21 @@ def main() -> None:
             payload.append(
                 {
                     "id": i,
+                    "registry_id": f"Q-{i:03d}",
                     "query": it["query"],
                     "expected_clause": it["expected_clause"],
+                    "section": "Tests24.ru",
                 }
             )
 
-    args.output.parent.mkdir(parents=True, exist_ok=True)
-    args.output.write_text(
-        json.dumps(payload, ensure_ascii=False, indent=2) + "\n",
-        encoding="utf-8",
+    rel_out = args.output.relative_to(ROOT).as_posix() if args.output.is_relative_to(ROOT) else args.output.name
+    write_eval_registry(
+        args.output,
+        {
+            "title": "Eval-набор этапа 4 (Tests24 + base38)",
+            "source_file": rel_out,
+            "questions": payload,
+        },
     )
     print(f"Записано {len(payload)} вопросов -> {args.output}")
     print(f"Из tests24 (после дедупа): {len(from_tests24)}")

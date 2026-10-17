@@ -1,17 +1,19 @@
 # Этап №4. | AI/ML | Прототип рабочего контура RAG и первая точность retrieval (Hit@k)
 
 **Проект:** интеллектуальный Telegram-бот с RAG по Правилам устройства электроустановок (ПУЭ), 7-е издание.  
-**Репозиторий:** `Итоговы_Проект` (ветка дипломной работы).  
+**Каталог проекта:** `Итоговы_Проект` (материалы дипломной работы).  
 **Дата отчёта:** 27.09.2026.
 
-**Расположение файлов этапа 4:** каталог `Этапы/Reports/etap4/` (см. также `Этапы/Reports/README.md`).
+**Этот каталог:** только текст отчёта (`Readme-4.md`). Исходники и артефакты — см. `Этапы/Reports/README.md` и `scripts/lib/report_paths.py`.
 
-| Подкаталог / файл | Назначение |
-|-------------------|------------|
-| `Readme-4.md`, `Readme-4 (ver. 2).ipynb` | Текст для Word и исполняемый ноутбук |
-| `data/stage4_eval_questions.json` | Тестовые вопросы и эталоны Clause |
-| `retrieval/` | Hit@k: JSON, история прогонов, PNG-графики |
-| `generation/` | Метрики RAG-generation (`eval_rag_generation.py`) |
+| Путь (от корня проекта) | Назначение |
+|-------------------------|------------|
+| `Этапы/Reports/etap4/Readme-4.md` | Текст для Word (этот файл) |
+| `Этапы/Reports/etap4/Readme-4 (ver. 2).ipynb` | Исполняемый отчёт |
+| `data/rag_eval_questions/eval_questions.json` | Реестр **300** контрольных вопросов (`n_questions`, `questions[]`) |
+| `scripts/stage4_eval/Сводка_метрик_этапа_4.md` | Перечень метрик, поля JSON, процедура пересчёта |
+| `scripts/stage4_eval/results/retrieval/` | Hit@k: JSON, история, PNG |
+| `scripts/stage4_eval/results/generation/` | Generation, performance, LLM-judge |
 
 ---
 
@@ -40,7 +42,7 @@
 ### Ожидаемый результат этапа
 
 - Рабочий контур **«вопрос → эмбеддинг → Milvus → top-k → (опционально) LLM»**.
-- Набор тестовых вопросов с эталонными пунктами и процедура расчёта Hit@1 / Hit@3 / Hit@5.
+- Контрольный набор из **300** вопросов с эталонными пунктами ПУЭ и процедура расчёта Hit@1 / Hit@3 / Hit@5.
 - Описание архитектуры полного RAG (retrieval + LLM) для следующей итерации (Telegram-бот, этап 5).
 
 ---
@@ -196,7 +198,7 @@
 
 **Hit@k = (1 / N) · Σ hit@k(q)**
 
-В прототипе: *N* = 73 (`stage4_eval_questions.json`; число строк в JSON, обновляется после eval), релевантность — один эталонный **Clause**, *k* ∈ {1, 3, 5}. Всегда выполняется **Hit@1 ≤ Hit@3 ≤ Hit@5**.
+В прототипе: *N* = **300** — значение поля `n_questions` в реестре `eval_questions.json` (массив `questions`; обновляется при изменении набора и после прогона оценки). Релевантность — один эталонный **Clause** на вопрос, *k* ∈ {1, 3, 5}. Всегда выполняется **Hit@1 ≤ Hit@3 ≤ Hit@5**.
 
 | Метрика | Смысл в проекте |
 |---------|-----------------|
@@ -241,10 +243,10 @@ Precision@k при одном эталоне равна 1/*k* при попад�
 
 ```powershell
 cd X:\Учеба_УИИ\Итоговы_Проект
-python scripts/start_report_docker.py
+python scripts/infra/start_report_docker.py
 ```
 
-Только Milvus (Hit@k / поиск без LLM): `python scripts/start_milvus.py` или `python scripts/start_report_docker.py --skip-ollama`.
+Только Milvus (Hit@k / поиск без LLM): `python scripts/infra/start_milvus.py` или `python scripts/infra/start_report_docker.py --skip-ollama`.
 
 В ноутбуке: вторая code-ячейка после bootstrap вызывает `start_report_docker.py` (в ячейке — комментарий с установкой PyTorch CUDA при предупреждении про `torch.cuda`).
 
@@ -256,7 +258,7 @@ pip install torch torchvision --index-url https://download.pytorch.org/whl/cu128
 python -c "import torch; print('cuda:', torch.cuda.is_available())"
 ```
 
-Для RTX 5060 Ti и новее — **cu128** (`start/Readme.md`). Оставить эмбеддинги на CPU: `python scripts/compute_detect.py --apply-config`.
+Для RTX 5060 Ti и новее — **cu128** (`start/Readme.md`). Оставить эмбеддинги на CPU: `python scripts/infra/compute_detect.py --apply-config`.
 
 Проверка Milvus:
 
@@ -280,9 +282,11 @@ cd X:\Учеба_УИИ\Итоговы_Проект
 python scripts/stage4_eval/eval_retrieval_hitk.py
 ```
 
-Сохраняются в `etap4/retrieval/`: `stage4_hitk_results.json`, `stage4_hitk_chart.png`, `stage4_hitk_report.png`; обновляется блок §5.3 в этом файле.
+Сохраняются в `scripts/stage4_eval/results/retrieval/`: `stage4_hitk_results.json`, `stage4_hitk_chart.png`, `stage4_hitk_report.png`; обновляется блок §5.3 в этом файле.
 
 ### 5.3. Результаты прогона
+
+Контрольный набор для расчёта — **300** вопросов. Таблица ниже заполняется **автоматически** из последнего файла `stage4_hitk_results.json`; если прогон выполнялся на меньшем *N*, в таблице будут старые числа до полного пересчёта на актуальном реестре.
 
 В ноутбуке: **code-ячейка §5.3** — таблица и Plotly по актуальному `stage4_hitk_results.json` (после §5.2 в той же сессии или `force_eval=True` в ячейке).
 
@@ -292,15 +296,15 @@ python scripts/stage4_eval/eval_retrieval_hitk.py
 Коллекция: `diplom_multimodal`, **2912** записей в Milvus. Модель при оценке: `intfloat/multilingual-e5-base`.
 Последний прогон: **08.10.2026 01:10** (`python scripts/stage4_eval/eval_retrieval_hitk.py`).
 Inference эмбеддингов при прогоне eval: **cuda**.
-Число запросов *N* — из `Этапы/Reports/etap4/data/stage4_eval_questions.json`; метрики — из `Этапы/Reports/etap4/retrieval/stage4_hitk_results.json`.
-Полный JSON: `Этапы/Reports/etap4/retrieval/stage4_hitk_results.json`.
+Число запросов *N* — из `data/rag_eval_questions/eval_questions.json`; метрики — из `scripts/stage4_eval/results/retrieval/stage4_hitk_results.json`.
+Полный JSON: `scripts/stage4_eval/results/retrieval/stage4_hitk_results.json`.
 
 | Метрика | Значение | Комментарий |
 |---------|----------|-------------|
 | Hit@1 | **50 / 73 (68,5 %)** | Эталонный пункт на 1-м месте |
 | Hit@3 | **56 / 73 (76,7 %)** | Эталонный пункт в top-3 |
 | Hit@5 | **58 / 73 (79,5 %)** | Эталонный пункт в top-5 |
-| Число запросов | **73** | `Этапы/Reports/etap4/data/stage4_eval_questions.json` |
+| Число запросов | **73** | `data/rag_eval_questions/eval_questions.json` |
 | Сводка JSON | Hit@1 68.5 %, Hit@3 76.7 %, Hit@5 79.5 % | `metrics_percent` в JSON |
 
 Примеры успешных Hit@5: id 3, id 4, id 5, id 6, id 12, id 13, id 14, id 15 … (всего 58).
@@ -308,7 +312,7 @@ Inference эмбеддингов при прогоне eval: **cuda**.
 Средний cosine top-1: при Hit@5 **0.890**, при промахе Hit@5 **0.865**.
 
 
-**История прогонов** (каждый вызов `eval_retrieval_hitk.py`, файл `Этапы/Reports/etap4/retrieval/stage4_hitk_runs.jsonl`):
+**История прогонов** (каждый вызов `eval_retrieval_hitk.py`, файл `scripts/stage4_eval/results/retrieval/stage4_hitk_runs.jsonl`):
 
 | Прогон (eval) | N | Hit@1 | Hit@3 | Hit@5 | Модель |
 |---|---:|---:|---:|---:|---|
@@ -324,11 +328,61 @@ Inference эмбеддингов при прогоне eval: **cuda**.
 После изменения вопросов в JSON снова выполните eval — блок обновится автоматически.
 <!-- stage4-eval:5.3:end -->
 
-Полный JSON и графики: `etap4/retrieval/` (см. таблицу в начале документа). При изменении `etap4/data/stage4_eval_questions.json` снова запустите §5.2 — обновятся §5.3, §6.1 и *N* в §4.4 / §7.
+Полный JSON и графики: `scripts/stage4_eval/results/retrieval/` (см. таблицу в начале). При изменении `data/rag_eval_questions/eval_questions.json` снова запустите §5.2 — обновятся §5.3, §6.1 и *N* в §4.4 / §7.
 
-### 6.3. Метрики generation (дополнение к Hit@k)
+### 5.4. Прочие метрики (кроме Hit@k)
 
-Скрипт `scripts/stage4_eval/eval_rag_generation.py` (режим `live` — Milvus + Ollama; `mock` — офлайн по chunked). Результаты: `etap4/generation/stage4_gen_eval_results.json`, пояснение: `etap4/generation/Etap4-gen-metrics.md`. Команды и обёртки: **`scripts/stage4_eval/README.md`**.
+Помимо Hit@k (§5.3) в проекте **уже выполнялись** прогоны и сохранены JSON:
+
+| Слой | Метрики | Скрипт | Артефакт |
+|------|---------|--------|----------|
+| Generation (полный RAG) | citation rate, groundedness, relevance | `eval_rag_generation.py` | `generation/stage4_gen_eval_results.json` |
+| Эксплуатация | TTFT, TPS, latency (avg, p95, p99), RPS, availability | `eval_rag_performance.py` | `generation/stage4_performance_metrics.json` |
+| Оценка судьёй | faithfulness, answer relevancy, context recall | `eval_rag_llm_judge.py` | `generation/stage4_llm_judge_metrics.json` |
+
+**Расшифровка полей и процедура пересчёта:** `scripts/stage4_eval/Сводка_метрик_этапа_4.md`.  
+**Сводная таблица для Word** (факт — прогон при *N* = **73**; реестр расширен до **300**; пути — `scripts/stage4_eval/results/`):
+
+| Слой | Метрика | Факт (прогон) | Артефакт / скрипт |
+|------|---------|---------------|-------------------|
+| Retrieval | Hit@1 | **68,5 %** (08.10.2026) | `retrieval/stage4_hitk_results.json`, `eval_retrieval_hitk.py` |
+| Retrieval | Hit@3 | **76,7 %** | то же |
+| Retrieval | Hit@5 | **79,5 %** | то же |
+| Generation (live) | Citation rate | **79,5 %** | `generation/stage4_gen_eval_results.json`, `eval_rag_generation.py` |
+| Generation (live) | Groundedness (среднее) | **0,92** | то же |
+| Generation (live) | Relevance (среднее) | **0,801** | то же |
+| LLM-as-a-Judge | Faithfulness (среднее) | **0,749** (18.10.2026) | `generation/stage4_llm_judge_metrics.json`, `eval_rag_llm_judge.py` |
+| LLM-as-a-Judge | Answer relevancy (среднее) | **0,619** | то же |
+| LLM-as-a-Judge | Context recall (среднее) | **0,708** | то же |
+| Operations | TTFT (среднее) | **5,83 с** | `generation/stage4_performance_metrics.json`, `eval_rag_performance.py` |
+| Operations | TPS (среднее) | **28,23** ток/с | то же |
+| Operations | Latency p95 | **11,29 с** | то же |
+| Operations | RPS | **0,35** зап/с | то же |
+| Operations | Availability | **100 %** | то же |
+
+MRR и nDCG@5 в текущих скриптах **не рассчитываются** (только Hit@1/3/5).
+
+### 5.5. Типовые точки отказа RAG (для защиты)
+
+1. **Неполный контрольный набор** — снижен риск реестром **300** вопросов по разделам ПУЭ (`data/rag_eval_questions/eval_questions.json`).
+2. **Пропуск при retrieval** — эталонный пункт не в top-5 (сложные формулировки; см. Hit@5).
+3. **Ошибка ранжирования** — без реранкера общие определения иногда выше конкретных требований.
+4. **Шум в контексте** — смежные пункты в top-k усложняют точное цитирование.
+5. **Галлюцинации LLM** — при отсутствии числа в контексте; снижается жёстким промптом «только по фрагментам ПУЭ».
+6. **Таймауты Ollama** — при нагрузке; в конфиге задан разумный timeout.
+7. **Milvus / Docker** — диагностика: `python scripts/infra/start_milvus_logs.py` (см. `infra/milvus/Storage.md`).
+
+Оценка LLM-as-a-Judge — вспомогательная; ограничения методики — в `Сводка_метрик_этапа_4.md`.
+
+### 6.3. Запуск прогонов generation, performance и LLM-judge
+
+| Скрипт | Назначение | Артефакт |
+|--------|------------|----------|
+| `eval_rag_generation.py` | Citation, groundedness, relevance (`live` / `mock`) | `generation/stage4_gen_eval_results.json` |
+| `eval_rag_performance.py` | Задержка, TTFT, пропускная способность | `generation/stage4_performance_metrics.json` |
+| `eval_rag_llm_judge.py` | Faithfulness, relevancy, context recall (LLM-as-a-Judge) | `generation/stage4_llm_judge_metrics.json` |
+
+Все прогоны читают тот же реестр вопросов, что и Hit@k (**300** записей в `eval_questions.json`). Пояснение к раннему mock-generation: `scripts/stage4_eval/results/generation/Etap4-gen-metrics.md`. Команды: **`scripts/stage4_eval/README.md`**, цепочка performance + judge: `run_perf_and_judge.ps1`.
 
 ```powershell
 python scripts/stage4_eval/eval_rag_generation.py --mode live
@@ -343,17 +397,17 @@ python scripts/stage4_eval/eval_rag_generation.py --mode live
 
 | Файл | Роль |
 |------|------|
-| **`etap4/Readme-4.md`** (этот документ) | Мастер-текст для **Word**: разделы 1–8 и приложения |
-| **`etap4/Readme-4 (ver. 2).ipynb`** | **Рабочий** отчёт: те же разделы 1–8 + исполняемые ячейки (Hit@k, демо Milvus) |
+| **`Этапы/Reports/etap4/Readme-4.md`** (этот документ) | Мастер-текст для **Word**: разделы 1–8 и приложения |
+| **`Этапы/Reports/etap4/Readme-4 (ver. 2).ipynb`** | **Рабочий** отчёт: те же разделы 1–8 + исполняемые ячейки (Hit@k, демо Milvus) |
 
-После правок текста в `.md` обновите markdown-ячейки ноутбука: `python scripts/sync_readme4_notebook.py`.
+После правок текста в `.md` обновите markdown-ячейки ноутбука: `python scripts/reports/sync_readme4_notebook.py`.
 
 **Python-скрипты** (логика прототипа, можно запускать без ноутбука):
 
 | Файл | Назначение |
 |------|------------|
-| `scripts/notebook_bootstrap.py` | Корень проекта и `sys.path` (первая ячейка ноутбука) |
-| `scripts/start_report_docker.py` | Milvus + Ollama через Docker (вторая code-ячейка ноутбука) |
+| `scripts/lib/notebook_bootstrap.py` | Корень проекта и `sys.path` (первая ячейка ноутбука) |
+| `scripts/infra/start_report_docker.py` | Milvus + Ollama через Docker (вторая code-ячейка ноутбука) |
 | `scripts/stage4_eval/demo_stage4_milvus_search.py` | Демо `search_text` к Milvus (ячейка §6 ноутбука) |
 | `src/preprocessing/Create_embeddings/query_test.py` | То же из терминала |
 | `scripts/stage4_eval/eval_retrieval_hitk.py` | Прототип оценки «первой точности» (Hit@k) |
@@ -362,11 +416,13 @@ python scripts/stage4_eval/eval_rag_generation.py --mode live
 | `scripts/stage4_eval/stage4_hitk_notebook.py` | §5.2 / §5.3 ноутбука (прогон и графики) |
 | `scripts/stage4_eval/stage4_hitk_report.py` | Текст §5.3 / §6.1 / §7 из JSON |
 | `scripts/stage4_eval/plot_stage4_hitk.py` | PNG и Plotly для Hit@k |
-| `scripts/report_paths.py` | Единые пути к артефактам в `etap4/` |
+| `scripts/lib/report_paths.py` | Единые пути к данным и артефактам этапа 4 |
 | `scripts/stage4_eval/README.md` | Мануал прогона метрик |
-| `etap4/data/stage4_eval_questions.json` | 25 тестовых вопросов и эталонные пункты ПУЭ |
+| `data/rag_eval_questions/eval_questions.json` | Реестр **300** контрольных вопросов и эталонные пункты ПУЭ |
 
-### 6.1. Тестовый набор (эталоны)
+### 6.1. Контрольный набор (эталоны)
+
+Файл `eval_questions.json` — **реестр** JSON: поля `title`, `source_file`, `n_questions` (300), массив `questions` с полями `id`, `registry_id`, `query`, `expected_clause`, `section`. Полные формулировки — в реестре и в исходном markdown (поле `source_file`). Таблица ниже (краткие формулировки) обновляется скриптом `update_readme4_eval_docs.py` после прогона Hit@k; при 300 записях в отчёт Word целесообразно прилагать файл реестра целиком.
 
 <!-- stage4-eval:6.1:start -->
 | № | Вопрос (кратко) | Эталон Clause |
@@ -446,7 +502,7 @@ python scripts/stage4_eval/eval_rag_generation.py --mode live
 | 73 | Каким должно быть напряжение холостого хода источника с... | 7.6.57 |
 <!-- stage4-eval:6.1:end -->
 
-*(Полные формулировки — в `stage4_eval_questions.json`.)*
+*(Полный реестр — в `eval_questions.json`; при 300 записях в Word удобнее ссылаться на файл и сводный отчёт.)*
 
 ### 6.2. Пример прототипа generation (промпт для Ollama)
 
@@ -469,12 +525,14 @@ python scripts/stage4_eval/eval_rag_generation.py --mode live
 
 ## 7. Выводы
 
-В ноутбуке: **code-ячейка §7** ниже — пункты с актуальными Hit@k из `stage4_hitk_results.json` (после §5.2).
+Пункты о Hit@k формируются из последнего `stage4_hitk_results.json`. Для контрольного набора из **300** вопросов необходим полный прогон `eval_retrieval_hitk.py`; до пересчёта в блоке ниже могут оставаться показатели предыдущего прогона (меньший *N*).
+
+В ноутбуке: **code-ячейка §7** — те же выводы (после §5.2).
 
 <!-- stage4-eval:7:start -->
 1. **База ПУЭ** подготовлена и проиндексирована; **прототип рабочего контура RAG** опирается на чанки с метаданными пунктов.
 2. **Retrieval** — **SentenceTransformer + Milvus** (`search_text`) — реализован; конфиг `rag_runtime.json`.
-3. **Первая измеримая точность** — **Hit@k** (73 вопросов, один поиск на вопрос); скрипт `eval_retrieval_hitk.py` и график. На прогоне **08.10.2026 01:10**: Hit@1 **68.5%**, Hit@3 **76.7%**, Hit@5 **79.5%** (`eval_retrieval_hitk.py`, `Этапы/Reports/etap4/retrieval/stage4_hitk_results.json`).
+3. **Первая измеримая точность** — **Hit@k** (73 вопросов, один поиск на вопрос); скрипт `eval_retrieval_hitk.py` и график. На прогоне **08.10.2026 01:10**: Hit@1 **68.5%**, Hit@3 **76.7%**, Hit@5 **79.5%** (`eval_retrieval_hitk.py`, `scripts/stage4_eval/results/retrieval/stage4_hitk_results.json`).
 4. **Generation** — **Ollama** в `src/rag/rag_service.py`; Telegram-бот — этап 5.
 5. Ограничения: промахи retrieval; LLM — только при опоре на top-k контекст.
 <!-- stage4-eval:7:end -->

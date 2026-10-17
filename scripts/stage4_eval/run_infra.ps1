@@ -13,14 +13,14 @@ $ErrorActionPreference = "Stop"
 . (Join-Path $PSScriptRoot "_root.ps1")
 
 if ($MilvusOnly) {
-    & $Python scripts\start_milvus.py
+    & $Python scripts\infra\start_milvus.py
     exit $LASTEXITCODE
 }
 
 if ($SkipOllama) {
-    & $Python scripts\start_report_docker.py --skip-ollama
+    & $Python scripts\infra\start_report_docker.py --skip-ollama
     exit $LASTEXITCODE
 }
 
-& $Python scripts\start_report_docker.py
+& $Python scripts\infra\start_report_docker.py
 exit $LASTEXITCODE

@@ -161,7 +161,7 @@ docker-compose down -v
 docker-compose logs -f milvus-standalone
 
 # Снимок логов в infra/milvus/logs/<дата-время>/ (из корня репозитория)
-python scripts/start_milvus_logs.py
+python scripts/infra/start_milvus_logs.py
 
 # Перезапуск конкретного сервиса
 docker-compose restart milvus-standalone

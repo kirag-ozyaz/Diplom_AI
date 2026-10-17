@@ -15,7 +15,7 @@ $here = $PSScriptRoot
 
 function Invoke-MilvusLogSnapshot {
     Write-Host "Снимок логов Milvus (start_milvus_logs.py)..."
-    & $Python scripts\start_milvus_logs.py
+    & $Python scripts\infra\start_milvus_logs.py
     if ($LASTEXITCODE -ne 0) {
         Write-Warning "start_milvus_logs.py завершился с кодом $LASTEXITCODE (Docker запущен?)."
     }
