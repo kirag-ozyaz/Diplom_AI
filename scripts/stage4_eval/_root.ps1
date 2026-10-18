@@ -11,3 +11,16 @@ if ($PSVersionTable.PSEdition -eq "Desktop") {
 }
 $VenvPython = Join-Path $ProjectRoot ".venv\Scripts\python.exe"
 $Python = if (Test-Path $VenvPython) { $VenvPython } else { "python" }
+
+. (Join-Path $PSScriptRoot "_banner.ps1")
+
+if (-not $env:STAGE4_RUN_LOG) {
+    $logDir = Join-Path $ProjectRoot "scripts\stage4_eval\results\logs"
+    New-Item -ItemType Directory -Force -Path $logDir | Out-Null
+    $stamp = Get-Date -Format "yyyy-MM-dd_HH-mm-ss"
+    $env:STAGE4_RUN_LOG = Join-Path $logDir "stage4_$stamp.log"
+}
+
+Write-Stage4Log "Корень проекта: $ProjectRoot"
+Write-Stage4Log "Python: $Python"
+Write-Stage4Log "Лог-файл: $env:STAGE4_RUN_LOG"

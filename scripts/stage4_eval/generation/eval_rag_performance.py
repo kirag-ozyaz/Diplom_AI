@@ -112,12 +112,6 @@ def run_load_test(questions, cfg, concurrency=3):
     host = ollama_cfg.get("host", "http://localhost:11434")
     model = ollama_cfg.get("model", "qwen2.5:3b")
 
-    print(
-        f"[*] Этап: нагрузочный тест — {total} вопросов, "
-        f"параллельность {concurrency}, Ollama {model} @ {host}",
-        flush=True,
-    )
-
     def task(q_item):
         q = q_item.get("query") or q_item.get("question", "")
         prompt = f"Контекст: Правила устройства электроустановок.\nВопрос: {q}\nОтвет:"
@@ -194,12 +188,24 @@ def run_load_test(questions, cfg, concurrency=3):
 
 
 def main():
-    print("=" * 60, flush=True)
-    print("[1/2] Оценка производительности и нагрузочное тестирование", flush=True)
-    print("=" * 60, flush=True)
+    from stage4_console import log_run_start, log_run_end, stage_banner  # noqa: E402
 
+    log_run_start("eval_rag_performance.py", out_json=STAGE4_PERF_METRICS.name)
     cfg = load_config()
     questions = load_questions()
+    total = len(questions)
+    ollama_cfg = cfg.get("ollama", {})
+    host = ollama_cfg.get("host", "http://localhost:11434")
+    model = ollama_cfg.get("model", "qwen2.5:3b")
+
+    stage_banner(
+        "Оценка производительности и нагрузочное тестирование",
+        step=os.environ.get("STAGE4_BANNER_STEP") or "[1/2]",
+        detail=(
+            f"нагрузочный тест — {total} вопросов, "
+            f"параллельность 3, Ollama {model} @ {host}"
+        ),
+    )
 
     summary = run_load_test(questions, cfg, concurrency=3)
     summary["source"] = "eval_rag_performance.py"
@@ -225,6 +231,10 @@ def main():
     print(f" • Задержка P95 / P99                 : {summary['metrics']['latency_p95_sec']}s / {summary['metrics']['latency_p99_sec']}s")
     print(f" • Всего сгенерировано токенов        : {summary['metrics']['total_tokens_generated']}")
     print(f"\n[+] Метрики сохранены в: {out_file.resolve()}")
+    log_run_end(
+        "eval_rag_performance.py",
+        note=f"availability={summary['availability_pct']}%, RPS={summary['rps']}",
+    )
 
 
 if __name__ == "__main__":

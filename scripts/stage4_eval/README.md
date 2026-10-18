@@ -21,7 +21,7 @@ stage4_eval/
   reports/      синхронизация Readme-4.md с JSON
   demo/         демо search_text (§6 ноутбука)
   docs/         Сводка_метрик_этапа_4.md
-  results/      артефакты прогонов (retrieval/, generation/)
+  results/      артефакты прогонов (retrieval/, generation/, logs/)
 ```
 
 | Путь | Назначение |
@@ -69,6 +69,8 @@ stage4_eval/
 **Сводка всех слоёв и последние сохранённые значения:** `scripts/stage4_eval/docs/Сводка_метрик_этапа_4.md`; таблица для Word — §5.4 в `Этапы/Reports/etap4/Readme-4.md`.
 
 **Результаты** — в `scripts/stage4_eval/results/retrieval/` и `generation/`.
+
+**Лог прогона** (консоль + файл): при `run_all.ps1` — `results/logs/pipeline_<дата-время>.log`; при отдельных `run_*.ps1` — `results/logs/stage4_<дата-время>.log`. Переменная окружения `STAGE4_RUN_LOG`.
 
 ### Реестр контрольных вопросов (300 записей)
 

@@ -63,6 +63,13 @@ def hit_at_k(results: list[dict], expected_clause: str, k: int) -> bool:
 
 def run_hitk_eval(*, refresh_readme: bool = True) -> dict:
     """Прогон Hit@k по Milvus; пишет JSON/PNG. Для ноутбука и CLI."""
+    from stage4_console import log_run_start  # noqa: E402
+
+    log_run_start(
+        "eval_retrieval_hitk.py",
+        questions_file=str(QUESTIONS_PATH.name),
+        results_json=str(RESULTS_JSON.name),
+    )
     cfg = load_runtime_config()
     vdb = cfg["vector_db"]
     host = vdb["host"]
@@ -81,6 +88,8 @@ def run_hitk_eval(*, refresh_readme: bool = True) -> dict:
     from eval_questions_io import load_eval_questions  # noqa: E402
 
     questions = load_eval_questions(QUESTIONS_PATH)
+    from stage4_console import stage_banner  # noqa: E402
+
     meta = MultimodalRAG.get_embedding_meta_from_collection(host, port, collection)
     if meta:
         text_model = meta["text_model"]
@@ -88,6 +97,14 @@ def run_hitk_eval(*, refresh_readme: bool = True) -> dict:
     else:
         text_model, _ = select_text_model(cfg)
         text_model, text_dim = get_default_embedding_model()
+
+    stage_banner(
+        "Оценка retrieval Hit@1 / Hit@3 / Hit@5",
+        detail=(
+            f"{len(questions)} вопросов, Milvus {host}:{port}, "
+            f"коллекция {collection}, эмбеддинги {text_model}"
+        ),
+    )
 
     models_cfg = cfg["models"]
     rag = MultimodalRAG(
@@ -176,6 +193,9 @@ def run_hitk_eval(*, refresh_readme: bool = True) -> dict:
             )
 
     rag.close()
+    from stage4_console import log_run_end  # noqa: E402
+
+    log_run_end("eval_retrieval_hitk.py", note=f"N={n}, Hit@5={metrics.get('hit@5')}%")
     return out
 
 
@@ -183,6 +203,9 @@ def main() -> None:
     try:
         run_hitk_eval()
     except RuntimeError as exc:
+        from stage4_console import log_run_end  # noqa: E402
+
+        log_run_end("eval_retrieval_hitk.py", ok=False, note=str(exc))
         print(exc)
         sys.exit(1)
 

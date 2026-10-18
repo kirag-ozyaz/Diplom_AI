@@ -86,10 +86,6 @@ def call_llm_judge(host: str, model: str, question: str, context: str, response_
 
 
 def run_llm_judge_eval():
-    print("=" * 60, flush=True)
-    print("[2/2] Оценка качества генерации (LLM-as-a-Judge)", flush=True)
-    print("=" * 60, flush=True)
-
     if not CONFIG_PATH.exists():
         print(f"[-] Конфиг не найден: {CONFIG_PATH}")
         return
@@ -114,9 +110,13 @@ def run_llm_judge_eval():
     ok_count = 0
     err_count = 0
 
-    print(
-        f"[*] Этап: LLM-as-a-Judge — {total} вопросов, судья {model} @ {host}",
-        flush=True,
+    from stage4_console import log_run_start, log_run_end, stage_banner  # noqa: E402
+
+    log_run_start("eval_rag_llm_judge.py", out_json=STAGE4_LLM_JUDGE_METRICS.name)
+    stage_banner(
+        "Оценка качества генерации (LLM-as-a-Judge)",
+        step=os.environ.get("STAGE4_BANNER_STEP") or "[2/2]",
+        detail=f"LLM-as-a-Judge — {total} вопросов, судья {model} @ {host}",
     )
 
     for idx, item in enumerate(questions, start=1):
@@ -182,6 +182,10 @@ def run_llm_judge_eval():
     print(f" • Answer Relevancy (Релевантность): {report['summary_metrics']['answer_relevancy_avg']}")
     print(f" • Context Recall (Полнота)        : {report['summary_metrics']['context_recall_avg']}")
     print(f"\n[+] Отчет судейства сохранен в: {out_file.resolve()}")
+    log_run_end(
+        "eval_rag_llm_judge.py",
+        note=f"faithfulness={report['summary_metrics']['faithfulness_avg']}",
+    )
 
 
 if __name__ == "__main__":

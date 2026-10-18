@@ -407,12 +407,28 @@ def run_eval(
         raise RuntimeError(f"Нет файла вопросов: {QUESTIONS_PATH}")
 
     from eval_questions_io import load_eval_questions  # noqa: E402
+    from stage4_console import log_run_start, stage_banner  # noqa: E402
 
     questions = load_eval_questions(QUESTIONS_PATH)
     if start_id is not None:
         questions = [q for q in questions if int(q.get("id", 0)) >= start_id]
     if limit is not None:
         questions = questions[:limit]
+
+    qpath = QUESTIONS_PATH.name
+    log_run_start(
+        "eval_rag_generation.py",
+        mode=mode,
+        questions_file=qpath,
+        out_json=str(out_path.name),
+    )
+    stage_banner(
+        "Оценка generation (citation / groundedness / relevance)",
+        detail=(
+            f"режим {mode}, {len(questions)} вопросов, реестр {qpath}"
+            + (", LLM-judge" if use_llm_judge else "")
+        ),
+    )
 
     hitk_map: dict[Any, bool] = {}
     if use_hitk and HITK_JSON.is_file():
@@ -534,6 +550,12 @@ def run_eval(
     )
     out = json.loads(out_path.read_text(encoding="utf-8"))
     metrics = out["metrics"]
+    from stage4_console import log_run_end  # noqa: E402
+
+    log_run_end(
+        "eval_rag_generation.py",
+        note=f"mode={out.get('mode_effective')}, citation={metrics.get('citation_rate_pct')}%",
+    )
     print(f"\nМетрики: {json.dumps(metrics, ensure_ascii=False)}")
     print(f"Результаты: {out_path}")
     return out
