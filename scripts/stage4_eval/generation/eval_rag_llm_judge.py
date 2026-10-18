@@ -85,6 +85,27 @@ def call_llm_judge(host: str, model: str, question: str, context: str, response_
         }
 
 
+def log_llm_judge_legends() -> None:
+    """Баннер и [*] перед строками [n/N] id=… (как у generation / performance)."""
+    from stage4_console import log_line, stage_banner  # noqa: E402
+
+    log_line(
+        "[*] faithfulness — обоснованность ответа контекстом (0–1), без фактов вне контекста; "
+        "relevancy — релевантность ответа вопросу (0–1); "
+        "recall — полнота контекста для корректного ответа (0–1)"
+    )
+    log_line(
+        "[*] Режим: по одному запросу к судье-Ollama на вопрос (без параллельности); "
+        "для оценки подставляются демонстрационные контекст и ответ по expected_clause "
+        "(шаблон, не текст из прогона live generation)"
+    )
+    stage_banner("Прогресс LLM-as-a-Judge", step="")
+    log_line(
+        "[*] В строке: OK — ответ судьи получен и JSON разобран; "
+        "ОШИБКА — сбой HTTP/таймаут или ошибка разбора ответа"
+    )
+
+
 def run_llm_judge_eval():
     if not CONFIG_PATH.exists():
         print(f"[-] Конфиг не найден: {CONFIG_PATH}")
@@ -116,8 +137,12 @@ def run_llm_judge_eval():
     stage_banner(
         "Оценка качества генерации (LLM-as-a-Judge)",
         step=os.environ.get("STAGE4_BANNER_STEP") or "[2/2]",
-        detail=f"LLM-as-a-Judge — {total} вопросов, судья {model} @ {host}",
+        detail=(
+            f"LLM-as-a-Judge — {total} вопросов, по одному запросу к судье; "
+            f"модель-судья {model} @ {host}"
+        ),
     )
+    log_llm_judge_legends()
 
     for idx, item in enumerate(questions, start=1):
         q_id = item.get("id", idx)

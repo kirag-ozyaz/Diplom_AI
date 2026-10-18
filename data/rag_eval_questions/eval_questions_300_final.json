@@ -1,6 +1,6 @@
 {
-  "title": "Набор из 300 вопросов (ПУЭ)",
-  "source_file": "Этапы/Reports/etap4/data/Набор из 300 вопросов (ПУЭ).md",
+  "title": "Набор из 268 вопросов (ПУЭ)",
+  "source_file": "eval_questions_300_final.json",
   "n_questions": 268,
   "questions": [
     {

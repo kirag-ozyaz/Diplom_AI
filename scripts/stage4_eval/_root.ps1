@@ -1,4 +1,4 @@
-# Shared: repo root and python for stage4_eval wrappers.
+﻿# Shared: repo root and python for stage4_eval wrappers.
 $ProjectRoot = (Resolve-Path (Join-Path $PSScriptRoot "..\..")).Path
 Set-Location $ProjectRoot
 $env:PYTHONIOENCODING = "utf-8"

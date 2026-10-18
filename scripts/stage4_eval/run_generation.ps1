@@ -1,4 +1,4 @@
-# Run generation metrics (live / mock / dry-run).
+﻿# Run generation metrics (live / mock / dry-run).
 # Usage:
 #   run_generation.ps1
 #   run_generation.ps1 -Mode live -LlmJudge

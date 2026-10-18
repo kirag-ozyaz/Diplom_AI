@@ -24,7 +24,6 @@ def start_report_docker(
     skip_ollama: bool = False,
 ) -> int:
     project_root = find_project_root(root)
-    scripts = project_root / "scripts"
 
     sys.path.insert(0, str(SCRIPTS_DIR))
     from compute_detect import ensure_runtime_config  # noqa: E402
@@ -36,7 +35,7 @@ def start_report_docker(
     milvus = subprocess.run(
         [
             sys.executable,
-            str(scripts / "infra" / "start_milvus.py"),
+            str(_INFRA / "start_milvus.py"),
             "--skip-compute-bootstrap",
         ],
         cwd=project_root,
@@ -49,7 +48,7 @@ def start_report_docker(
         return 0
 
     print("\n=== Ollama ===")
-    ollama_cmd = [sys.executable, str(scripts / "infra" / "start_ollama.py"), "--no-apply-config"]
+    ollama_cmd = [sys.executable, str(_INFRA / "start_ollama.py"), "--no-apply-config"]
     if pull_ollama:
         ollama_cmd.append("--pull")
     ollama = subprocess.run(ollama_cmd, cwd=project_root)

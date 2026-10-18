@@ -1,4 +1,4 @@
-# Run Hit@1 / Hit@3 / Hit@5 eval (Milvus must be up).
+﻿# Run Hit@1 / Hit@3 / Hit@5 eval (Milvus must be up).
 # Usage: run_hitk.ps1
 
 $ErrorActionPreference = "Stop"

@@ -1,4 +1,4 @@
-# Start Docker services for stage-4 metrics.
+﻿# Start Docker services for stage-4 metrics.
 # Usage:
 #   run_infra.ps1              # Milvus + Ollama (start_report_docker.py)
 #   run_infra.ps1 -MilvusOnly  # Hit@k only

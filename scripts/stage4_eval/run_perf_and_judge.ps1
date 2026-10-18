@@ -1,4 +1,4 @@
-# PowerShell: performance + LLM judge (Russian banners printed by Python).
+﻿# PowerShell: performance + LLM judge (Russian banners printed by Python).
 # Usage: run_perf_and_judge.ps1
 
 $ErrorActionPreference = "Stop"

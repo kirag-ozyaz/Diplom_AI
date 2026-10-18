@@ -26,8 +26,8 @@ if ($SkipPerfJudge) { $flags += "-SkipPerfJudge" }
 if ($SnapshotMilvusLogs) { $flags += "-SnapshotMilvusLogs" }
 $flagStr = if ($flags.Count) { $flags -join ", " } else { "(нет)" }
 
-Write-Stage4Banner -Step "[0/5]" -Title "Полный прогон метрик этапа 4" -Detail "infra → Hit@k → generation (live) → performance → LLM-judge"
-Write-Stage4Log "run_all.ps1 | флаги: $flagStr"
+Write-Stage4Banner -Step "[0/5]" -Title "Полный прогон метрик этапа 4" -Detail "infra -> Hit@k -> generation (live) -> performance -> LLM-judge"
+Write-Stage4Log ("run_all.ps1 | флаги: " + $flagStr)
 
 function Invoke-MilvusLogSnapshot {
     Write-Host "Снимок логов Milvus (start_milvus_logs.py)..."
@@ -38,7 +38,7 @@ function Invoke-MilvusLogSnapshot {
 }
 
 $env:STAGE4_BANNER_STEP = "[1/5]"
-Write-Stage4Log "→ run_infra.ps1"
+Write-Stage4Log "-> run_infra.ps1"
 & (Join-Path $here "run_infra.ps1")
 if ($LASTEXITCODE -ne 0) {
     Invoke-MilvusLogSnapshot
@@ -46,7 +46,7 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 $env:STAGE4_BANNER_STEP = "[2/5]"
-Write-Stage4Log "→ run_hitk.ps1"
+Write-Stage4Log "-> run_hitk.ps1"
 & (Join-Path $here "run_hitk.ps1")
 if ($LASTEXITCODE -ne 0) {
     Invoke-MilvusLogSnapshot
@@ -60,7 +60,7 @@ if ($MilvusOnlyHitk) {
 }
 
 $env:STAGE4_BANNER_STEP = "[3/5]"
-Write-Stage4Log "→ run_generation.ps1 -Mode live"
+Write-Stage4Log "-> run_generation.ps1 -Mode live"
 & (Join-Path $here "run_generation.ps1") -Mode live
 $genExit = $LASTEXITCODE
 if ($genExit -ne 0) {
@@ -70,7 +70,7 @@ if ($genExit -ne 0) {
 
 if (-not $SkipPerfJudge) {
     $env:STAGE4_BANNER_STEP = "[4/5]"
-    Write-Stage4Log "→ run_perf_and_judge.ps1"
+    Write-Stage4Log "-> run_perf_and_judge.ps1"
     & (Join-Path $here "run_perf_and_judge.ps1")
     $genExit = $LASTEXITCODE
 }
@@ -82,7 +82,7 @@ if ($genExit -ne 0 -or $SnapshotMilvusLogs) {
 if ($genExit -eq 0) {
     Write-Stage4Log "run_all.ps1: завершено успешно"
 } else {
-    Write-Stage4Log "run_all.ps1: завершено с кодом $genExit"
+    Write-Stage4Log ("run_all.ps1: завершено с кодом " + $genExit)
 }
-Write-Stage4Log "Полный лог: $env:STAGE4_RUN_LOG"
+Write-Stage4Log ("Полный лог: " + $env:STAGE4_RUN_LOG)
 exit $genExit

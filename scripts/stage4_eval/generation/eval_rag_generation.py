@@ -24,6 +24,7 @@ import argparse
 import json
 import re
 import sys
+import time
 from collections import Counter
 from datetime import datetime
 from pathlib import Path
@@ -45,6 +46,56 @@ QUESTIONS_PATH = STAGE4_QUESTIONS
 HITK_JSON = STAGE4_HITK_RESULTS
 DEFAULT_OUT = STAGE4_GEN_RESULTS
 sys.path.insert(0, str(ROOT / "src" / "preprocessing" / "Create_embeddings"))
+
+
+def load_hitk_map(hitk_path: Path) -> dict[Any, dict[str, bool]]:
+    """id вопроса → hit@1 / @3 / @5 из stage4_hitk_results.json."""
+    if not hitk_path.is_file():
+        return {}
+    hitk = json.loads(hitk_path.read_text(encoding="utf-8"))
+    out: dict[Any, dict[str, bool]] = {}
+    for row in hitk.get("details") or []:
+        hits = row.get("hit") or {}
+        out[row.get("id")] = {
+            "@1": bool(hits.get("@1")),
+            "@3": bool(hits.get("@3")),
+            "@5": bool(hits.get("@5")),
+        }
+    return out
+
+
+def hitk_triple(
+    hitk_map: dict[Any, dict[str, bool]], qid: Any
+) -> tuple[bool | None, bool | None, bool | None]:
+    if not hitk_map:
+        return None, None, None
+    row = hitk_map.get(qid)
+    if not row:
+        return None, None, None
+    return row.get("@1"), row.get("@3"), row.get("@5")
+
+
+def log_generation_progress_header(*, hitk_aligned: bool) -> None:
+    """Баннер и легенда полей перед строками [id] cite=… (после init RAG на 1-м вопросе)."""
+    from stage4_console import log_line, stage_banner  # noqa: E402
+
+    stage_banner("Прогресс по вопросам (generation)", step="")
+    log_line(
+        "[*] cite — цитирование эталонного пункта (в ответе или в контексте); "
+        "g — groundedness, опора ответа на источники (0–1); "
+        "r — relevance к полю expected_clause (0–1); "
+        "t — время обработки вопроса (с), ответ RAG + метрики (+ LLM-judge, если включён)"
+    )
+    if hitk_aligned:
+        log_line(
+            "[*] hit1, hit3, hit5 — показатель: попал ли эталонный пункт (expected_clause) "
+            "в top-1, top-3 или top-5 чанков при отдельном прогоне Hit@k "
+            "(stage4_hitk_results.json); None — нет записи по id"
+        )
+    else:
+        log_line(
+            "[*] hit1, hit3, hit5 — н/д (нет stage4_hitk_results.json или указан --no-hitk)"
+        )
 
 
 def clause_in_text(clause: str, text: str) -> bool:
@@ -274,6 +325,8 @@ def score_one(
     answer: str,
     sources: list[dict[str, Any]],
     retrieval_hit5: bool | None,
+    retrieval_hit1: bool | None = None,
+    retrieval_hit3: bool | None = None,
 ) -> dict[str, Any]:
     contexts = [(s.get("text") or "") for s in sources]
     cite_answer = clause_in_text(expected_clause, answer)
@@ -294,6 +347,8 @@ def score_one(
         },
         "relevance": rel["score"],
         "relevance_reason": rel["reason"],
+        "retrieval_hit1": retrieval_hit1,
+        "retrieval_hit3": retrieval_hit3,
         "retrieval_hit5": retrieval_hit5,
     }
 
@@ -352,6 +407,12 @@ def aggregate(details: list[dict[str, Any]]) -> dict[str, Any]:
     cite_ctx = sum(1 for d in details if d["scores"]["citation_in_context"])
     ground = sum(d["scores"]["groundedness"] for d in details) / n
     rel = sum(d["scores"]["relevance"] for d in details) / n
+    durations = [
+        float(d["duration_sec"])
+        for d in details
+        if d.get("duration_sec") is not None
+    ]
+    dur_avg = round(sum(durations) / len(durations), 2) if durations else None
     return {
         "n_questions": len(details),
         "citation_rate": round(100.0 * cite / n, 1),
@@ -359,6 +420,7 @@ def aggregate(details: list[dict[str, Any]]) -> dict[str, Any]:
         "citation_in_context_rate": round(100.0 * cite_ctx / n, 1),
         "groundedness_avg": round(ground, 3),
         "relevance_avg": round(rel, 3),
+        "duration_avg_sec": dur_avg,
         "llm_judge_avg": None,
     }
 
@@ -369,7 +431,7 @@ def _write_eval_json(
     mode: str,
     mode_eff: str,
     blockers: list[str],
-    hitk_map: dict[Any, bool],
+    hitk_map: dict[Any, dict[str, bool]],
     details: list[dict[str, Any]],
     llm_scores: list[float],
     partial: bool = False,
@@ -430,11 +492,9 @@ def run_eval(
         ),
     )
 
-    hitk_map: dict[Any, bool] = {}
-    if use_hitk and HITK_JSON.is_file():
-        hitk = json.loads(HITK_JSON.read_text(encoding="utf-8"))
-        for row in hitk.get("details") or []:
-            hitk_map[row.get("id")] = bool((row.get("hit") or {}).get("@5"))
+    hitk_map: dict[Any, dict[str, bool]] = (
+        load_hitk_map(HITK_JSON) if use_hitk else {}
+    )
 
     mode_eff = mode
     blockers: list[str] = []
@@ -465,8 +525,9 @@ def run_eval(
             qid = item.get("id")
             q = item["query"]
             expected = item["expected_clause"]
-            hit5 = hitk_map.get(qid) if hitk_map else None
+            hit1, hit3, hit5 = hitk_triple(hitk_map, qid)
 
+            t0 = time.perf_counter()
             if mode_eff == "live":
                 try:
                     result = live_answer(q)
@@ -483,6 +544,7 @@ def run_eval(
                 result = mock_retrieve_and_answer(
                     q, expected, clause_index, hit5=hit5
                 )
+            rag_duration_sec = round(time.perf_counter() - t0, 3)
 
             answer = result.get("answer") or ""
             sources = result.get("sources") or []
@@ -492,6 +554,8 @@ def run_eval(
                 answer=answer,
                 sources=sources,
                 retrieval_hit5=hit5,
+                retrieval_hit1=hit1,
+                retrieval_hit3=hit3,
             )
 
             llm_j = None
@@ -500,6 +564,10 @@ def run_eval(
                 if llm_j and isinstance(llm_j.get("score"), (int, float)):
                     llm_scores.append(float(llm_j["score"]))
 
+            duration_sec = round(time.perf_counter() - t0, 3)
+
+            if not details:
+                log_generation_progress_header(hitk_aligned=bool(hitk_map))
             details.append(
                 {
                     "id": qid,
@@ -512,12 +580,15 @@ def run_eval(
                     "scores": scores,
                     "llm_judge": llm_j,
                     "error": result.get("error"),
+                    "rag_duration_sec": rag_duration_sec,
+                    "duration_sec": duration_sec,
                 }
             )
             print(
                 f"[{qid}] cite={scores['citation']} "
                 f"g={scores['groundedness']:.2f} r={scores['relevance']:.2f} "
-                f"hit5={hit5} | {expected}"
+                f"hit1={hit1} hit3={hit3} hit5={hit5} "
+                f"t={duration_sec:.2f}s | {expected}"
             )
             _write_eval_json(
                 out_path=out_path,

@@ -106,11 +106,34 @@ def measure_single_stream_request(ollama_host: str, model: str, prompt: str):
         }
 
 
+def log_performance_legends(concurrency: int = 3) -> None:
+    """Баннер и [*] перед строками [n/N] id=… (как у generation)."""
+    from stage4_console import log_line, stage_banner  # noqa: E402
+
+    log_line(
+        f"[*] Режим: к Ollama одновременно до {concurrency} запросов "
+        f"(параллельность {concurrency})"
+    )
+    log_line(
+        "[*] TPS — скорость decode модели; "
+        "Latency avg / p95 / p99 — полное время ответа Ollama на упрощённый промпт; "
+        f"RPS, availability — пропускная способность при параллельности {concurrency}"
+    )
+    stage_banner("Прогресс нагрузочного теста", step="")
+    log_line(
+        "[*] TTFT(1-й токен) — время до первого токена; "
+        "latency — полное время одного запроса; "
+        "TPS — токенов/с на этапе генерации (в строке прогресса)"
+    )
+
+
 def run_load_test(questions, cfg, concurrency=3):
     total = len(questions)
     ollama_cfg = cfg.get("ollama", {})
     host = ollama_cfg.get("host", "http://localhost:11434")
     model = ollama_cfg.get("model", "qwen2.5:3b")
+
+    log_performance_legends(concurrency=concurrency)
 
     def task(q_item):
         q = q_item.get("query") or q_item.get("question", "")
@@ -134,7 +157,7 @@ def run_load_test(questions, cfg, concurrency=3):
                 ok_count += 1
                 print(
                     f"  [{done}/{total}] id={q_id}: OK — "
-                    f"TTFT {r['ttft_sec']} с, latency {r['total_latency_sec']} с, "
+                    f"TTFT(1-й токен) {r['ttft_sec']} с, latency {r['total_latency_sec']} с, "
                     f"TPS {r['tps']}",
                     flush=True,
                 )
@@ -203,7 +226,9 @@ def main():
         step=os.environ.get("STAGE4_BANNER_STEP") or "[1/2]",
         detail=(
             f"нагрузочный тест — {total} вопросов, "
-            f"параллельность 3, Ollama {model} @ {host}"
+            f"к Ollama одновременно до 3 запросов (параллельность 3); "
+            f"TTFT (Time To First Token — время до первого токена), TPS, latency; "
+            f"Ollama {model} @ {host}"
         ),
     )
 

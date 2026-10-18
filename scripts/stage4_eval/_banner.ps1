@@ -1,4 +1,4 @@
-# UTF-8 banners and log lines for stage4_eval PowerShell wrappers.
+﻿# UTF-8 banners and log lines for stage4_eval PowerShell wrappers.
 function Write-Stage4Log {
     param([string]$Message)
     $ts = Get-Date -Format "HH:mm:ss"
