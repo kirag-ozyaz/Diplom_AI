@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 Запуск Ollama в Docker с выбором GPU или CPU compose.
-Из корня: python scripts/infra/start_ollama.py [--pull] [--check-only]
+Из корня: python scripts/infra_start_system/start_ollama.py [--pull] [--check-only]
 """
 from __future__ import annotations
 

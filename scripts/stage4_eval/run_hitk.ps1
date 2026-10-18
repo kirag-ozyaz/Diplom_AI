@@ -4,5 +4,5 @@
 $ErrorActionPreference = "Stop"
 . (Join-Path $PSScriptRoot "_root.ps1")
 
-& $Python scripts\stage4_eval\eval_retrieval_hitk.py
+& $Python scripts\stage4_eval\retrieval\eval_retrieval_hitk.py
 exit $LASTEXITCODE

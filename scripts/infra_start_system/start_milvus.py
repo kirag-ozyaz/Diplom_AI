@@ -1,6 +1,6 @@
 """Запуск Milvus standalone: docker compose up -d в infra/milvus.
 
-Диагностика после сбоя: scripts/infra/start_milvus_logs.py (см. infra/milvus/Storage.md).
+Диагностика после сбоя: scripts/infra_start_system/start_milvus_logs.py (см. infra/milvus/Storage.md).
 """
 from __future__ import annotations
 
@@ -59,4 +59,13 @@ def start_milvus(*, root: Path | None = None, skip_compute_bootstrap: bool = Fal
 
 
 if __name__ == "__main__":
-    raise SystemExit(start_milvus())
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Запуск Milvus (docker compose up -d).")
+    parser.add_argument(
+        "--skip-compute-bootstrap",
+        action="store_true",
+        help="Не вызывать compute_detect (если конфиг уже синхронизирован, напр. из start_report_docker)",
+    )
+    args = parser.parse_args()
+    raise SystemExit(start_milvus(skip_compute_bootstrap=args.skip_compute_bootstrap))

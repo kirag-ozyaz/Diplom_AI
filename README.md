@@ -110,7 +110,7 @@ https://code.visualstudio.com/docs/languages/python
 
 ```
 energy_norms_bot/
-├── infra/                              # Инфраструктура и развертывание
+├── infra_start_system/                              # Инфраструктура и развертывание
 │   ├── docker/                         # Docker-конфигурации (в разработке)
 │   │   ├── Dockerfile.bot/             # Docker для Telegram-бота
 │   │   │   ├── Dockerfile
@@ -169,7 +169,7 @@ energy_norms_bot/
 │   └── model_profiles.json             # Профили GPU, overrides, каталог кандидатов моделей
 ├── scripts/                            # См. scripts/README.md
 │   ├── lib/                            # report_paths.py, notebook_bootstrap.py
-│   ├── infra/                          # Milvus/Ollama, compute_detect, update_model_profiles.py
+│   ├── infra_start_system/                          # Milvus/Ollama, compute_detect, update_model_profiles.py
 │   ├── reports/                        # sync_readme4_notebook.py
 │   ├── check/                          # test_ollama, CUDA, smoke RAG
 │   ├── stage4_eval/                    # Hit@k, generation, judge; results/retrieval|generation/
@@ -260,7 +260,7 @@ docker compose up -d
 Профили авто-выбора модели по GPU лежат в `config/model_profiles.json`:
 - `profiles` — набор профилей по VRAM (`rtx2060_baseline`, `mid_gpu`, `high_gpu`)
 - `gpu_name_overrides` — привязка конкретной видеокарты к профилю (например, RTX 2060 → `all-MiniLM-L6-v2`)
-- `candidates` — каталог embedding/LLM-моделей (обновляется скриптом `scripts/infra/update_model_profiles.py`)
+- `candidates` — каталог embedding/LLM-моделей (обновляется скриптом `scripts/infra_start_system/update_model_profiles.py`)
 
 **Автовыбор embedding-модели** (`model_selector.py`):
 1. `auto_select_text_model=false` → берётся `models.text_model_name`
@@ -271,9 +271,9 @@ docker compose up -d
 
 **Обновление каталога моделей:**
 ```bash
-python scripts/infra/update_model_profiles.py
+python scripts/infra_start_system/update_model_profiles.py
 # или с лимитами:
-python scripts/infra/update_model_profiles.py --max-hf-per-query 5 --max-ollama-models 20
+python scripts/infra_start_system/update_model_profiles.py --max-hf-per-query 5 --max-ollama-models 20
 ```
 Скрипт дополняет `candidates` моделями из Hugging Face API, Ollama и `embedding_config.json`, не удаляя закреплённые (`pinned`) записи.
 
@@ -393,7 +393,7 @@ python -m src.bot
 | `src/preprocessing/Create_chunkeds/` | Сегментация Markdown → чанки (JSONL) с метаданными ПУЭ |
 | `src/preprocessing/Create_embeddings/` | Multimodal RAG: эмбеддинги, Milvus, поиск; runtime-конфиг и автовыбор модели |
 | `config/` | `rag_runtime.json` — параметры окружения; `model_profiles.json` — профили GPU |
-| `scripts/infra/update_model_profiles.py` | Обновление каталога embedding/LLM-моделей в `model_profiles.json` |
+| `scripts/infra_start_system/update_model_profiles.py` | Обновление каталога embedding/LLM-моделей в `model_profiles.json` |
 
 ---
 
@@ -580,12 +580,12 @@ python -m src.bot
 
 ---
 
-### 4. scripts/infra/update_model_profiles.py
+### 4. scripts/infra_start_system/update_model_profiles.py
 
 | Функция | Описание |
 |---------|----------|
 | `update_model_profiles(max_hf_per_query, max_ollama_models)` | Обновляет блок `candidates` в `config/model_profiles.json`: собирает модели из `embedding_config.json`, Hugging Face API, Ollama; сохраняет pinned-модели; записывает `candidate_refresh.updated_at_utc`. |
-| `main()` | CLI: `--max-hf-per-query`, `--max-ollama-models`. Запуск: `python scripts/infra/update_model_profiles.py`. |
+| `main()` | CLI: `--max-hf-per-query`, `--max-ollama-models`. Запуск: `python scripts/infra_start_system/update_model_profiles.py`. |
 
 ---
 

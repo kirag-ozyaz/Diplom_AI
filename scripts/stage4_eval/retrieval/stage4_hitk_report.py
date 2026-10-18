@@ -6,6 +6,10 @@ import json
 from datetime import datetime
 from statistics import mean
 
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "lib"))
 from _bootstrap import setup_paths  # noqa: E402
 
 setup_paths()
@@ -162,12 +166,12 @@ def build_section_52_markdown(
         )
 
     lines = [
-        "**Источник:** только последний прогон **`scripts/stage4_eval/eval_retrieval_hitk.py`** "
+        "**Источник:** только последний прогон **`scripts/stage4_eval/retrieval/eval_retrieval_hitk.py`** "
         "(Milvus + SentenceTransformer, поле `details` в JSON). **Ollama / LLM не используются.** "
         "Текст §5.3 — автоматическое форматирование чисел из JSON, не генерация ответа моделью.",
         "",
         coll_line,
-        f"Последний прогон: **{evaluated}** (`python scripts/stage4_eval/eval_retrieval_hitk.py`).",
+        f"Последний прогон: **{evaluated}** (`python scripts/stage4_eval/retrieval/eval_retrieval_hitk.py`).",
     ]
     if device_line:
         lines.append(device_line)

@@ -12,26 +12,37 @@
 
 ## Назначение каталога и состав файлов
 
-| Файл | Назначение |
+```
+stage4_eval/
+  README.md, _root.ps1, run_*.ps1     # точки входа (PowerShell)
+  lib/          _bootstrap.py, eval_questions_io.py, print_run_done.py
+  retrieval/    Hit@k, графики, отчёт, ноутбук §5.2–5.3
+  generation/   generation, performance, LLM-judge
+  reports/      синхронизация Readme-4.md с JSON
+  demo/         демо search_text (§6 ноутбука)
+  docs/         Сводка_метрик_этапа_4.md
+  results/      артефакты прогонов (retrieval/, generation/)
+```
+
+| Путь | Назначение |
 |------|------------|
-| `README.md` | Руководство по прогону метрик (этот документ) |
-| `_bootstrap.py` | Определение корня проекта и настройка `sys.path` для Python-скриптов |
-| `_root.ps1` | Определение корня проекта и интерпретатора Python для сценариев PowerShell |
-| `eval_retrieval_hitk.py` | Расчёт Hit@1 / Hit@3 / Hit@5 по Milvus и модели эмбеддингов (без LLM) |
-| `eval_rag_generation.py` | Расчёт метрик generation в режимах `live`, `mock`, `dry-run` |
-| `update_readme4_eval_docs.py` | Обновление разделов §5.3, §6.1 и §7 в `Readme-4.md` по сохранённому JSON |
-| `stage4_hitk_report.py` | Формирование текстовых блоков отчёта Hit@k для Word и ноутбука |
-| `plot_stage4_hitk.py` | Построение графиков Hit@k (PNG для отчёта, Plotly для ноутбука) |
-| `stage4_hitk_notebook.py` | Вызов прогона и отображение результатов в ячейках §5.2 и §5.3 ноутбука |
-| `demo_stage4_milvus_search.py` | Демонстрация одного семантического поиска (`search_text`) — раздел §6 ноутбука |
-| `run_infra.ps1` | Запуск Docker-сервисов (Milvus и/или Ollama) |
-| `run_hitk.ps1` | Запуск `eval_retrieval_hitk.py` |
-| `run_generation.ps1` | Запуск `eval_rag_generation.py` с параметрами |
-| `run_all.ps1` | Последовательный запуск: инфраструктура → Hit@k → generation (live) |
-| `eval_rag_performance.py` | Эксплуатационные метрики (задержка, TTFT, пропускная способность) |
-| `eval_rag_llm_judge.py` | Оценка генерации методом LLM-as-a-Judge (faithfulness, relevancy, context recall) |
-| `run_perf_and_judge.ps1` | Последовательный запуск performance и LLM-judge |
-| `print_run_done.py` | Сообщение об окончании цепочки прогонов |
+| `lib/_bootstrap.py` | Корень проекта и `sys.path` для Python |
+| `_root.ps1` | Корень и Python для сценариев PowerShell |
+| `retrieval/eval_retrieval_hitk.py` | Hit@1 / Hit@3 / Hit@5 (Milvus, без LLM) |
+| `generation/eval_rag_generation.py` | Метрики generation (`live` / `mock` / `dry-run`) |
+| `reports/update_readme4_eval_docs.py` | §5.3, §6.1, §7 в `Readme-4.md` из JSON |
+| `retrieval/stage4_hitk_report.py` | Текстовые блоки Hit@k для Word и ноутбука |
+| `retrieval/plot_stage4_hitk.py` | Графики Hit@k (PNG, Plotly) |
+| `retrieval/stage4_hitk_notebook.py` | Ячейки §5.2 и §5.3 ноутбука |
+| `demo/demo_stage4_milvus_search.py` | Демо `search_text` (§6) |
+| `run_infra.ps1` | Docker (Milvus / Ollama) |
+| `run_hitk.ps1` | Обёртка над `retrieval/eval_retrieval_hitk.py` |
+| `run_generation.ps1` | Обёртка над `generation/eval_rag_generation.py` |
+| `run_all.ps1` | Полная цепочка метрик |
+| `generation/eval_rag_performance.py` | TTFT, TPS, latency, RPS |
+| `generation/eval_rag_llm_judge.py` | LLM-as-a-Judge |
+| `run_perf_and_judge.ps1` | performance + judge |
+| `lib/eval_questions_io.py` | Чтение/запись реестра вопросов |
 
 **Дополнительные материалы проекта:**
 
@@ -53,9 +64,9 @@
 
 **Эксплуатация (`eval_rag_performance.py`).** Нагрузочный прогон к Ollama: **TTFT**, **TPS**, задержка (средняя, p95, p99), **RPS**, **availability**.
 
-**LLM-as-a-Judge (`eval_rag_llm_judge.py`).** Судья (модель из конфигурации) выставляет **faithfulness**, **answer relevancy**, **context recall** по каждому вопросу. См. ограничение методики в `scripts/stage4_eval/Сводка_метрик_этапа_4.md`.
+**LLM-as-a-Judge (`eval_rag_llm_judge.py`).** Судья (модель из конфигурации) выставляет **faithfulness**, **answer relevancy**, **context recall** по каждому вопросу. См. ограничение методики в `scripts/stage4_eval/docs/Сводка_метрик_этапа_4.md`.
 
-**Сводка всех слоёв и последние сохранённые значения:** `scripts/stage4_eval/Сводка_метрик_этапа_4.md`; таблица для Word — §5.4 в `Этапы/Reports/etap4/Readme-4.md`.
+**Сводка всех слоёв и последние сохранённые значения:** `scripts/stage4_eval/docs/Сводка_метрик_этапа_4.md`; таблица для Word — §5.4 в `Этапы/Reports/etap4/Readme-4.md`.
 
 **Результаты** — в `scripts/stage4_eval/results/retrieval/` и `generation/`.
 
@@ -90,7 +101,7 @@
 | `eval_questions_74.json` | Снимок раннего набора (~74 вопроса) |
 | `eval_questions_base38.json` | Базовые 38 вопросов |
 
-Чтение и запись реестра в коде: `eval_questions_io.py`. Дополнительные формулировки можно готовить по билетам электробезопасности (`manual/tests24_electro_safety.md`, `data/tests24/`); скрипт `build_stage4_eval_questions.py` **перезаписывает** основной файл при `--merge-base` и не должен запускаться поверх уже утверждённого набора из 300 вопросов без указания другого пути `-o`.
+Чтение и запись реестра в коде: `lib/eval_questions_io.py`. Дополнительные формулировки можно готовить по билетам электробезопасности (`manual/tests24_electro_safety.md`, `data/tests24/`); скрипт `build_stage4_eval_questions.py` **перезаписывает** основной файл при `--merge-base` и не должен запускаться поверх уже утверждённого набора из 300 вопросов без указания другого пути `-o`.
 
 ---
 
@@ -158,15 +169,16 @@ docker compose ps
 
 ### `run_all.ps1`
 
-Основной способ полного прогона метрик (эквивалент `run_infra` → `run_hitk` → `run_generation -Mode live`).
+Основной способ полного прогона метрик (эквивалент `run_infra` → `run_hitk` → `run_generation -Mode live` → `run_perf_and_judge`).
 
 | Параметр | Описание |
 |----------|----------|
-| без параметров | Инфраструктура → Hit@k → generation (`live`) |
-| `-MilvusOnlyHitk` | После Hit@k этап generation не выполняется |
-| `-SnapshotMilvusLogs` | В конце (или при ошибке infra/Hit@k/generation) вызвать `start_milvus_logs.py` |
+| без параметров | Инфраструктура → Hit@k → generation (`live`) → performance + LLM-judge |
+| `-MilvusOnlyHitk` | После Hit@k generation и performance/judge не выполняются |
+| `-SkipPerfJudge` | После generation не вызывать `run_perf_and_judge.ps1` |
+| `-SnapshotMilvusLogs` | В конце (или при ошибке infra/Hit@k/generation/judge) вызвать `start_milvus_logs.py` |
 
-Отдельно `python scripts/infra/start_milvus.py` и ручная цепочка Python нужны только если вы **не** используете PowerShell-сценарии. Если generation оборвался на середине (в JSON есть `error`, Milvus «упал»), но `run_all` уже завершился с кодом 0 — снимок логов вручную: `python scripts/infra/start_milvus_logs.py` (см. `infra/milvus/Storage.md`).
+Отдельно `python scripts/infra_start_system/start_milvus.py` и ручная цепочка Python нужны только если вы **не** используете PowerShell-сценарии. Если generation оборвался на середине (в JSON есть `error`, Milvus «упал»), но `run_all` уже завершился с кодом 0 — снимок логов вручную: `python scripts/infra_start_system/start_milvus_logs.py` (см. `infra/milvus/Storage.md`).
 
 ---
 
@@ -195,7 +207,7 @@ python scripts\start_ollama.py --pull
 ### Оценка retrieval (Hit@k)
 
 ```powershell
-python scripts\stage4_eval\eval_retrieval_hitk.py
+python scripts\stage4_eval\retrieval\eval_retrieval_hitk.py
 ```
 
 По завершении успешного прогона:
@@ -207,7 +219,7 @@ python scripts\stage4_eval\eval_retrieval_hitk.py
 Если автоматическое обновление отчёта не выполнилось:
 
 ```powershell
-python scripts\stage4_eval\update_readme4_eval_docs.py
+python scripts\stage4_eval\reports\update_readme4_eval_docs.py
 ```
 
 Синхронизация текста ячеек ноутбука с `Readme-4.md`:
@@ -221,43 +233,43 @@ python scripts\sync_readme4_notebook.py
 Полный прогон с Milvus и Ollama:
 
 ```powershell
-python scripts\stage4_eval\eval_rag_generation.py --mode live
+python scripts\stage4_eval\generation\eval_rag_generation.py --mode live
 ```
 
 С дополнительной оценкой через LLM-judge:
 
 ```powershell
-python scripts\stage4_eval\eval_rag_generation.py --mode live --llm-judge
+python scripts\stage4_eval\generation\eval_rag_generation.py --mode live --llm-judge
 ```
 
 Офлайн без Docker:
 
 ```powershell
-python scripts\stage4_eval\eval_rag_generation.py --mode mock
+python scripts\stage4_eval\generation\eval_rag_generation.py --mode mock
 ```
 
 Ограничение числа вопросов (отладка):
 
 ```powershell
-python scripts\stage4_eval\eval_rag_generation.py --mode live --limit 5
+python scripts\stage4_eval\generation\eval_rag_generation.py --mode live --limit 5
 ```
 
 Продолжение прерванного live-прогона (обрабатываются вопросы с `id` не меньше указанного; итоговый JSON перезаписывается по обработанному подмножеству — для полного отчёта по всем вопросам рекомендуется сохранить резервную копию файла результатов или выполнить полный прогон заново):
 
 ```powershell
-python scripts\stage4_eval\eval_rag_generation.py --mode live --start-id 23
+python scripts\stage4_eval\generation\eval_rag_generation.py --mode live --start-id 23
 ```
 
 Указание пути к файлу результатов:
 
 ```powershell
-python scripts\stage4_eval\eval_rag_generation.py --mode live --out путь\к\файлу.json
+python scripts\stage4_eval\generation\eval_rag_generation.py --mode live --out путь\к\файлу.json
 ```
 
 ### Демонстрация поиска
 
 ```powershell
-python scripts\stage4_eval\demo_stage4_milvus_search.py
+python scripts\stage4_eval\demo\demo_stage4_milvus_search.py
 ```
 
 ---
@@ -304,7 +316,7 @@ python scripts\stage4_eval\demo_stage4_milvus_search.py
 | Прерывание прогона generation на середине набора | Перезапустить Milvus при сбое контейнера; продолжить с `--start-id` или выполнить полный прогон |
 | `partial_run: true` | Завершить обработку оставшихся вопросов или повторить полный live-прогон |
 | Ошибка CUDA в PyTorch | Выполнить `compute_detect.py --apply-config` или установить сборку torch с CUDA (см. `start/Readme.md`) |
-| Раздел §5.3 в Readme-4 не изменился | Запустить `update_readme4_eval_docs.py` |
+| Раздел §5.3 в Readme-4 не изменился | `reports/update_readme4_eval_docs.py` |
 
 ---
 
@@ -319,8 +331,8 @@ python scripts\stage4_eval\demo_stage4_milvus_search.py
 ```powershell
 python scripts\start_milvus.py
 python scripts\start_ollama.py --pull
-python scripts\stage4_eval\eval_retrieval_hitk.py
-python scripts\stage4_eval\eval_rag_generation.py --mode live
+python scripts\stage4_eval\retrieval\eval_retrieval_hitk.py
+python scripts\stage4_eval\generation\eval_rag_generation.py --mode live
 ```
 
 **Альтернатива для инфраструктуры:** вместо двух первых строк можно один раз выполнить `python scripts\start_report_docker.py` (Milvus и Ollama), затем те же две команды оценки из каталога `stage4_eval`.
@@ -351,7 +363,7 @@ powershell -ExecutionPolicy Bypass -File scripts\stage4_eval\run_all.ps1 -Milvus
 
 Сценарии PowerShell внутри переходят в корневой каталог проекта и вызывают интерпретатор из `.venv`, если он установлен.
 
-После расширения набора до 300 вопросов для актуализации сводного отчёта выполните полный прогон Hit@k, generation, при необходимости `run_perf_and_judge.ps1`, затем обновите §5.4 в `Readme-4.md` числами из JSON-артефактов.
+После расширения набора до 300 вопросов для актуализации сводного отчёта выполните `run_all.ps1` (или цепочку вручную), затем обновите §5.4 в `Readme-4.md` числами из JSON-артефактов.
 
 ---
 

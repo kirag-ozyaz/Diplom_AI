@@ -9,14 +9,14 @@
   dry-run — то же, что mock (алиас)
 
 Запуск из корневого каталога проекта:
-  python scripts/stage4_eval/eval_rag_generation.py
-  python scripts/stage4_eval/eval_rag_generation.py --mode live
-  python scripts/stage4_eval/eval_rag_generation.py --mode mock --limit 5
+  python scripts/stage4_eval/generation/eval_rag_generation.py
+  python scripts/stage4_eval/generation/eval_rag_generation.py --mode live
+  python scripts/stage4_eval/generation/eval_rag_generation.py --mode mock --limit 5
 
 Инфра:
-  python scripts/infra/start_milvus.py
-  python scripts/infra/start_milvus_logs.py   # снимок логов после сбоя Milvus
-  python scripts/infra/start_ollama.py --pull
+  python scripts/infra_start_system/start_milvus.py
+  python scripts/infra_start_system/start_milvus_logs.py   # снимок логов после сбоя Milvus
+  python scripts/infra_start_system/start_ollama.py --pull
 """
 from __future__ import annotations
 
@@ -29,6 +29,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "lib"))
 from _bootstrap import setup_paths  # noqa: E402
 
 ROOT = setup_paths()
@@ -426,11 +427,11 @@ def run_eval(
         if not m_ok:
             blockers.append(
                 "Milvus недоступен (localhost:19530). "
-                "Запустите: python scripts/infra/start_milvus.py; "
-                "диагностика: python scripts/infra/start_milvus_logs.py"
+                "Запустите: python scripts/infra_start_system/start_milvus.py; "
+                "диагностика: python scripts/infra_start_system/start_milvus_logs.py"
             )
         if not o_ok:
-            blockers.append("Ollama недоступен (localhost:11434). Запустите: python scripts/infra/start_ollama.py --pull")
+            blockers.append("Ollama недоступен (localhost:11434). Запустите: python scripts/infra_start_system/start_ollama.py --pull")
         if blockers:
             print("LIVE недоступен, переключаюсь на mock:\n  - " + "\n  - ".join(blockers))
             mode_eff = "mock"

@@ -1,11 +1,13 @@
-# Full stage-4 metrics: infra -> Hit@k -> generation (live).
+# Full stage-4 metrics: infra -> Hit@k -> generation (live) -> performance + LLM-judge.
 # Usage:
 #   run_all.ps1
 #   run_all.ps1 -MilvusOnlyHitk
+#   run_all.ps1 -SkipPerfJudge          # без performance / LLM-judge
 #   run_all.ps1 -SnapshotMilvusLogs   # после цепочки — снимок в infra/milvus/logs/
 
 param(
     [switch]$MilvusOnlyHitk,
+    [switch]$SkipPerfJudge,
     [switch]$SnapshotMilvusLogs
 )
 
@@ -15,7 +17,7 @@ $here = $PSScriptRoot
 
 function Invoke-MilvusLogSnapshot {
     Write-Host "Снимок логов Milvus (start_milvus_logs.py)..."
-    & $Python scripts\infra\start_milvus_logs.py
+    & $Python scripts\infra_start_system\start_milvus_logs.py
     if ($LASTEXITCODE -ne 0) {
         Write-Warning "start_milvus_logs.py завершился с кодом $LASTEXITCODE (Docker запущен?)."
     }
@@ -41,6 +43,16 @@ if ($MilvusOnlyHitk) {
 
 & (Join-Path $here "run_generation.ps1") -Mode live
 $genExit = $LASTEXITCODE
+if ($genExit -ne 0) {
+    Invoke-MilvusLogSnapshot
+    exit $genExit
+}
+
+if (-not $SkipPerfJudge) {
+    & (Join-Path $here "run_perf_and_judge.ps1")
+    $genExit = $LASTEXITCODE
+}
+
 if ($genExit -ne 0 -or $SnapshotMilvusLogs) {
     Invoke-MilvusLogSnapshot
 }

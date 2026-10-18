@@ -7,9 +7,9 @@
 **Экспорт в папку** (из корня репозитория; снимок в `infra/milvus/logs/<дата-время>/`):
 
 ```powershell
-python scripts/infra/start_milvus_logs.py
-python scripts/infra/start_milvus_logs.py --since 6h
-python scripts/infra/start_milvus_logs.py --tail 500
+python scripts/infra_start_system/start_milvus_logs.py
+python scripts/infra_start_system/start_milvus_logs.py --since 6h
+python scripts/infra_start_system/start_milvus_logs.py --tail 500
 ```
 
 В каталоге снимка: `compose-ps.txt`, `milvus-standalone.log`, `milvus-etcd.log`, `milvus-minio.log`, `inspect-state.txt` (OOMKilled, exit code), `README.txt`. Папка `infra/milvus/logs/` в `.gitignore` — в Git не коммитится.
@@ -106,7 +106,7 @@ docker stats --no-stream
 
 1. Перед `eval_rag_generation --mode live` — `docker compose ps` (все **Up**, standalone **healthy**).
 2. Второй терминал: `docker events` или периодически `docker compose ps -a`.
-3. После первого `Connection refused` — **сразу** `python scripts/infra/start_milvus_logs.py` (или ручные `docker logs` ниже); при необходимости скопировать снимок в `scripts/stage4_eval/results/` для отчёта.
+3. После первого `Connection refused` — **сразу** `python scripts/infra_start_system/start_milvus_logs.py` (или ручные `docker logs` ниже); при необходимости скопировать снимок в `scripts/stage4_eval/results/` для отчёта.
 
 ## 7. Docker Desktop (если в логах контейнера пусто)
 
@@ -118,8 +118,8 @@ docker stats --no-stream
 
 | Скрипт | Назначение |
 |--------|------------|
-| `scripts/infra/start_milvus.py` | `docker compose up -d` в `infra/milvus` |
-| `scripts/infra/start_milvus_logs.py` | Снимок логов и состояния контейнеров в `infra/milvus/logs/<дата-время>/` |
+| `scripts/infra_start_system/start_milvus.py` | `docker compose up -d` в `infra/milvus` |
+| `scripts/infra_start_system/start_milvus_logs.py` | Снимок логов и состояния контейнеров в `infra/milvus/logs/<дата-время>/` |
 
 Подробнее по этапу 4 (eval, `--start-id`): `scripts/stage4_eval/README.md`.
 

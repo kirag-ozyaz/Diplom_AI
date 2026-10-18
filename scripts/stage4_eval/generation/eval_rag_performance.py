@@ -14,10 +14,16 @@ from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import requests
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "lib"))
 from _bootstrap import setup_paths  # noqa: E402
 
 ROOT = setup_paths()
-from report_paths import STAGE4_QUESTIONS  # noqa: E402
+from report_paths import (  # noqa: E402
+    STAGE4_PERF_METRICS,
+    STAGE4_QUESTIONS,
+    ensure_stage4_result_dirs,
+    rel_from_root,
+)
 
 CONFIG_PATH = ROOT / "config" / "rag_runtime.json"
 QUESTIONS_PATH = STAGE4_QUESTIONS
@@ -196,10 +202,14 @@ def main():
     questions = load_questions()
 
     summary = run_load_test(questions, cfg, concurrency=3)
+    summary["source"] = "eval_rag_performance.py"
+    summary["questions_path"] = rel_from_root(QUESTIONS_PATH)
+    summary["pipeline_note"] = (
+        "Нагрузочный тест Ollama (упрощённый промпт); не latency полного RAG (Milvus+LLM)."
+    )
 
-    out_dir = ROOT / "Этапы" / "Reports" / "etap4" / "generation"
-    out_dir.mkdir(parents=True, exist_ok=True)
-    out_file = out_dir / "stage4_performance_metrics.json"
+    ensure_stage4_result_dirs()
+    out_file = STAGE4_PERF_METRICS
 
     with open(out_file, "w", encoding="utf-8") as f:
         json.dump(summary, f, ensure_ascii=False, indent=2)

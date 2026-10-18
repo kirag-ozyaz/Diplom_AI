@@ -3,7 +3,7 @@
 Этап 4: оценка Hit@1 / Hit@3 / Hit@5 для семантического поиска по ПУЭ.
 Контрольные вопросы — реестр JSON (поле n_questions, массив questions).
 Запуск из корневого каталога проекта:
-  python scripts/stage4_eval/eval_retrieval_hitk.py
+  python scripts/stage4_eval/retrieval/eval_retrieval_hitk.py
 """
 from __future__ import annotations
 
@@ -13,6 +13,7 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "lib"))
 from _bootstrap import setup_paths  # noqa: E402
 
 ROOT = setup_paths(embed=True)
@@ -70,7 +71,7 @@ def run_hitk_eval(*, refresh_readme: bool = True) -> dict:
 
     if not check_vector_db_server(host, port):
         raise RuntimeError(
-            "Milvus недоступен. Запустите: python scripts/infra/start_milvus.py "
+            "Milvus недоступен. Запустите: python scripts/infra_start_system/start_milvus.py "
             "или docker-ячейку ноутбука (§5.1)."
         )
 
@@ -171,7 +172,7 @@ def run_hitk_eval(*, refresh_readme: bool = True) -> dict:
         except Exception as exc:
             print(
                 f"Readme-4.md не обновлён ({exc}). "
-                "Вручную: python scripts/stage4_eval/update_readme4_eval_docs.py"
+                "Вручную: python scripts/stage4_eval/reports/update_readme4_eval_docs.py"
             )
 
     rag.close()

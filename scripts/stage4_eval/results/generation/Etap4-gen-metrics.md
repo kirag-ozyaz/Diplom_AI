@@ -14,15 +14,15 @@
 | Milvus (`:19530`) | недоступен |
 | Ollama (`:11434`) | недоступен |
 
-Попытка `python scripts/infra/start_milvus.py` / `start_ollama.py` — блокируется отсутствием Docker.  
+Попытка `python scripts/infra_start_system/start_milvus.py` / `start_ollama.py` — блокируется отсутствием Docker.  
 Поэтому выполнен **mock**-прогон (не live RAG).
 
 ### Как запустить live у себя
 
 ```bash
 cd Diplom_AI
-python scripts/infra/start_milvus.py
-python scripts/infra/start_ollama.py --pull
+python scripts/infra_start_system/start_milvus.py
+python scripts/infra_start_system/start_ollama.py --pull
 python scripts/stage4_eval/eval_rag_generation.py --mode live \
   --out /workspace/stage4_gen_eval_results.json --llm-judge
 ```
@@ -65,7 +65,7 @@ Mock **симулирует** generation с опорой на Hit@5 из уже 
 
 ## Blockers для live
 
-1. Нет Docker на agent box → нельзя поднять Milvus/Ollama через `scripts/infra/start_*.py`.
+1. Нет Docker на agent box → нельзя поднять Milvus/Ollama через `scripts/infra_start_system/start_*.py`.
 2. Порты 19530 / 11434 закрыты.
 3. Без live embeddings + LLM нельзя получить реальные ответы `rag_service.answer()`.
 

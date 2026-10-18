@@ -23,7 +23,7 @@ from paths import TESTS24_DATA  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "scripts" / "lib"))
-sys.path.insert(0, str(ROOT / "scripts" / "stage4_eval"))
+sys.path.insert(0, str(ROOT / "scripts" / "stage4_eval" / "lib"))
 from eval_questions_io import load_eval_questions, write_eval_registry  # noqa: E402
 from report_paths import STAGE4_QUESTIONS, STAGE4_QUESTIONS_BASE38  # noqa: E402
 

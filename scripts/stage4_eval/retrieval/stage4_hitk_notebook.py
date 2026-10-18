@@ -26,7 +26,7 @@ def _user_ns() -> dict:
 
 def _load_eval_module(stage4_dir: Path):
     name = "eval_retrieval_hitk"
-    path = stage4_dir / "eval_retrieval_hitk.py"
+    path = stage4_dir / "retrieval" / "eval_retrieval_hitk.py"
     if name in sys.modules:
         return importlib.reload(sys.modules[name])
     spec = importlib.util.spec_from_file_location(name, path)
@@ -37,12 +37,18 @@ def _load_eval_module(stage4_dir: Path):
     return mod
 
 
+def _extend_sys_path(scripts: Path, stage4: Path) -> None:
+    lib = stage4 / "lib"
+    retrieval = stage4 / "retrieval"
+    for p in (scripts, stage4, lib, retrieval):
+        if str(p) not in sys.path:
+            sys.path.insert(0, str(p))
+
+
 def run_eval(reports: Path, root: Path, *, refresh_readme: bool = True) -> dict[str, Any]:
     scripts = root / "scripts"
     stage4 = scripts / "stage4_eval"
-    for p in (scripts, stage4):
-        if str(p) not in sys.path:
-            sys.path.insert(0, str(p))
+    _extend_sys_path(scripts, stage4)
     eval_mod = _load_eval_module(stage4)
     results = eval_mod.run_hitk_eval(refresh_readme=refresh_readme)
     _user_ns()[_SESSION_KEY] = results
@@ -94,9 +100,7 @@ def render_section_53(
 
     scripts = root / "scripts"
     stage4 = scripts / "stage4_eval"
-    for p in (scripts, stage4):
-        if str(p) not in sys.path:
-            sys.path.insert(0, str(p))
+    _extend_sys_path(scripts, stage4)
 
     from report_paths import (
         STAGE4_HITK_CHART,
@@ -113,7 +117,7 @@ def render_section_53(
         report_mod = importlib.reload(sys.modules[report_name])
     else:
         spec_r = importlib.util.spec_from_file_location(
-            report_name, stage4 / "stage4_hitk_report.py"
+            report_name, stage4 / "retrieval" / "stage4_hitk_report.py"
         )
         report_mod = importlib.util.module_from_spec(spec_r)
         sys.modules[report_name] = report_mod
@@ -138,7 +142,9 @@ def render_section_53(
     if plot_name in sys.modules:
         plot_mod = importlib.reload(sys.modules[plot_name])
     else:
-        spec = importlib.util.spec_from_file_location(plot_name, stage4 / "plot_stage4_hitk.py")
+        spec = importlib.util.spec_from_file_location(
+            plot_name, stage4 / "retrieval" / "plot_stage4_hitk.py"
+        )
         plot_mod = importlib.util.module_from_spec(spec)
         sys.modules[plot_name] = plot_mod
         assert spec.loader is not None

@@ -4,6 +4,7 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "lib"))
 from _bootstrap import setup_paths  # noqa: E402
 
 ROOT = setup_paths(embed=True)
@@ -33,7 +34,7 @@ def main() -> int:
     if not check_vector_db_server(host, port):
         print(
             f"Milvus недоступен ({host}:{port}). "
-            "Запустите: python scripts/infra/start_report_docker.py",
+            "Запустите: python scripts/infra_start_system/start_report_docker.py",
             file=sys.stderr,
         )
         return 1

@@ -15,7 +15,7 @@ param(
 $ErrorActionPreference = "Stop"
 . (Join-Path $PSScriptRoot "_root.ps1")
 
-$argsList = @("scripts\stage4_eval\eval_rag_generation.py", "--mode", $Mode)
+$argsList = @("scripts\stage4_eval\generation\eval_rag_generation.py", "--mode", $Mode)
 if ($StartId -gt 0) {
     $argsList += @("--start-id", $StartId)
 }

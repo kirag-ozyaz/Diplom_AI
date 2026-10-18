@@ -21,8 +21,8 @@ nvidia-smi
 **Автовыбор GPU или CPU** (из корня репозитория):
 
 ```powershell
-python scripts/infra/compute_detect.py
-python scripts/infra/start_ollama.py --pull
+python scripts/infra_start_system/compute_detect.py
+python scripts/infra_start_system/start_ollama.py --pull
 ```
 
 Скрипт проверяет `nvidia-smi`, PyTorch CUDA и NVIDIA runtime в Docker:
@@ -42,9 +42,9 @@ docker compose -f docker-compose.yml up -d
 Модель LLM — в `config/rag_runtime.json` → `ollama.model` (или автовыбор при `model_selection.auto_select_ollama_model` по `config/model_profiles.json` → `ollama_model` в профилях GPU). Рекомендация и запись в конфиг:
 
 ```powershell
-python scripts/infra/compute_detect.py
-python scripts/infra/compute_detect.py --apply-config
-python scripts/infra/start_ollama.py --apply-config --pull
+python scripts/infra_start_system/compute_detect.py
+python scripts/infra_start_system/compute_detect.py --apply-config
+python scripts/infra_start_system/start_ollama.py --apply-config --pull
 ```
 
 **Telegram-бот** в этом compose **не поднимается** (заготовка backend закомментирована в `docker-compose.yml` — «логика отдельно»). Актуальный каркас бота: `infra/docker/Dockerfile.bot/` и `src/bot/`.

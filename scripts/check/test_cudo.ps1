@@ -90,14 +90,14 @@ if (-not $dockerCmd) {
 if ($dockerCmd -and $dockerEngineOk) {
     $ollamaId = docker ps -q -f "name=^ollama$" 2>$null
     if (-not $ollamaId) {
-        Write-Result "Ollama" "WARN" "not running - python scripts/infra/start_ollama.py --pull"
+        Write-Result "Ollama" "WARN" "not running - python scripts/infra_start_system/start_ollama.py --pull"
     } else {
         Write-Result "Ollama" "OK" "container running"
         $gpuReq = docker inspect ollama --format "{{json .HostConfig.DeviceRequests}}" 2>&1
         if ($LASTEXITCODE -eq 0 -and $gpuReq -match "nvidia") {
             Write-Result "Ollama GPU compose" "OK" "nvidia DeviceRequests"
         } else {
-            Write-Result "Ollama GPU compose" "FAIL" "no GPU - python scripts/infra/start_ollama.py"
+            Write-Result "Ollama GPU compose" "FAIL" "no GPU - python scripts/infra_start_system/start_ollama.py"
         }
         $smiIn = docker exec ollama nvidia-smi --query-gpu=name --format=csv,noheader 2>&1
         if ($LASTEXITCODE -eq 0 -and $smiIn -and ($smiIn -notmatch "error|not found")) {
@@ -109,8 +109,8 @@ if ($dockerCmd -and $dockerEngineOk) {
 }
 
 Write-Host ""
-Write-Host "--- python scripts/infra/compute_detect.py ---"
-& $Python (Join-Path $ProjectRoot "scripts\infra\compute_detect.py")
+Write-Host "--- python scripts/infra_start_system/compute_detect.py ---"
+& $Python (Join-Path $ProjectRoot "scripts\infra_start_system\compute_detect.py")
 
 Write-Host ""
 Write-Host ("Summary: FAIL=" + $fail + " WARN=" + $warn)

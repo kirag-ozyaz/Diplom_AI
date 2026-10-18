@@ -25,12 +25,11 @@
 
 **Этап 4 — типовой порядок метрик** (подробно: `scripts/stage4_eval/README.md`):
 
-1. Milvus и (для generation) Ollama — шаги 4 и 8 или `python scripts\infra\start_report_docker.py`.
-2. Hit@k: `python scripts\stage4_eval\eval_retrieval_hitk.py` или `scripts\stage4_eval\run_hitk.ps1`.
-3. Generation (live): `run_generation.ps1` / `eval_rag_generation.py --mode live`.
-4. Performance + LLM-judge: `run_perf_and_judge.ps1`.
-5. Всё подряд: `scripts\stage4_eval\run_all.ps1`.
-6. Обновить §5.3 в отчёте: `python scripts\stage4_eval\update_readme4_eval_docs.py` (после Hit@k).
+1. **Полный прогон одной командой** (infra → Hit@k → generation live → performance + LLM-judge):
+   `powershell -ExecutionPolicy Bypass -File scripts\stage4_eval\run_all.ps1`
+2. Только Hit@k: `run_all.ps1 -MilvusOnlyHitk`. Без performance/judge после generation: `run_all.ps1 -SkipPerfJudge`.
+3. По шагам вручную: `run_infra.ps1` → `run_hitk.ps1` → `run_generation.ps1 -Mode live` → `run_perf_and_judge.ps1`.
+4. Обновить §5.3 в отчёте при необходимости: `python scripts\stage4_eval\reports\update_readme4_eval_docs.py` (после Hit@k).
 
 Исполняемый отчёт этапа 4 — ячейки ноутбука `Readme-4 (ver. 2).ipynb` (те же сервисы и скрипты, что в мануале stage4_eval).
 
@@ -296,8 +295,8 @@ python src\preprocessing\Create_embeddings\query_test.py
 **Проверка CUDA и выбор compose (GPU / CPU):**
 
 ```powershell
-python scripts\infra\compute_detect.py
-python scripts\infra\compute_detect.py --apply-config
+python scripts\infra_start_system\compute_detect.py
+python scripts\infra_start_system\compute_detect.py --apply-config
 ```
 
 При старте **Milvus / Ollama / start_report_docker** конфиг `rag_runtime.json` синхронизируется автоматически (`device_text`, при `auto_select_ollama_model` — `ollama.model`).
@@ -305,7 +304,7 @@ python scripts\infra\compute_detect.py --apply-config
 **Запуск Ollama** (автовыбор compose и модели LLM):
 
 ```powershell
-python scripts\infra\start_ollama.py --pull
+python scripts\infra_start_system\start_ollama.py --pull
 ```
 
 Ручной вариант:
@@ -414,5 +413,5 @@ cd infra\milvus; docker compose down -v; docker compose up -d; cd ..\..
 docker logs -f ollama
 
 # Обновить каталог embedding-моделей
-python scripts\infra\update_model_profiles.py
+python scripts\infra_start_system\update_model_profiles.py
 ```

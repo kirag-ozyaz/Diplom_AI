@@ -34,7 +34,11 @@ def start_report_docker(
 
     print("=== Milvus (etcd, minio, standalone) ===")
     milvus = subprocess.run(
-        [sys.executable, str(scripts / "infra" / "start_milvus.py")],
+        [
+            sys.executable,
+            str(scripts / "infra" / "start_milvus.py"),
+            "--skip-compute-bootstrap",
+        ],
         cwd=project_root,
     )
     if milvus.returncode != 0:

@@ -3,9 +3,9 @@
 Снять логи контейнеров Milvus в infra/milvus/logs/<дата-время>/.
 
 Из корня репозитория:
-  python scripts/infra/start_milvus_logs.py
-  python scripts/infra/start_milvus_logs.py --since 6h
-  python scripts/infra/start_milvus_logs.py --tail 500
+  python scripts/infra_start_system/start_milvus_logs.py
+  python scripts/infra_start_system/start_milvus_logs.py --since 6h
+  python scripts/infra_start_system/start_milvus_logs.py --tail 500
 """
 from __future__ import annotations
 

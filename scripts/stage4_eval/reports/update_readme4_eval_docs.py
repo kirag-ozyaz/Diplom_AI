@@ -7,6 +7,7 @@ import re
 import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "lib"))
 from _bootstrap import ROOT, setup_paths  # noqa: E402
 
 setup_paths()
@@ -50,7 +51,7 @@ def refresh_readme4_eval_docs(*, sync_notebook: bool = True) -> None:
 
     if not RESULTS_PATH.is_file():
         raise SystemExit(
-            f"Нет {RESULTS_PATH.name} — сначала: python scripts/stage4_eval/eval_retrieval_hitk.py"
+            f"Нет {RESULTS_PATH.name} — сначала: python scripts/stage4_eval/retrieval/eval_retrieval_hitk.py"
         )
     results = load_results()
 
