@@ -27,5 +27,4 @@ if ($LlmJudge) {
     $argsList += "--llm-judge"
 }
 
-& $Python @argsList
-exit $LASTEXITCODE
+exit (Invoke-Stage4Python @argsList)

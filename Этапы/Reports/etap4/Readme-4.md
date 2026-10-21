@@ -2,7 +2,7 @@
 
 **Проект:** интеллектуальный Telegram-бот с RAG по Правилам устройства электроустановок (ПУЭ), 7-е издание.  
 **Каталог проекта:** `Итоговы_Проект` (материалы дипломной работы).  
-**Дата отчёта:** 27.09.2026.
+**Дата отчёта:** 18.10.2026.
 
 **Этот каталог:** только текст отчёта (`Readme-4.md`). Исходники и артефакты — см. `Этапы/Reports/README.md` и `scripts/lib/report_paths.py`.
 
@@ -10,8 +10,8 @@
 |-------------------------|------------|
 | `Этапы/Reports/etap4/Readme-4.md` | Текст для Word (этот файл) |
 | `Этапы/Reports/etap4/Readme-4 (ver. 2).ipynb` | Исполняемый отчёт |
-| `data/rag_eval_questions/eval_questions.json` | Реестр **300** контрольных вопросов (`n_questions`, `questions[]`) |
-| `scripts/stage4_eval/Сводка_метрик_этапа_4.md` | Перечень метрик, поля JSON, процедура пересчёта |
+| `data/rag_eval_questions/eval_questions.json` | Реестр **268** контрольных вопросов (`n_questions`, `questions[]`) |
+| `scripts/stage4_eval/docs/Сводка_метрик_этапа_4.md` | Перечень метрик, поля JSON, процедура пересчёта |
 | `scripts/stage4_eval/results/retrieval/` | Hit@k: JSON, история, PNG |
 | `scripts/stage4_eval/results/generation/` | Generation, performance, LLM-judge |
 
@@ -42,7 +42,7 @@
 ### Ожидаемый результат этапа
 
 - Рабочий контур **«вопрос → эмбеддинг → Milvus → top-k → (опционально) LLM»**.
-- Контрольный набор из **300** вопросов с эталонными пунктами ПУЭ и процедура расчёта Hit@1 / Hit@3 / Hit@5.
+- Контрольный набор из **268** вопросов с эталонными пунктами ПУЭ и процедура расчёта Hit@1 / Hit@3 / Hit@5.
 - Описание архитектуры полного RAG (retrieval + LLM) для следующей итерации (Telegram-бот, этап 5).
 
 ---
@@ -198,7 +198,7 @@
 
 **Hit@k = (1 / N) · Σ hit@k(q)**
 
-В прототипе: *N* = **300** — значение поля `n_questions` в реестре `eval_questions.json` (массив `questions`; обновляется при изменении набора и после прогона оценки). Релевантность — один эталонный **Clause** на вопрос, *k* ∈ {1, 3, 5}. Всегда выполняется **Hit@1 ≤ Hit@3 ≤ Hit@5**.
+В прототипе: *N* = **268** — значение поля `n_questions` в реестре `eval_questions.json` (массив `questions`; обновляется при изменении набора и после прогона оценки). Релевантность — один эталонный **Clause** на вопрос, *k* ∈ {1, 3, 5}. Всегда выполняется **Hit@1 ≤ Hit@3 ≤ Hit@5**.
 
 | Метрика | Смысл в проекте |
 |---------|-----------------|
@@ -286,7 +286,7 @@ python scripts/stage4_eval/eval_retrieval_hitk.py
 
 ### 5.3. Результаты прогона
 
-Контрольный набор для расчёта — **300** вопросов. Таблица ниже заполняется **автоматически** из последнего файла `stage4_hitk_results.json`; если прогон выполнялся на меньшем *N*, в таблице будут старые числа до полного пересчёта на актуальном реестре.
+Контрольный набор для расчёта — **268** вопросов. Таблица ниже заполняется **автоматически** из последнего файла `stage4_hitk_results.json`; если прогон выполнялся на меньшем *N*, в таблице будут старые числа до полного пересчёта на актуальном реестре.
 
 В ноутбуке: **code-ячейка §5.3** — таблица и Plotly по актуальному `stage4_hitk_results.json` (после §5.2 в той же сессии или `force_eval=True` в ячейке).
 
@@ -328,7 +328,7 @@ Inference эмбеддингов при прогоне eval: **cuda**.
 После изменения реестра контрольных вопросов снова выполните прогон оценки — блок обновится автоматически.
 <!-- stage4-eval:5.3:end -->
 
-Полный JSON и графики: `scripts/stage4_eval/results/retrieval/` (см. таблицу в начале). При изменении `data/rag_eval_questions/eval_questions.json` снова запустите §5.2 — обновятся §5.3, §6.1 и *N* в §4.4 / §7.
+Полный JSON и графики: `scripts/stage4_eval/results/retrieval/` (см. таблицу в начале). После `run_all.ps1` или отдельных eval: `python scripts/stage4_eval/reports/update_readme4_eval_docs.py` — обновятся §5.3, §5.4, §6.1, §7 и ноутбук.
 
 ### 5.4. Прочие метрики (кроме Hit@k)
 
@@ -340,31 +340,34 @@ Inference эмбеддингов при прогоне eval: **cuda**.
 | Эксплуатация | TTFT, TPS, latency (avg, p95, p99), RPS, availability | `eval_rag_performance.py` | `generation/stage4_performance_metrics.json` |
 | LLM-as-a-Judge (судья-модель) | обоснованность, релевантность ответа, полнота контекста | `eval_rag_llm_judge.py` | `generation/stage4_llm_judge_metrics.json` |
 
-**Расшифровка полей:** `scripts/stage4_eval/Сводка_метрик_этапа_4.md`. Архив Hit@k 38/73: `Etap4-hitk-otchet-N38.md`, `N73.md`.  
-**Сводная таблица** (факт — полный прогон *N* = **300**, **18.10.2026**; `scripts/stage4_eval/results/`):
+**Расшифровка полей:** `scripts/stage4_eval/docs/Сводка_метрик_этапа_4.md`. Архив Hit@k 38/73: `Etap4-hitk-otchet-N38.md`, `N73.md`.  
+<!-- stage4-eval:5.4:start -->
+**Сводная таблица** — полный прогон `run_all.ps1`, *N* = **268** вопросов (реестр `data/rag_eval_questions/eval_questions.json`); retrieval **18.10.2026 16:58**, generation live **18.10.2026 17:28**, performance **2026-10-18 18:10:17**, LLM-judge **2026-10-18 18:24:52**. Ollama: `qwen2.5:14b-instruct-q4_K_M`. Артефакты: `scripts/stage4_eval/results/`.
 
 | Слой | Метрика | Факт (прогон) | Артефакт / скрипт |
 |------|---------|---------------|-------------------|
-| Retrieval | Hit@1 | **12,3 %** (37/300) | `retrieval/stage4_hitk_results.json`, `eval_retrieval_hitk.py` |
-| Retrieval | Hit@3 | **23,0 %** | то же |
-| Retrieval | Hit@5 | **28,0 %** | то же |
-| Generation (live) | Citation rate (цитирование) | **28,0 %** | `generation/stage4_gen_eval_results.json`, `eval_rag_generation.py` |
-| Generation (live) | Groundedness — опора на контекст | **0,89** | то же |
-| Generation (live) | Relevance — соответствие эталону | **0,317** | то же |
-| LLM-as-a-Judge | Faithfulness — **обоснованность** | **0,452** | `generation/stage4_llm_judge_metrics.json`, `eval_rag_llm_judge.py` |
-| LLM-as-a-Judge | Answer relevancy — **релевантность ответа** | **0,196** | то же |
-| LLM-as-a-Judge | Context recall — **полнота контекста** | **0,500** | то же |
-| Operations | TTFT (среднее) | **19,72 с** | `generation/stage4_performance_metrics.json`, `eval_rag_performance.py` |
-| Operations | TPS (среднее) | **40,02** ток/с | то же |
-| Operations | Latency p95 | **43,50 с** | то же |
-| Operations | RPS | **0,10** зап/с | то же |
-| Operations | Availability | **100 %** | то же |
+| Retrieval | Hit@1 | **156 / 268 (58,2 %)** | `retrieval/stage4_hitk_results.json`, `eval_retrieval_hitk.py` |
+| Retrieval | Hit@3 | **204 / 268 (76,1 %)** | то же |
+| Retrieval | Hit@5 | **218 / 268 (81,3 %)** | то же |
+| Generation (live) | Citation rate | **81,3 %** (218/268) | `generation/stage4_gen_eval_results.json`, `eval_rag_generation.py` |
+| Generation (live) | Citation в ответе | **70,9 %** (190/268) | то же |
+| Generation (live) | Groundedness | **0,89** | то же |
+| Generation (live) | Relevance | **0,79** | то же |
+| LLM-as-a-Judge | Faithfulness | **0,4347** | `generation/stage4_llm_judge_metrics.json`, `eval_rag_llm_judge.py` |
+| LLM-as-a-Judge | Answer relevancy | **0,1847** | то же |
+| LLM-as-a-Judge | Context recall | **0,5060** | то же |
+| Operations | TTFT (среднее) | **18,72** с | `generation/stage4_performance_metrics.json`, `eval_rag_performance.py` |
+| Operations | TPS (среднее) | **38,19** ток/с | то же |
+| Operations | Latency p95 | **39,58** с | то же |
+| Operations | RPS | **0,11** зап/с | то же |
+| Operations | Availability | **100.0 %** | то же |
 
-MRR и nDCG@5 в текущих скриптах **не рассчитываются** (только Hit@1/3/5).
+MRR и nDCG@5 в текущих скриптах **не рассчитываются** (только Hit@1/3/5). Нагрузочный тест performance — упрощённый промпт к Ollama (см. `pipeline_note` в JSON), не latency полного RAG.
+<!-- stage4-eval:5.4:end -->
 
 ### 5.5. Типовые точки отказа RAG (для защиты)
 
-1. **Неполный контрольный набор** — снижен риск реестром **300** вопросов по разделам ПУЭ (`data/rag_eval_questions/eval_questions.json`).
+1. **Неполный контрольный набор** — снижен риск реестром **268** вопросов по разделам ПУЭ (`data/rag_eval_questions/eval_questions.json`).
 2. **Пропуск при retrieval** — эталонный пункт не в top-5 (сложные формулировки; см. Hit@5).
 3. **Ошибка ранжирования** — без реранкера общие определения иногда выше конкретных требований.
 4. **Шум в контексте** — смежные пункты в top-k усложняют точное цитирование.
@@ -382,7 +385,7 @@ MRR и nDCG@5 в текущих скриптах **не рассчитывают
 | `eval_rag_performance.py` | Задержка, TTFT, пропускная способность | `generation/stage4_performance_metrics.json` |
 | `eval_rag_llm_judge.py` | Faithfulness, relevancy, context recall (LLM-as-a-Judge) | `generation/stage4_llm_judge_metrics.json` |
 
-Все прогоны читают тот же реестр вопросов, что и Hit@k (**300** записей в `eval_questions.json`). Пояснение к раннему mock-generation: `scripts/stage4_eval/results/generation/Etap4-gen-metrics.md`. Команды: **`scripts/stage4_eval/README.md`**, цепочка performance + judge: `run_perf_and_judge.ps1`.
+Все прогоны читают тот же реестр вопросов, что и Hit@k (**268** записей в `eval_questions.json`). Пояснение к раннему mock-generation: `scripts/stage4_eval/results/generation/Etap4-gen-metrics.md`. Команды: **`scripts/stage4_eval/README.md`**, цепочка performance + judge: `run_perf_and_judge.ps1`.
 
 ```powershell
 python scripts/stage4_eval/eval_rag_generation.py --mode live
@@ -418,11 +421,11 @@ python scripts/stage4_eval/eval_rag_generation.py --mode live
 | `scripts/stage4_eval/plot_stage4_hitk.py` | PNG и Plotly для Hit@k |
 | `scripts/lib/report_paths.py` | Единые пути к данным и артефактам этапа 4 |
 | `scripts/stage4_eval/README.md` | Мануал прогона метрик |
-| `data/rag_eval_questions/eval_questions.json` | Реестр **300** контрольных вопросов и эталонные пункты ПУЭ |
+| `data/rag_eval_questions/eval_questions.json` | Реестр **268** контрольных вопросов и эталонные пункты ПУЭ |
 
 ### 6.1. Контрольный набор (эталоны)
 
-Файл `eval_questions.json` — **реестр** JSON: поля `title`, `source_file`, `n_questions` (300), массив `questions` с полями `id`, `registry_id`, `query`, `expected_clause`, `section`. Полные формулировки — в реестре и в исходном markdown (поле `source_file`). Таблица ниже (краткие формулировки) обновляется скриптом `update_readme4_eval_docs.py` после прогона Hit@k; при 300 записях в отчёт Word целесообразно прилагать файл реестра целиком.
+Файл `eval_questions.json` — **реестр** JSON: поля `title`, `source_file`, `n_questions` (268), массив `questions` с полями `id`, `registry_id`, `query`, `expected_clause`, `section`. Полные формулировки — в реестре и в исходном markdown (поле `source_file`). Таблица ниже (краткие формулировки) обновляется скриптом `update_readme4_eval_docs.py` после прогона Hit@k; в отчёт Word целесообразно прилагать файл реестра целиком.
 
 <!-- stage4-eval:6.1:start -->
 | № | Вопрос (кратко) | Эталон Clause |
@@ -697,7 +700,7 @@ python scripts/stage4_eval/eval_rag_generation.py --mode live
 | 268 | К каким помещениям по опасности поражения электрическим... | 7.10.12 |
 <!-- stage4-eval:6.1:end -->
 
-*(Полный реестр — в `eval_questions.json`; при 300 записях в Word удобнее ссылаться на файл и сводный отчёт.)*
+*(Полный реестр — в `eval_questions.json`; в Word удобнее ссылаться на файл и сводный отчёт §5.4.)*
 
 ### 6.2. Пример прототипа generation (промпт для Ollama)
 
@@ -720,7 +723,7 @@ python scripts/stage4_eval/eval_rag_generation.py --mode live
 
 ## 7. Выводы
 
-Пункты о Hit@k формируются из последнего `stage4_hitk_results.json`. Для контрольного набора из **300** вопросов необходим полный прогон `eval_retrieval_hitk.py`; до пересчёта в блоке ниже могут оставаться показатели предыдущего прогона (меньший *N*).
+Пункты о Hit@k и сводка §5.4 формируются из JSON в `scripts/stage4_eval/results/` (скрипт `reports/update_readme4_eval_docs.py`). Актуальный реестр — **268** вопросов (`n_questions` в `eval_questions.json`).
 
 В ноутбуке: **code-ячейка §7** — те же выводы (после §5.2).
 
@@ -728,8 +731,9 @@ python scripts/stage4_eval/eval_rag_generation.py --mode live
 1. **База ПУЭ** подготовлена и проиндексирована; **прототип рабочего контура RAG** опирается на чанки с метаданными пунктов.
 2. **Retrieval** — **SentenceTransformer + Milvus** (`search_text`) — реализован; конфиг `rag_runtime.json`.
 3. **Первая измеримая точность** — **Hit@k** (268 вопросов, один поиск на вопрос); скрипт `eval_retrieval_hitk.py` и график. На прогоне **18.10.2026 16:58**: Hit@1 **58.2%**, Hit@3 **76.1%**, Hit@5 **81.3%** (`eval_retrieval_hitk.py`, `scripts/stage4_eval/results/retrieval/stage4_hitk_results.json`).
-4. **Generation** — **Ollama** в `src/rag/rag_service.py`; Telegram-бот — этап 5.
-5. Ограничения: промахи retrieval; LLM — только при опоре на top-k контекст.
+4. **Generation (live RAG)** — `eval_rag_generation.py` + `src/rag/rag_service.py`: citation **81.3%**, groundedness **0.887**, relevance **0.792** (18.10.2026 17:28, `scripts/stage4_eval/results/generation/stage4_gen_eval_results.json`).
+5. **Эксплуатация и качество (доп.)** — availability **100.0%**, RPS **0.11** (TTFT avg **18.7199** с); LLM-judge faithfulness **0.4347** (2026-10-18 18:24:52).
+6. **Ограничения:** промахи retrieval; LLM — только при опоре на top-k; judge использует шаблонный контекст (см. `scripts/stage4_eval/docs/Сводка_метрик_этапа_4.md`).
 <!-- stage4-eval:7:end -->
 
 ---

@@ -126,7 +126,8 @@ def run_hitk_eval(*, refresh_readme: bool = True) -> dict:
     hits = {k: 0 for k in k_values}
     details = []
 
-    for item in questions:
+    n = len(questions)
+    for i, item in enumerate(questions, start=1):
         q = item["query"]
         expected = item["expected_clause"]
         results = rag.search_text(q, limit=search_limit)
@@ -143,8 +144,12 @@ def run_hitk_eval(*, refresh_readme: bool = True) -> dict:
                 hits[k] += 1
             row["hit"][f"@{k}"] = ok
         details.append(row)
-
-    n = len(questions)
+        print(
+            f"  [{i}/{n}] id={item.get('id')}: "
+            f"hit@1={row['hit']['@1']} hit@3={row['hit']['@3']} hit@5={row['hit']['@5']} "
+            f"| {expected}",
+            flush=True,
+        )
     metrics = {f"hit@{k}": round(100.0 * hits[k] / n, 1) for k in k_values}
 
     out = {

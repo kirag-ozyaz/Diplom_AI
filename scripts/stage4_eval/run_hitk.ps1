@@ -5,5 +5,4 @@ $ErrorActionPreference = "Stop"
 . (Join-Path $PSScriptRoot "_root.ps1")
 
 Write-Stage4Log "Команда: scripts\stage4_eval\retrieval\eval_retrieval_hitk.py"
-& $Python scripts\stage4_eval\retrieval\eval_retrieval_hitk.py
-exit $LASTEXITCODE
+exit (Invoke-Stage4Python @("scripts\stage4_eval\retrieval\eval_retrieval_hitk.py"))

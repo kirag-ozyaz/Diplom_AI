@@ -31,9 +31,9 @@ Write-Stage4Log ("run_all.ps1 | флаги: " + $flagStr)
 
 function Invoke-MilvusLogSnapshot {
     Write-Host "Снимок логов Milvus (start_milvus_logs.py)..."
-    & $Python scripts\infra_start_system\start_milvus_logs.py
-    if ($LASTEXITCODE -ne 0) {
-        Write-Warning "start_milvus_logs.py завершился с кодом $LASTEXITCODE (Docker запущен?)."
+    $milvusLogExit = Invoke-Stage4Python @("scripts\infra_start_system\start_milvus_logs.py")
+    if ($milvusLogExit -ne 0) {
+        Write-Warning "start_milvus_logs.py завершился с кодом $milvusLogExit (Docker запущен?)."
     }
 }
 

@@ -22,16 +22,13 @@ if ($MilvusOnly) {
 
 if ($MilvusOnly) {
     Write-Stage4Log "Команда: start_milvus.py"
-    & $Python scripts\infra_start_system\start_milvus.py
-    exit $LASTEXITCODE
+    exit (Invoke-Stage4Python @("scripts\infra_start_system\start_milvus.py"))
 }
 
 if ($SkipOllama) {
     Write-Stage4Log "Команда: start_report_docker.py --skip-ollama"
-    & $Python scripts\infra_start_system\start_report_docker.py --skip-ollama
-    exit $LASTEXITCODE
+    exit (Invoke-Stage4Python @("scripts\infra_start_system\start_report_docker.py", "--skip-ollama"))
 }
 
 Write-Stage4Log "Команда: start_report_docker.py"
-& $Python scripts\infra_start_system\start_report_docker.py
-exit $LASTEXITCODE
+exit (Invoke-Stage4Python @("scripts\infra_start_system\start_report_docker.py"))

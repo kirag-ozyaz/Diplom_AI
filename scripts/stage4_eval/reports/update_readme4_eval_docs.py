@@ -11,7 +11,14 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "lib"))
 from _bootstrap import ROOT, setup_paths  # noqa: E402
 
 setup_paths()
-from report_paths import README4_MD, STAGE4_QUESTIONS, rel_from_root  # noqa: E402
+from report_paths import (  # noqa: E402
+    README4_MD,
+    STAGE4_GEN_RESULTS,
+    STAGE4_LLM_JUDGE_METRICS,
+    STAGE4_PERF_METRICS,
+    STAGE4_QUESTIONS,
+    rel_from_root,
+)
 
 MD_PATH = README4_MD
 
@@ -21,6 +28,8 @@ MARK_52_LEGACY_START = "<!-- stage4-eval:5.2:start -->"
 MARK_52_LEGACY_END = "<!-- stage4-eval:5.2:end -->"
 MARK_61_START = "<!-- stage4-eval:6.1:start -->"
 MARK_61_END = "<!-- stage4-eval:6.1:end -->"
+MARK_54_START = "<!-- stage4-eval:5.4:start -->"
+MARK_54_END = "<!-- stage4-eval:5.4:end -->"
 MARK_7_START = "<!-- stage4-eval:7:start -->"
 MARK_7_END = "<!-- stage4-eval:7:end -->"
 
@@ -38,8 +47,10 @@ def refresh_readme4_eval_docs(*, sync_notebook: bool = True) -> None:
         QUESTIONS_PATH,
         RESULTS_PATH,
         build_section_52_markdown,
+        build_section_54_markdown,
         build_section_61_markdown,
         build_section_7_markdown,
+        load_optional_json,
         load_questions,
         load_results,
     )
@@ -54,6 +65,9 @@ def refresh_readme4_eval_docs(*, sync_notebook: bool = True) -> None:
             f"Нет {RESULTS_PATH.name} — сначала: python scripts/stage4_eval/retrieval/eval_retrieval_hitk.py"
         )
     results = load_results()
+    gen = load_optional_json(STAGE4_GEN_RESULTS)
+    perf = load_optional_json(STAGE4_PERF_METRICS)
+    judge = load_optional_json(STAGE4_LLM_JUDGE_METRICS)
 
     body_52 = build_section_52_markdown(results)
     body_52 = body_52.replace(
@@ -62,6 +76,7 @@ def refresh_readme4_eval_docs(*, sync_notebook: bool = True) -> None:
     )
 
     md = MD_PATH.read_text(encoding="utf-8")
+    has_54 = MARK_54_START in md
     if MARK_52_START in md:
         md = _replace_block(md, MARK_52_START, MARK_52_END, body_52)
     elif MARK_52_LEGACY_START in md:
@@ -71,9 +86,39 @@ def refresh_readme4_eval_docs(*, sync_notebook: bool = True) -> None:
     md = _replace_block(
         md, MARK_61_START, MARK_61_END, build_section_61_markdown(questions)
     )
+    if MARK_54_START in md:
+        md = _replace_block(
+            md,
+            MARK_54_START,
+            MARK_54_END,
+            build_section_54_markdown(results, gen=gen, perf=perf, judge=judge),
+        )
     if MARK_7_START in md:
-        md = _replace_block(md, MARK_7_START, MARK_7_END, build_section_7_markdown(results))
+        md = _replace_block(
+            md,
+            MARK_7_START,
+            MARK_7_END,
+            build_section_7_markdown(results, gen=gen, perf=perf, judge=judge),
+        )
 
+    md = re.sub(r"\*\*Дата отчёта:\*\* \d{2}\.\d{2}\.\d{4}\.", "**Дата отчёта:** 18.10.2026.", md, count=1)
+    md = re.sub(
+        r"Реестр \*\*\d+\*\* контрольных вопросов",
+        f"Реестр **{n}** контрольных вопросов",
+        md,
+    )
+    md = re.sub(
+        r"Контрольный набор из \*\*\d+\*\* вопросов",
+        f"Контрольный набор из **{n}** вопросов",
+        md,
+        count=1,
+    )
+    md = re.sub(
+        r"Контрольный набор для расчёта — \*\*\d+\*\* вопросов",
+        f"Контрольный набор для расчёта — **{n}** вопросов",
+        md,
+        count=1,
+    )
     md = re.sub(r"(\*N\* = )\d+", rf"\g<1>{n}", md, count=1)
     md = re.sub(
         rf"(\| `{rel_from_root(STAGE4_QUESTIONS).replace('/', r'/')}` \| )\d+( тестовых вопросов)",
@@ -89,9 +134,16 @@ def refresh_readme4_eval_docs(*, sync_notebook: bool = True) -> None:
     )
 
     MD_PATH.write_text(md, encoding="utf-8")
-    print(f"Readme-4.md: обновлены §5.3, §6.1, §7, N={n}")
+    parts = ["§5.3", "§6.1"]
+    if has_54:
+        parts.append("§5.4")
+    parts.append("§7")
+    print(f"Readme-4.md: обновлены {', '.join(parts)}, N={n}")
 
     if sync_notebook:
+        reports_scripts = ROOT / "scripts" / "reports"
+        if str(reports_scripts) not in sys.path:
+            sys.path.insert(0, str(reports_scripts))
         import sync_readme4_notebook
 
         sync_readme4_notebook.main()

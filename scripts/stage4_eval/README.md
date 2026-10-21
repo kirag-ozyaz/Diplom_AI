@@ -70,7 +70,7 @@ stage4_eval/
 
 **Результаты** — в `scripts/stage4_eval/results/retrieval/` и `generation/`.
 
-**Лог прогона** (консоль + файл): при `run_all.ps1` — `results/logs/pipeline_<дата-время>.log`; при отдельных `run_*.ps1` — `results/logs/stage4_<дата-время>.log`. Переменная окружения `STAGE4_RUN_LOG`.
+**Лог прогона** (консоль + один файл): при `run_all.ps1` — `results/logs/pipeline_<дата-время>.log`; при отдельных `run_*.ps1` — `results/logs/stage4_<дата-время>.log`. В файл попадают строки обёрток PowerShell и **весь stdout/stderr** Python (прогресс по вопросам, Docker, сводки). Переменная `STAGE4_RUN_LOG`.
 
 ### Реестр контрольных вопросов (300 записей)
 
