@@ -15,6 +15,7 @@ param(
 $ErrorActionPreference = "Stop"
 . (Join-Path $PSScriptRoot "_root.ps1")
 
+Write-Stage4Banner -Title "Оценка generation" -Detail "режим $Mode, eval_rag_generation.py"
 Write-Stage4Log "Команда: eval_rag_generation.py --mode $Mode"
 $argsList = @("scripts\stage4_eval\generation\eval_rag_generation.py", "--mode", $Mode)
 if ($StartId -gt 0) {
@@ -27,4 +28,4 @@ if ($LlmJudge) {
     $argsList += "--llm-judge"
 }
 
-exit (Invoke-Stage4Python @argsList)
+exit (Invoke-Stage4Python -ArgumentList $argsList)

@@ -4,7 +4,7 @@
   "collection_num_entities": 2912,
   "text_model": "intfloat/multilingual-e5-base",
   "embedding_device": "cuda",
-  "evaluated_at": "18.10.2026 16:58",
+  "evaluated_at": "25.10.2026 20:00",
   "source": "eval_retrieval_hitk.py",
   "metrics_percent": {
     "hit@1": 58.2,

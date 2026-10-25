@@ -88,7 +88,7 @@ def run_hitk_eval(*, refresh_readme: bool = True) -> dict:
     from eval_questions_io import load_eval_questions  # noqa: E402
 
     questions = load_eval_questions(QUESTIONS_PATH)
-    from stage4_console import stage_banner  # noqa: E402
+    from stage4_console import opening_stage_banner, progress_line  # noqa: E402
 
     meta = MultimodalRAG.get_embedding_meta_from_collection(host, port, collection)
     if meta:
@@ -98,7 +98,7 @@ def run_hitk_eval(*, refresh_readme: bool = True) -> dict:
         text_model, _ = select_text_model(cfg)
         text_model, text_dim = get_default_embedding_model()
 
-    stage_banner(
+    opening_stage_banner(
         "Оценка retrieval Hit@1 / Hit@3 / Hit@5",
         detail=(
             f"{len(questions)} вопросов, Milvus {host}:{port}, "
@@ -107,6 +107,7 @@ def run_hitk_eval(*, refresh_readme: bool = True) -> dict:
     )
 
     models_cfg = cfg["models"]
+    print(f"База: коллекция «{collection}», модель {text_model}.", flush=True)
     rag = MultimodalRAG(
         vector_db_host=host,
         vector_db_port=port,
@@ -118,6 +119,7 @@ def run_hitk_eval(*, refresh_readme: bool = True) -> dict:
         load_image_model=False,
     )
     rag.load_collection()
+    print("Коллекция Milvus открыта, модель embedding готова.", flush=True)
     num_entities = rag.collection.num_entities if rag.collection else None
     embedding_device = getattr(rag, "text_device", None)
 
@@ -144,11 +146,10 @@ def run_hitk_eval(*, refresh_readme: bool = True) -> dict:
                 hits[k] += 1
             row["hit"][f"@{k}"] = ok
         details.append(row)
-        print(
+        progress_line(
             f"  [{i}/{n}] id={item.get('id')}: "
             f"hit@1={row['hit']['@1']} hit@3={row['hit']['@3']} hit@5={row['hit']['@5']} "
-            f"| {expected}",
-            flush=True,
+            f"| {expected}"
         )
     metrics = {f"hit@{k}": round(100.0 * hits[k] / n, 1) for k in k_values}
 

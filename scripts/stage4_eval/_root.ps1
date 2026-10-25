@@ -1,4 +1,4 @@
-﻿# Shared: repo root and python for stage4_eval wrappers.
+﻿# Общее: корень репозитория и Python для обёрток stage4_eval.
 $ProjectRoot = (Resolve-Path (Join-Path $PSScriptRoot "..\..")).Path
 Set-Location $ProjectRoot
 $env:PYTHONIOENCODING = "utf-8"
@@ -21,6 +21,9 @@ if (-not $env:STAGE4_RUN_LOG) {
     $env:STAGE4_RUN_LOG = Join-Path $logDir "stage4_$stamp.log"
 }
 
-Write-Stage4Log "Корень проекта: $ProjectRoot"
-Write-Stage4Log "Python: $Python"
-Write-Stage4Log "Лог-файл: $env:STAGE4_RUN_LOG"
+if (-not $env:STAGE4_ROOT_LOGGED) {
+    Write-Stage4Log "Корень проекта: $ProjectRoot"
+    Write-Stage4Log "Python: $Python"
+    Write-Stage4Log "Лог-файл: $env:STAGE4_RUN_LOG"
+    $env:STAGE4_ROOT_LOGGED = "1"
+}

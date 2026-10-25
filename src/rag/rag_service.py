@@ -32,15 +32,22 @@ PUE_SYSTEM = (
 )
 
 _rag_session: dict[str, Any] = {"key": None, "rag": None}
+_first_live_answer_pending = True
+
+
+def _progress(msg: str) -> None:
+    print(msg, flush=True)
 
 
 def close_rag_session() -> None:
     """Закрыть кэш MultimodalRAG (после пакетного eval)."""
+    global _first_live_answer_pending
     rag = _rag_session.get("rag")
     if rag is not None:
         rag.close()
     _rag_session["key"] = None
     _rag_session["rag"] = None
+    _first_live_answer_pending = True
 
 
 def _open_rag(
@@ -53,11 +60,23 @@ def _open_rag(
     device_text: str,
     device_clip: str,
     reuse: bool,
+    e5_query_prefix: bool = False,
 ) -> MultimodalRAG:
-    key = (host, port, collection, text_model, text_dim, device_text, device_clip)
+    key = (
+        host,
+        port,
+        collection,
+        text_model,
+        text_dim,
+        device_text,
+        device_clip,
+        e5_query_prefix,
+    )
     if reuse and _rag_session["rag"] is not None and _rag_session["key"] == key:
         return _rag_session["rag"]
     close_rag_session()
+    stage_label = "E5" if e5_query_prefix else "База"
+    _progress(f"{stage_label}: коллекция «{collection}», модель {text_model}.")
     rag = MultimodalRAG(
         vector_db_host=host,
         vector_db_port=port,
@@ -67,8 +86,10 @@ def _open_rag(
         device_text=device_text,
         device_clip=device_clip,
         load_image_model=False,
+        e5_query_prefix=e5_query_prefix,
     )
     rag.load_collection()
+    _progress("Коллекция Milvus открыта, модель embedding готова.")
     if reuse:
         _rag_session["key"] = key
         _rag_session["rag"] = rag
@@ -88,9 +109,15 @@ def _format_context(hits: list[dict[str, Any]]) -> str:
 
 
 def answer(
-    question: str, *, limit: int | None = None, reuse_rag: bool = False
+    question: str,
+    *,
+    limit: int | None = None,
+    reuse_rag: bool = False,
+    config_path: Path | None = None,
+    e5_query_prefix: bool = False,
 ) -> dict[str, Any]:
-    cfg = load_runtime_config()
+    global _first_live_answer_pending
+    cfg = load_runtime_config(config_path)
     vdb = cfg["vector_db"]
     host = vdb["host"]
     port = str(vdb["port"])
@@ -120,7 +147,16 @@ def answer(
             device_text=models_cfg["device_text"],
             device_clip=models_cfg["device_clip"],
             reuse=reuse_rag,
+            e5_query_prefix=e5_query_prefix,
         )
+    first_live = _first_live_answer_pending
+    if first_live:
+        _progress(
+            "[*] Первый live-запрос: поиск в Milvus и ответ Ollama; "
+            "1–3 мин без новых строк — нормально (холодный старт LLM)."
+        )
+        _first_live_answer_pending = False
+
     hits = rag.search_text(question, limit=search_limit)
     if not reuse_rag:
         rag.close()
@@ -131,6 +167,8 @@ def answer(
     if not llm.health():
         raise RuntimeError("Ollama недоступен")
 
+    if first_live:
+        _progress(f"Генерация ответа Ollama ({llm.config.model})…")
     text = llm.generate(prompt, system=PUE_SYSTEM)
     return {
         "question": question,

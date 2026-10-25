@@ -1,4 +1,4 @@
-# Full stage-4 metrics: infra -> Hit@k -> generation (live) -> performance + LLM-judge.
+﻿# Full stage-4 metrics: infra -> Hit@k -> generation (live) -> performance + LLM-judge.
 # Usage:
 #   run_all.ps1
 #   run_all.ps1 -MilvusOnlyHitk
@@ -31,7 +31,7 @@ Write-Stage4Log ("run_all.ps1 | флаги: " + $flagStr)
 
 function Invoke-MilvusLogSnapshot {
     Write-Host "Снимок логов Milvus (start_milvus_logs.py)..."
-    $milvusLogExit = Invoke-Stage4Python @("scripts\infra_start_system\start_milvus_logs.py")
+    $milvusLogExit = Invoke-Stage4Python -ArgumentList @("scripts\infra_start_system\start_milvus_logs.py")
     if ($milvusLogExit -ne 0) {
         Write-Warning "start_milvus_logs.py завершился с кодом $milvusLogExit (Docker запущен?)."
     }

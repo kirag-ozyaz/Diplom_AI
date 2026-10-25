@@ -80,12 +80,6 @@ def log_generation_progress_header(*, hitk_aligned: bool) -> None:
     from stage4_console import log_line, stage_banner  # noqa: E402
 
     stage_banner("Прогресс по вопросам (generation)", step="")
-    log_line(
-        "[*] cite — цитирование эталонного пункта (в ответе или в контексте); "
-        "g — groundedness, опора ответа на источники (0–1); "
-        "r — relevance к полю expected_clause (0–1); "
-        "t — время обработки вопроса (с), ответ RAG + метрики (+ LLM-judge, если включён)"
-    )
     if hitk_aligned:
         log_line(
             "[*] hit1, hit3, hit5 — показатель: попал ли эталонный пункт (expected_clause) "
@@ -96,6 +90,20 @@ def log_generation_progress_header(*, hitk_aligned: bool) -> None:
         log_line(
             "[*] hit1, hit3, hit5 — н/д (нет stage4_hitk_results.json или указан --no-hitk)"
         )
+    log_line(
+        "[*] cite — цитирование эталонного пункта (в ответе или в контексте); "
+        "    t — время обработки вопроса (с), ответ RAG + метрики (+ LLM-judge, если включён)"
+    )
+    log_line(
+        "[*] g — обоснованность (groundedness) (0–1): насколько формулировки ответа опираются на "
+        "        выданные чанки — доля предложений, у которых ≥30% значимых слов есть в контексте "
+        "        (не «с потолка»; честный отказ при пустом контексте может дать 1.0)"
+    )
+    log_line(
+        "[*] r — релевантность (relevance) (0–1): попал ли эталонный пункт ПУЭ (expected_clause) "
+        "        в смысл ответа — 1.0 если номер пункта в ответе; 0.7 если пункт в контексте и ответ "
+        "        по делу; 0.3 если только Hit@5; 0.5 честный отказ при промахе retrieval"
+    )
 
 
 def clause_in_text(clause: str, text: str) -> bool:
@@ -297,6 +305,9 @@ def mock_retrieve_and_answer(
     }
 
 
+_LIVE_RAG: dict[str, Any] = {"config_path": None, "e5_query_prefix": False}
+
+
 def live_answer(question: str) -> dict[str, Any]:
     import time
 
@@ -305,7 +316,12 @@ def live_answer(question: str) -> dict[str, Any]:
     last_exc: Exception | None = None
     for attempt in range(2):
         try:
-            result = rag_answer(question, reuse_rag=True)
+            result = rag_answer(
+                question,
+                reuse_rag=True,
+                config_path=_LIVE_RAG["config_path"],
+                e5_query_prefix=bool(_LIVE_RAG["e5_query_prefix"]),
+            )
             result["mode"] = "live"
             return result
         except RuntimeError as exc:
@@ -464,12 +480,15 @@ def run_eval(
     out_path: Path,
     use_llm_judge: bool,
     use_hitk: bool,
+    hitk_path: Path | None = None,
+    config_path: Path | None = None,
+    e5_query_prefix: bool = False,
 ) -> dict[str, Any]:
     if not QUESTIONS_PATH.is_file():
         raise RuntimeError(f"Нет файла вопросов: {QUESTIONS_PATH}")
 
     from eval_questions_io import load_eval_questions  # noqa: E402
-    from stage4_console import log_run_start, stage_banner  # noqa: E402
+    from stage4_console import log_run_start, opening_stage_banner, progress_line  # noqa: E402
 
     questions = load_eval_questions(QUESTIONS_PATH)
     if start_id is not None:
@@ -484,7 +503,7 @@ def run_eval(
         questions_file=qpath,
         out_json=str(out_path.name),
     )
-    stage_banner(
+    opening_stage_banner(
         "Оценка generation (citation / groundedness / relevance)",
         detail=(
             f"режим {mode}, {len(questions)} вопросов, реестр {qpath}"
@@ -492,8 +511,11 @@ def run_eval(
         ),
     )
 
+    _LIVE_RAG["config_path"] = config_path
+    _LIVE_RAG["e5_query_prefix"] = e5_query_prefix
+    hitk_file = hitk_path or HITK_JSON
     hitk_map: dict[Any, dict[str, bool]] = (
-        load_hitk_map(HITK_JSON) if use_hitk else {}
+        load_hitk_map(hitk_file) if use_hitk else {}
     )
 
     mode_eff = mode
@@ -519,9 +541,10 @@ def run_eval(
 
     details: list[dict[str, Any]] = []
     llm_scores: list[float] = []
+    n_q = len(questions)
 
     try:
-        for item in questions:
+        for i, item in enumerate(questions, start=1):
             qid = item.get("id")
             q = item["query"]
             expected = item["expected_clause"]
@@ -584,8 +607,8 @@ def run_eval(
                     "duration_sec": duration_sec,
                 }
             )
-            print(
-                f"[{qid}] cite={scores['citation']} "
+            progress_line(
+                f"[{i}/{n_q}] id={qid} cite={scores['citation']} "
                 f"g={scores['groundedness']:.2f} r={scores['relevance']:.2f} "
                 f"hit1={hit1} hit3={hit3} hit5={hit5} "
                 f"t={duration_sec:.2f}s | {expected}"
@@ -654,6 +677,23 @@ def main() -> None:
         help="Путь JSON (по умолчанию scripts/stage4_eval/results/generation/stage4_gen_eval_results.json)",
     )
     parser.add_argument(
+        "--hitk",
+        type=Path,
+        default=None,
+        help="JSON Hit@k для hit1/hit3/hit5 (по умолчанию stage4_hitk_results.json)",
+    )
+    parser.add_argument(
+        "--config",
+        type=Path,
+        default=None,
+        help="Runtime JSON вместо config/rag_runtime.json (для коллекции E5)",
+    )
+    parser.add_argument(
+        "--e5-query-prefix",
+        action="store_true",
+        help="Кодировать запрос как «query: …» (коллекция diplom_multimodal_e5)",
+    )
+    parser.add_argument(
         "--no-hitk",
         action="store_true",
         help="Не выравнивать mock по stage4_hitk_results.json",
@@ -673,6 +713,9 @@ def main() -> None:
             out_path=out,
             use_llm_judge=args.llm_judge,
             use_hitk=not args.no_hitk,
+            hitk_path=args.hitk,
+            config_path=args.config,
+            e5_query_prefix=args.e5_query_prefix,
         )
     except RuntimeError as exc:
         print(exc, file=sys.stderr)

@@ -29,6 +29,7 @@ stage4_eval/
 | `lib/_bootstrap.py` | Корень проекта и `sys.path` для Python |
 | `_root.ps1` | Корень и Python для сценариев PowerShell |
 | `retrieval/eval_retrieval_hitk.py` | Hit@1 / Hit@3 / Hit@5 (Milvus, без LLM) |
+| `retrieval/eval_retrieval_hitk_e5.py` | То же для коллекции `diplom_multimodal_e5` |
 | `generation/eval_rag_generation.py` | Метрики generation (`live` / `mock` / `dry-run`) |
 | `reports/update_readme4_eval_docs.py` | §5.3, §6.1, §7 в `Readme-4.md` из JSON |
 | `retrieval/stage4_hitk_report.py` | Текстовые блоки Hit@k для Word и ноутбука |
@@ -37,8 +38,12 @@ stage4_eval/
 | `demo/demo_stage4_milvus_search.py` | Демо `search_text` (§6) |
 | `run_infra.ps1` | Docker (Milvus / Ollama) |
 | `run_hitk.ps1` | Обёртка над `retrieval/eval_retrieval_hitk.py` |
+| `run_hitk_e5.ps1` | Как `run_hitk.ps1`, коллекция `diplom_multimodal_e5` |
 | `run_generation.ps1` | Обёртка над `generation/eval_rag_generation.py` |
-| `run_all.ps1` | Полная цепочка метрик |
+| `run_generation_e5.ps1` | Как `run_generation.ps1`, JSON `stage4_gen_eval_results_e5.json` |
+| `run_all.ps1` | Полная цепочка метрик. Лог `results/logs/pipeline_<дата>.log` |
+| `run_all_e5.ps1` | Как `run_all.ps1` (те же флаги), лог `pipeline_<дата>_e5.log`, JSON `*_e5` |
+| `run_perf_and_judge_e5.ps1` | Как `run_perf_and_judge.ps1`, JSON `stage4_performance_metrics_e5.json`, `stage4_llm_judge_metrics_e5.json` |
 | `generation/eval_rag_performance.py` | TTFT, TPS, latency, RPS |
 | `generation/eval_rag_llm_judge.py` | LLM-as-a-Judge |
 | `run_perf_and_judge.ps1` | performance + judge |

@@ -6,6 +6,7 @@
 Результат: scripts/stage4_eval/results/generation/stage4_llm_judge_metrics.json
 """
 
+import argparse
 import os
 import sys
 import json
@@ -17,10 +18,17 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "lib"))
 from _bootstrap import setup_paths  # noqa: E402
 
 ROOT = setup_paths()
-from report_paths import STAGE4_LLM_JUDGE_METRICS, STAGE4_QUESTIONS  # noqa: E402
+from report_paths import STAGE4_LLM_JUDGE_METRICS, STAGE4_QUESTIONS, rel_from_root  # noqa: E402
 
 CONFIG_PATH = ROOT / "config" / "rag_runtime.json"
 QUESTIONS_PATH = STAGE4_QUESTIONS
+
+
+def resolve_under_root(raw: str | None, default: Path) -> Path:
+    if not raw:
+        return default
+    path = Path(raw)
+    return path if path.is_absolute() else ROOT / path
 
 JUDGE_PROMPT_TEMPLATE = """Вы — экспертный судья по оценке RAG-систем (LLM-as-a-Judge).
 Вам предоставлены:
@@ -106,12 +114,14 @@ def log_llm_judge_legends() -> None:
     )
 
 
-def run_llm_judge_eval():
-    if not CONFIG_PATH.exists():
-        print(f"[-] Конфиг не найден: {CONFIG_PATH}")
+def run_llm_judge_eval(config_path: Path | None = None, out_path: Path | None = None):
+    config_path = config_path or CONFIG_PATH
+    out_file = out_path or STAGE4_LLM_JUDGE_METRICS
+    if not config_path.exists():
+        print(f"[-] Конфиг не найден: {config_path}")
         return
 
-    with open(CONFIG_PATH, "r", encoding="utf-8") as f:
+    with open(config_path, "r", encoding="utf-8") as f:
         cfg = json.load(f)
     
     ollama_cfg = cfg.get("ollama", {})
@@ -131,10 +141,10 @@ def run_llm_judge_eval():
     ok_count = 0
     err_count = 0
 
-    from stage4_console import log_run_start, log_run_end, stage_banner  # noqa: E402
+    from stage4_console import log_run_start, log_run_end, opening_stage_banner  # noqa: E402
 
-    log_run_start("eval_rag_llm_judge.py", out_json=STAGE4_LLM_JUDGE_METRICS.name)
-    stage_banner(
+    log_run_start("eval_rag_llm_judge.py", out_json=out_file.name)
+    opening_stage_banner(
         "Оценка качества генерации (LLM-as-a-Judge)",
         step=os.environ.get("STAGE4_BANNER_STEP") or "[2/2]",
         detail=(
@@ -144,6 +154,8 @@ def run_llm_judge_eval():
     )
     log_llm_judge_legends()
 
+    from stage4_console import progress_line  # noqa: E402
+
     for idx, item in enumerate(questions, start=1):
         q_id = item.get("id", idx)
         q_text = item.get("query") or item.get("question")
@@ -152,7 +164,9 @@ def run_llm_judge_eval():
         sample_context = f"Пункт ПУЭ {expected_clause}. Требования к электроустановкам и заземляющим устройствам."
         sample_response = f"Согласно пункту ПУЭ {expected_clause}, необходимо соблюдать нормативы заземления."
 
+        t0 = time.perf_counter()
         scores = call_llm_judge(host, model, q_text, sample_context, sample_response)
+        duration_sec = round(time.perf_counter() - t0, 2)
         judge_ok = not str(scores.get("reasoning", "")).startswith("Ошибка")
         if judge_ok:
             ok_count += 1
@@ -165,17 +179,16 @@ def run_llm_judge_eval():
             "scores": scores
         })
         status = "OK" if judge_ok else "ОШИБКА"
-        print(
+        progress_line(
             f"  [{idx}/{total}] id={q_id}: {status} — "
             f"faithfulness={scores['faithfulness']}, "
             f"relevancy={scores['answer_relevancy']}, "
-            f"recall={scores['context_recall']}",
-            flush=True,
+            f"recall={scores['context_recall']}, "
+            f"t={duration_sec:.2f}s"
         )
 
-    print(
-        f"[+] Судейство: оценено {ok_count} из {total}, сбоев вызова {err_count}",
-        flush=True,
+    progress_line(
+        f"[+] Судейство: оценено {ok_count} из {total}, сбоев вызова {err_count}"
     )
 
     avg_faithfulness = sum(r["scores"]["faithfulness"] for r in results) / len(results) if results else 0
@@ -185,6 +198,7 @@ def run_llm_judge_eval():
     report = {
         "timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),
         "judge_model": model,
+        "config_path": rel_from_root(config_path),
         "sample_count": len(results),
         "summary_metrics": {
             "faithfulness_avg": round(avg_faithfulness, 4),
@@ -194,7 +208,6 @@ def run_llm_judge_eval():
         "details": results
     }
 
-    out_file = STAGE4_LLM_JUDGE_METRICS
     out_file.parent.mkdir(parents=True, exist_ok=True)
 
     with open(out_file, "w", encoding="utf-8") as f:
@@ -214,4 +227,11 @@ def run_llm_judge_eval():
 
 
 if __name__ == "__main__":
-    run_llm_judge_eval()
+    parser = argparse.ArgumentParser(description="LLM-as-a-Judge для этапа 4")
+    parser.add_argument("--config", default=None, help="rag_runtime JSON; по умолчанию config/rag_runtime.json")
+    parser.add_argument("--out", default=None, help="JSON результата; по умолчанию stage4_llm_judge_metrics.json")
+    args = parser.parse_args()
+    run_llm_judge_eval(
+        config_path=resolve_under_root(args.config, CONFIG_PATH),
+        out_path=resolve_under_root(args.out, STAGE4_LLM_JUDGE_METRICS),
+    )

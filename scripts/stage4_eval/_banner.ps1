@@ -16,7 +16,7 @@ function Write-Stage4TeeLine {
 function Invoke-Stage4Python {
     <#
     Запуск Python с потоковым tee stdout/stderr в консоль и STAGE4_RUN_LOG.
-    Требует $Python из _root.ps1. Включает STAGE4_LOG_TEE, чтобы stage4_console
+    Требует $Python и $ProjectRoot из _root.ps1. Включает STAGE4_LOG_TEE, чтобы stage4_console
     не дублировал строки в файл (запись только через tee).
     #>
     param(
@@ -31,6 +31,8 @@ function Invoke-Stage4Python {
     $prevTee = $env:STAGE4_LOG_TEE
     $env:STAGE4_LOG_TEE = "1"
     $eventSubs = @()
+    $logPath = $env:STAGE4_RUN_LOG
+    $workDir = if ($ProjectRoot) { $ProjectRoot } else { (Get-Location).Path }
     try {
         $psi = New-Object System.Diagnostics.ProcessStartInfo
         $psi.FileName = $Python
@@ -38,6 +40,7 @@ function Invoke-Stage4Python {
         $psi.RedirectStandardOutput = $true
         $psi.RedirectStandardError = $true
         $psi.CreateNoWindow = $true
+        $psi.WorkingDirectory = $workDir
         $psi.StandardOutputEncoding = [System.Text.UTF8Encoding]::new($false)
         $psi.StandardErrorEncoding = [System.Text.UTF8Encoding]::new($false)
         $argString = (
@@ -50,18 +53,45 @@ function Invoke-Stage4Python {
         $proc = New-Object System.Diagnostics.Process
         $proc.StartInfo = $psi
 
-        $eventSubs += Register-ObjectEvent -InputObject $proc -EventName OutputDataReceived -Action {
+        # Событие читает поток (иначе deadlock). Печать — в этом окне, иначе Write-Host
+        # из чужого runspace не виден, пока процесс не завершится.
+        $queue = New-Object System.Collections.Concurrent.ConcurrentQueue[string]
+        $eventSubs += Register-ObjectEvent -InputObject $proc -EventName OutputDataReceived -MessageData $queue -Action {
             $line = $Event.SourceEventArgs.Data
-            if ($line) { Write-Stage4TeeLine $line }
+            if ($null -eq $line -or $line -eq "") { return }
+            $q = $Event.MessageData
+            $q.Enqueue([string]$line)
         }
-        $eventSubs += Register-ObjectEvent -InputObject $proc -EventName ErrorDataReceived -Action {
+        $eventSubs += Register-ObjectEvent -InputObject $proc -EventName ErrorDataReceived -MessageData $queue -Action {
             $line = $Event.SourceEventArgs.Data
-            if ($line) { Write-Stage4TeeLine $line }
+            if ($null -eq $line -or $line -eq "") { return }
+            $q = $Event.MessageData
+            $q.Enqueue([string]$line)
         }
 
-        [void]$proc.Start()
+        if (-not $proc.Start()) {
+            throw "Invoke-Stage4Python: не удалось запустить $Python"
+        }
         $proc.BeginOutputReadLine()
         $proc.BeginErrorReadLine()
+
+        $chunk = ""
+        while (-not $proc.HasExited) {
+            while ($queue.TryDequeue([ref]$chunk)) {
+                Write-Host $chunk
+                if ($logPath) {
+                    Add-Content -Path $logPath -Value $chunk -Encoding utf8 -ErrorAction SilentlyContinue
+                }
+            }
+            Start-Sleep -Milliseconds 200
+        }
+        Start-Sleep -Milliseconds 400
+        while ($queue.TryDequeue([ref]$chunk)) {
+            Write-Host $chunk
+            if ($logPath) {
+                Add-Content -Path $logPath -Value $chunk -Encoding utf8 -ErrorAction SilentlyContinue
+            }
+        }
         $proc.WaitForExit()
         return $proc.ExitCode
     }

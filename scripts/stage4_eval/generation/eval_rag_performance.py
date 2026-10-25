@@ -5,6 +5,7 @@
 Результат: scripts/stage4_eval/results/generation/stage4_performance_metrics.json
 """
 
+import argparse
 import os
 import sys
 import time
@@ -29,9 +30,17 @@ CONFIG_PATH = ROOT / "config" / "rag_runtime.json"
 QUESTIONS_PATH = STAGE4_QUESTIONS
 
 
-def load_config():
-    if CONFIG_PATH.exists():
-        with open(CONFIG_PATH, "r", encoding="utf-8") as f:
+def resolve_under_root(raw: str | None, default: Path) -> Path:
+    if not raw:
+        return default
+    path = Path(raw)
+    return path if path.is_absolute() else ROOT / path
+
+
+def load_config(config_path: Path | None = None):
+    path = config_path or CONFIG_PATH
+    if path.exists():
+        with open(path, "r", encoding="utf-8") as f:
             return json.load(f)
     return {
         "ollama": {"host": "http://localhost:11434", "model": "qwen2.5:3b"},
@@ -128,6 +137,8 @@ def log_performance_legends(concurrency: int = 3) -> None:
 
 
 def run_load_test(questions, cfg, concurrency=3):
+    from stage4_console import progress_line  # noqa: E402
+
     total = len(questions)
     ollama_cfg = cfg.get("ollama", {})
     host = ollama_cfg.get("host", "http://localhost:11434")
@@ -155,20 +166,18 @@ def run_load_test(questions, cfg, concurrency=3):
             q_id = q_item.get("id", done)
             if r["success"]:
                 ok_count += 1
-                print(
+                progress_line(
                     f"  [{done}/{total}] id={q_id}: OK — "
                     f"TTFT(1-й токен) {r['ttft_sec']} с, latency {r['total_latency_sec']} с, "
-                    f"TPS {r['tps']}",
-                    flush=True,
+                    f"TPS {r['tps']}"
                 )
             else:
                 err_count += 1
                 err = (r.get("error") or "неизвестная ошибка")[:120]
-                print(f"  [{done}/{total}] id={q_id}: ОШИБКА — {err}", flush=True)
+                progress_line(f"  [{done}/{total}] id={q_id}: ОШИБКА — {err}")
 
-    print(
-        f"[+] Нагрузочный тест: успешно {ok_count} из {total}, ошибок {err_count}",
-        flush=True,
+    progress_line(
+        f"[+] Нагрузочный тест: успешно {ok_count} из {total}, ошибок {err_count}"
     )
 
     successful_requests = [r for r in results if r["success"]]
@@ -211,17 +220,24 @@ def run_load_test(questions, cfg, concurrency=3):
 
 
 def main():
-    from stage4_console import log_run_start, log_run_end, stage_banner  # noqa: E402
+    from stage4_console import log_run_start, log_run_end, opening_stage_banner  # noqa: E402
 
-    log_run_start("eval_rag_performance.py", out_json=STAGE4_PERF_METRICS.name)
-    cfg = load_config()
+    parser = argparse.ArgumentParser(description="Нагрузочный тест Ollama для этапа 4")
+    parser.add_argument("--config", default=None, help="rag_runtime JSON; по умолчанию config/rag_runtime.json")
+    parser.add_argument("--out", default=None, help="JSON результата; по умолчанию stage4_performance_metrics.json")
+    args = parser.parse_args()
+    config_path = resolve_under_root(args.config, CONFIG_PATH)
+    out_file = resolve_under_root(args.out, STAGE4_PERF_METRICS)
+
+    log_run_start("eval_rag_performance.py", out_json=out_file.name)
+    cfg = load_config(config_path)
     questions = load_questions()
     total = len(questions)
     ollama_cfg = cfg.get("ollama", {})
     host = ollama_cfg.get("host", "http://localhost:11434")
     model = ollama_cfg.get("model", "qwen2.5:3b")
 
-    stage_banner(
+    opening_stage_banner(
         "Оценка производительности и нагрузочное тестирование",
         step=os.environ.get("STAGE4_BANNER_STEP") or "[1/2]",
         detail=(
@@ -234,13 +250,14 @@ def main():
 
     summary = run_load_test(questions, cfg, concurrency=3)
     summary["source"] = "eval_rag_performance.py"
+    summary["config_path"] = rel_from_root(config_path)
     summary["questions_path"] = rel_from_root(QUESTIONS_PATH)
     summary["pipeline_note"] = (
         "Нагрузочный тест Ollama (упрощённый промпт); не latency полного RAG (Milvus+LLM)."
     )
 
     ensure_stage4_result_dirs()
-    out_file = STAGE4_PERF_METRICS
+    out_file.parent.mkdir(parents=True, exist_ok=True)
 
     with open(out_file, "w", encoding="utf-8") as f:
         json.dump(summary, f, ensure_ascii=False, indent=2)

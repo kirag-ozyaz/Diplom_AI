@@ -11,10 +11,9 @@ import sys
 import json
 import glob
 import socket
-import warnings
 from typing import List, Dict, Optional, Tuple, Any, Union
 from pathlib import Path
-from tqdm import tqdm
+from tqdm.auto import tqdm
 import asyncio
 import time
 from concurrent.futures import ThreadPoolExecutor
@@ -23,6 +22,31 @@ import torch
 from PIL import Image
 from sentence_transformers import SentenceTransformer
 import open_clip
+
+
+class _IndentHfBarTqdm(tqdm):
+    """Четыре пробела перед полосками Fetching и Loading weights."""
+
+    def __init__(self, *args, **kwargs):
+        desc = kwargs.get("desc")
+        if isinstance(desc, str) and (
+            desc.startswith("Fetching") or desc.startswith("Loading weights")
+        ):
+            kwargs["desc"] = "    " + desc
+        super().__init__(*args, **kwargs)
+
+
+@contextlib.contextmanager
+def _indent_loading_weights_bar():
+    """На время загрузки SentenceTransformer подменяет tqdm, которым transformers пишет Loading weights."""
+    from tqdm import auto as tqdm_auto
+
+    original = tqdm_auto.tqdm
+    tqdm_auto.tqdm = _IndentHfBarTqdm
+    try:
+        yield
+    finally:
+        tqdm_auto.tqdm = original
 
 
 @contextlib.contextmanager
@@ -55,6 +79,42 @@ def _quiet_hf_weight_load():
                 os.environ[key] = val
         if hf_logging is not None and prev_verbosity is not None:
             hf_logging.set_verbosity(prev_verbosity)
+
+
+def _println_run_log(message: str) -> None:
+    """Консоль + сразу STAGE4_RUN_LOG (пока GPU грузится, tee может отставать)."""
+    print(message, flush=True)
+    if os.environ.get("STAGE4_LOG_TEE") == "1":
+        return
+    log_path = (os.environ.get("STAGE4_RUN_LOG") or "").strip()
+    if not log_path:
+        return
+    try:
+        with open(log_path, "a", encoding="utf-8") as f:
+            f.write(message + "\n")
+    except OSError:
+        pass
+
+
+def _inform_embedding_weight_load_start(model_name: str, device: str) -> None:
+    """Строка перед загрузкой весов модели Fetching / Loading weights (stderr, flush)."""
+    e5_note = ""
+    if "e5" in model_name.lower():
+        e5_note = "\n    Для E5 предупреждение position_ids в логе HF — норма."
+    msg = (
+        f"[*] Загрузка весов embedding: {model_name} → {device}; "
+        f"полоски Fetching / Loading weights — с диска в память, обычно 1–2 мин.{e5_note}"
+    )
+    print(msg, file=sys.stderr, flush=True)
+    if os.environ.get("STAGE4_LOG_TEE") == "1":
+        return
+    log_path = (os.environ.get("STAGE4_RUN_LOG") or "").strip()
+    if log_path:
+        try:
+            with open(log_path, "a", encoding="utf-8") as f:
+                f.write(msg + "\n")
+        except OSError:
+            pass
 
 
 from pymilvus import (
@@ -150,6 +210,8 @@ class MultimodalRAG:
         batch_chunk_workers: int = 2,
         load_image_model: bool = True,
         text_dim: Optional[int] = None,
+        e5_passage_prefix: bool = False,
+        e5_query_prefix: bool = False,
     ):
         """
         Инициализация системы.
@@ -167,11 +229,15 @@ class MultimodalRAG:
             batch_chunk_workers: Потоков для параллельной обработки чанков в батче (0 = последовательно)
             load_image_model: Загружать ли CLIP (False — только текстовый поиск по готовой коллекции)
             text_dim: Размерность текстового эмбеддинга. Если None — берётся из embedding_config.json по text_model_name.
+            e5_passage_prefix: Перед encode дописывать «passage: » (только заливка E5, JSONL не меняются).
+            e5_query_prefix: Перед encode запроса дописывать «query: » (поиск по коллекции E5).
         """
         self.vector_db_host = vector_db_host
         self.vector_db_port = vector_db_port
         self.collection_name = collection_name
         self._text_model_name = text_model_name  # для метаданных коллекции и проверки при поиске
+        self.e5_passage_prefix = bool(e5_passage_prefix)
+        self.e5_query_prefix = bool(e5_query_prefix)
         self.base_data_path = Path(base_data_path)
         self.image_encode_workers = max(0, image_encode_workers)
         self.batch_chunk_workers = max(0, batch_chunk_workers)
@@ -287,13 +353,13 @@ class MultimodalRAG:
             self.clip_model = None
             self.clip_preprocess = None
             self.clip_device = None
-            print(
+            _println_run_log(
                 " CLIP (модель OpenCLIP ViT-B-32 для изображений) не загружается "
                 "(режим только текстового поиска)"
             )
-        
-        print(" MultimodalRAG инициализирован")
-        print(f"    Текст: {text_model_name} на {self.text_device}")
+
+        _println_run_log(" MultimodalRAG инициализирован")
+        _println_run_log(f"    Текст: {text_model_name} на {self.text_device}")
         if load_image_model:
             print(f"    CLIP: {clip_model_name} на {device_clip}")
 
@@ -332,7 +398,9 @@ class MultimodalRAG:
             )
         try:
             connections.connect(host=self.vector_db_host, port=self.vector_db_port)
-            print(f" Подключение к векторной БД: {self.vector_db_host}:{self.vector_db_port}")
+            _println_run_log(
+                f" Подключение к векторной БД: {self.vector_db_host}:{self.vector_db_port}"
+            )
         except Exception as e:
             print(
                 f" Не удалось подключиться к векторной БД: {e}\n"
@@ -342,31 +410,27 @@ class MultimodalRAG:
 
     def _load_text_model(self, model_name: str, device: str):
         """Загрузка модели для текста"""
-        print(f" Загрузка текстовой модели: {model_name}")
         # Показываем прогресс скачивания (в процентах) при первом запуске.
         # HuggingFace Hub сам рисует tqdm progress-bar в консоли.
+        _println_run_log(f" Загрузка текстовой модели: {model_name}")
+        _inform_embedding_weight_load_start(model_name, device)
         try:
             from huggingface_hub import snapshot_download
-            print("    Проверка/скачивание файлов модели (HuggingFace cache)...")
-            snapshot_download(repo_id=model_name)
-            print("    Файлы текстовой модели готовы (в кэше)")
+
+            _println_run_log("    Проверка/скачивание файлов модели (HuggingFace cache)...")
+            snapshot_download(repo_id=model_name, tqdm_class=_IndentHfBarTqdm)
+            _println_run_log("    Файлы текстовой модели готовы (в кэше)")
         except Exception as e:
             # Если huggingface_hub недоступен или нет интернета — просто продолжаем,
-            # SentenceTransformer сам попробует загрузить/взять из кэша.
-            print(f"    Не удалось показать прогресс скачивания для текста: {e}")
+            # SentenceTransformer сам попробует загрузить/взять из кэша.            
+            _println_run_log(f"    Не удалось показать прогресс скачивания для текста: {e}")
 
-        if "e5" in model_name.lower():
-            warnings.warn(
-                "При загрузке multilingual-e5 в логе HuggingFace иногда "
-                "«embeddings.position_ids | UNEXPECTED» — это нормально, "
-                "на поиск и Hit@k не влияет.",
-                UserWarning,
-                stacklevel=2,
-            )
-        with _quiet_hf_weight_load():
+        with _quiet_hf_weight_load(), _indent_loading_weights_bar():
             self.text_model = SentenceTransformer(model_name, device=device)
         self.text_device = device
-        print(" Текстовая модель готова")
+        _println_run_log(
+            " Загрузка весов завершена (Loading weights 100%). Текстовая модель готова."
+        )
 
     def _load_clip_model(self, model_name: str, device: str):
         """Загрузка CLIP модели для изображений"""
@@ -434,6 +498,8 @@ class MultimodalRAG:
             "Multimodal коллекция для диплома ИИ (текст + изображения). "
             f"text_model={self._text_model_name}, text_dim={self.text_dim}"
         )
+        if self.e5_passage_prefix:
+            desc += ", e5_passage=1"
         schema = CollectionSchema(fields, desc)
         
         self.collection = Collection(self.collection_name, schema)
@@ -547,7 +613,9 @@ class MultimodalRAG:
         return list(set(valid_paths))  # Убираем дубликаты
 
     def _encode_text(self, texts: List[str]) -> List[List[float]]:
-        """Векторизация текста"""
+        """Векторизация текста. В коллекцию пишется исходный текст чанка, префикс только у вектора."""
+        if self.e5_passage_prefix:
+            texts = [t if t.startswith("passage: ") else f"passage: {t}" for t in texts]
         embeddings = self.text_model.encode(
             texts,
             normalize_embeddings=True,
@@ -1026,9 +1094,12 @@ class MultimodalRAG:
         Returns:
             Список результатов поиска
         """
-        # Векторизация запроса
+        # Векторизация запроса. Префикс query: только у коллекции E5.
+        text = query
+        if self.e5_query_prefix and not text.startswith("query: "):
+            text = f"query: {text}"
         query_vector = self.text_model.encode(
-            query,
+            text,
             normalize_embeddings=True
         ).tolist()
         
