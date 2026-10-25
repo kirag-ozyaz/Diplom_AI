@@ -1,0 +1,23 @@
+{
+  "timestamp": "2026-10-26 02:08:23",
+  "total_requests": 268,
+  "successful_requests": 268,
+  "failed_requests": 0,
+  "concurrency": 3,
+  "rps": 0.11,
+  "availability_pct": 100.0,
+  "metrics": {
+    "ttft_avg_sec": 18.7309,
+    "tps_avg": 38.77,
+    "latency_avg_sec": 27.8256,
+    "latency_p50_sec": 27.4528,
+    "latency_p95_sec": 41.5111,
+    "latency_p99_sec": 50.4768,
+    "total_tokens_generated": 94179,
+    "cost_usd_est": 0.0
+  },
+  "source": "eval_rag_performance.py",
+  "config_path": "src/preprocessing/Create_embeddings/Rerank/rag_runtime_rerank.json",
+  "questions_path": "data/rag_eval_questions/eval_questions.json",
+  "pipeline_note": "Нагрузочный тест Ollama (упрощённый промпт); не latency полного RAG (Milvus+LLM)."
+}

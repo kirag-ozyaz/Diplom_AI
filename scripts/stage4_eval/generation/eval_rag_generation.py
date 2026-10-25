@@ -305,7 +305,11 @@ def mock_retrieve_and_answer(
     }
 
 
-_LIVE_RAG: dict[str, Any] = {"config_path": None, "e5_query_prefix": False}
+_LIVE_RAG: dict[str, Any] = {
+    "config_path": None,
+    "e5_query_prefix": False,
+    "rerank_enabled": False,
+}
 
 
 def live_answer(question: str) -> dict[str, Any]:
@@ -321,6 +325,7 @@ def live_answer(question: str) -> dict[str, Any]:
                 reuse_rag=True,
                 config_path=_LIVE_RAG["config_path"],
                 e5_query_prefix=bool(_LIVE_RAG["e5_query_prefix"]),
+                rerank_enabled=bool(_LIVE_RAG["rerank_enabled"]),
             )
             result["mode"] = "live"
             return result
@@ -483,6 +488,7 @@ def run_eval(
     hitk_path: Path | None = None,
     config_path: Path | None = None,
     e5_query_prefix: bool = False,
+    rerank_enabled: bool = False,
 ) -> dict[str, Any]:
     if not QUESTIONS_PATH.is_file():
         raise RuntimeError(f"Нет файла вопросов: {QUESTIONS_PATH}")
@@ -513,6 +519,7 @@ def run_eval(
 
     _LIVE_RAG["config_path"] = config_path
     _LIVE_RAG["e5_query_prefix"] = e5_query_prefix
+    _LIVE_RAG["rerank_enabled"] = rerank_enabled
     hitk_file = hitk_path or HITK_JSON
     hitk_map: dict[Any, dict[str, bool]] = (
         load_hitk_map(hitk_file) if use_hitk else {}
@@ -694,6 +701,11 @@ def main() -> None:
         help="Кодировать запрос как «query: …» (коллекция diplom_multimodal_e5)",
     )
     parser.add_argument(
+        "--rerank",
+        action="store_true",
+        help="После ANN: cross-encoder top-20 → 5 (коллекция diplom_multimodal_e5_rerank)",
+    )
+    parser.add_argument(
         "--no-hitk",
         action="store_true",
         help="Не выравнивать mock по stage4_hitk_results.json",
@@ -716,6 +728,7 @@ def main() -> None:
             hitk_path=args.hitk,
             config_path=args.config,
             e5_query_prefix=args.e5_query_prefix,
+            rerank_enabled=args.rerank,
         )
     except RuntimeError as exc:
         print(exc, file=sys.stderr)

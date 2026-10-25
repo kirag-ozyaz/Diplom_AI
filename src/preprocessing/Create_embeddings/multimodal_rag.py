@@ -212,6 +212,10 @@ class MultimodalRAG:
         text_dim: Optional[int] = None,
         e5_passage_prefix: bool = False,
         e5_query_prefix: bool = False,
+        rerank_enabled: bool = False,
+        rerank_model_name: str = "BAAI/bge-reranker-v2-m3",
+        rerank_candidates: int = 20,
+        rerank_device: str = "cuda",
     ):
         """
         Инициализация системы.
@@ -231,6 +235,10 @@ class MultimodalRAG:
             text_dim: Размерность текстового эмбеддинга. Если None — берётся из embedding_config.json по text_model_name.
             e5_passage_prefix: Перед encode дописывать «passage: » (только заливка E5, JSONL не меняются).
             e5_query_prefix: Перед encode запроса дописывать «query: » (поиск по коллекции E5).
+            rerank_enabled: После ANN прогнать cross-encoder и вернуть top-limit (опыт 2).
+            rerank_model_name: Модель реранкера (по умолчанию BAAI/bge-reranker-v2-m3).
+            rerank_candidates: Сколько соседей брать из Milvus перед реранком.
+            rerank_device: Устройство реранкера (cuda; при нехватке VRAM код сам уйдёт на cpu).
         """
         self.vector_db_host = vector_db_host
         self.vector_db_port = vector_db_port
@@ -238,6 +246,11 @@ class MultimodalRAG:
         self._text_model_name = text_model_name  # для метаданных коллекции и проверки при поиске
         self.e5_passage_prefix = bool(e5_passage_prefix)
         self.e5_query_prefix = bool(e5_query_prefix)
+        self.rerank_enabled = bool(rerank_enabled)
+        self.rerank_model_name = rerank_model_name or "BAAI/bge-reranker-v2-m3"
+        self.rerank_candidates = max(1, int(rerank_candidates or 20))
+        self.rerank_device = rerank_device or "cpu"
+        self._reranker = None
         self.base_data_path = Path(base_data_path)
         self.image_encode_workers = max(0, image_encode_workers)
         self.batch_chunk_workers = max(0, batch_chunk_workers)
@@ -1119,12 +1132,16 @@ class MultimodalRAG:
             else:
                 expr = "has_image == true"
         
+        ann_limit = limit
+        if self.rerank_enabled:
+            ann_limit = max(int(self.rerank_candidates), int(limit))
+
         # Поиск
         results = self.collection.search(
             data=[query_vector],
             anns_field="text_vector",
             param=search_params,
-            limit=limit,
+            limit=ann_limit,
             expr=expr if expr else None,
             output_fields=[
                 "chunk_id", "text", "image_paths",
@@ -1175,7 +1192,54 @@ class MultimodalRAG:
             except Exception as e:
                 print(f" Не удалось догрузить текст по id: {e}")
 
+        if self.rerank_enabled:
+            formatted_results = self._rerank_hits(query, formatted_results, limit)
+
         return formatted_results
+
+    def _ensure_reranker(self):
+        """Ленивая загрузка cross-encoder. Baseline и E5 этот путь не вызывают."""
+        if self._reranker is not None:
+            return
+        from sentence_transformers import CrossEncoder
+
+        device = resolve_torch_device(self.rerank_device, "реранкера")
+        self.rerank_device = device
+        _println_run_log(
+            f" Загрузка реранкера {self.rerank_model_name} на {device} "
+            f"(ANN top-{self.rerank_candidates} → выход top-k)..."
+        )
+        try:
+            self._reranker = CrossEncoder(self.rerank_model_name, device=device)
+        except Exception as exc:
+            if device != "cpu":
+                print(
+                    f" Реранкер не загрузился на {device} ({exc}); пробую cpu.",
+                    flush=True,
+                )
+                self.rerank_device = "cpu"
+                self._reranker = CrossEncoder(self.rerank_model_name, device="cpu")
+            else:
+                raise
+        _println_run_log(" Реранкер готов.")
+
+    def _rerank_hits(self, query: str, hits: List[Dict], limit: int) -> List[Dict]:
+        """Переранжировать кандидатов ANN; наружу — limit лучших."""
+        if not hits:
+            return hits
+        self._ensure_reranker()
+        pairs = [(query, (hit.get("text") or "")[:4000]) for hit in hits]
+        raw_scores = self._reranker.predict(pairs)
+        if len(hits) == 1:
+            scores = [float(raw_scores)]
+        else:
+            scores = [float(item) for item in raw_scores]
+        for hit, score in zip(hits, scores):
+            hit["ann_score"] = hit.get("score")
+            hit["rerank_score"] = float(score)
+            hit["score"] = float(score)
+        hits.sort(key=lambda row: row["score"], reverse=True)
+        return hits[:limit]
 
     def search_image(
         self,
@@ -1323,6 +1387,7 @@ class MultimodalRAG:
 
     def close(self):
         """Закрытие соединения с векторной БД"""
+        self._reranker = None
         connections.disconnect("default")
         print(" Соединение с векторной БД закрыто")
 

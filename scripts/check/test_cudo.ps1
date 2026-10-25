@@ -1,4 +1,4 @@
-# Proverka CUDA: embeddings (PyTorch host) + Ollama (Docker GPU).
+﻿# Proverka CUDA: embeddings (PyTorch host) + Ollama (Docker GPU).
 # Zapusk: powershell -ExecutionPolicy Bypass -File scripts\test_cudo.ps1
 
 $ErrorActionPreference = "Continue"

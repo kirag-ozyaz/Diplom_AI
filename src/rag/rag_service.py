@@ -61,6 +61,10 @@ def _open_rag(
     device_clip: str,
     reuse: bool,
     e5_query_prefix: bool = False,
+    rerank_enabled: bool = False,
+    rerank_model_name: str = "BAAI/bge-reranker-v2-m3",
+    rerank_candidates: int = 20,
+    rerank_device: str = "cuda",
 ) -> MultimodalRAG:
     key = (
         host,
@@ -71,11 +75,20 @@ def _open_rag(
         device_text,
         device_clip,
         e5_query_prefix,
+        rerank_enabled,
+        rerank_model_name,
+        rerank_candidates,
+        rerank_device,
     )
     if reuse and _rag_session["rag"] is not None and _rag_session["key"] == key:
         return _rag_session["rag"]
     close_rag_session()
-    stage_label = "E5" if e5_query_prefix else "База"
+    if rerank_enabled:
+        stage_label = "Rerank"
+    elif e5_query_prefix:
+        stage_label = "E5"
+    else:
+        stage_label = "База"
     _progress(f"{stage_label}: коллекция «{collection}», модель {text_model}.")
     rag = MultimodalRAG(
         vector_db_host=host,
@@ -87,6 +100,10 @@ def _open_rag(
         device_clip=device_clip,
         load_image_model=False,
         e5_query_prefix=e5_query_prefix,
+        rerank_enabled=rerank_enabled,
+        rerank_model_name=rerank_model_name,
+        rerank_candidates=rerank_candidates,
+        rerank_device=rerank_device,
     )
     rag.load_collection()
     _progress("Коллекция Milvus открыта, модель embedding готова.")
@@ -115,6 +132,7 @@ def answer(
     reuse_rag: bool = False,
     config_path: Path | None = None,
     e5_query_prefix: bool = False,
+    rerank_enabled: bool = False,
 ) -> dict[str, Any]:
     global _first_live_answer_pending
     cfg = load_runtime_config(config_path)
@@ -123,6 +141,10 @@ def answer(
     port = str(vdb["port"])
     collection = vdb["collection_name"]
     search_limit = limit if limit is not None else int(cfg["query"]["default_limit"])
+    rerank_cfg = cfg.get("rerank") or {}
+    rerank_model_name = str(rerank_cfg.get("model") or "BAAI/bge-reranker-v2-m3")
+    rerank_candidates = int(rerank_cfg.get("candidates") or 20)
+    rerank_device = str(rerank_cfg.get("device") or "cuda")
 
     if not check_vector_db_server(host, port):
         raise RuntimeError("Milvus недоступен")
@@ -148,6 +170,10 @@ def answer(
             device_clip=models_cfg["device_clip"],
             reuse=reuse_rag,
             e5_query_prefix=e5_query_prefix,
+            rerank_enabled=rerank_enabled,
+            rerank_model_name=rerank_model_name,
+            rerank_candidates=rerank_candidates,
+            rerank_device=rerank_device,
         )
     first_live = _first_live_answer_pending
     if first_live:
