@@ -2,7 +2,7 @@
 
 **Проект:** интеллектуальный Telegram-бот с RAG по Правилам устройства электроустановок (ПУЭ), 7-е издание.  
 **Каталог проекта:** `Итоговы_Проект` (материалы дипломной работы).  
-**Дата отчёта:** 25.10.2026.
+**Дата отчёта:** 18.10.2026.
 
 **Итоговый отчёт этапа 4** (разделы **1–8**): baseline и опыт E5 на реестре **268** вопросов. Текст предназначен для пояснительной записки (Microsoft Word); графики Hit@k — PNG в каталоге результатов оценки retrieval. Исполняемое воспроизведение — ноутбук **Readme-4 (ver. 2).ipynb**.
 
@@ -394,17 +394,17 @@ Inference эмбеддингов при прогоне eval: **cuda**.
 
 **Расшифровка полей:** имена метрик в таблице соответствуют ключам JSON (citation rate, groundedness, relevance, faithfulness, TTFT, availability и т.д.); итоговая оценка опирается на прогон **268** вопросов.  
 <!-- stage4-eval:5.4:start -->
-**Сводная таблица** — полный прогон `run_all.ps1`, *N* = **268** вопросов (реестр `data/rag_eval_questions/eval_questions.json`); retrieval **25.10.2026 20:00**, generation live **18.10.2026 17:28**, performance **2026-10-18 18:10:17**, LLM-judge **2026-10-18 18:24:52**. Ollama: `qwen2.5:14b-instruct-q4_K_M`. Артефакты: `scripts/stage4_eval/results/`.
+**Сводная таблица** — полный прогон `run_all.ps1`, *N* = **268** вопросов (реестр `data/rag_eval_questions/eval_questions.json`); retrieval **25.10.2026 20:00**, generation live **25.10.2026 20:05**, performance **2026-10-18 18:10:17**, LLM-judge **2026-10-18 18:24:52**. Ollama: `qwen2.5:14b-instruct-q4_K_M`. Артефакты: `scripts/stage4_eval/results/`.
 
 | Слой | Метрика | Факт (прогон) | Артефакт / скрипт |
 |------|---------|---------------|-------------------|
 | Retrieval | Hit@1 | **156 / 268 (58,2 %)** | `retrieval/stage4_hitk_results.json`, `eval_retrieval_hitk.py` |
 | Retrieval | Hit@3 | **204 / 268 (76,1 %)** | то же |
 | Retrieval | Hit@5 | **218 / 268 (81,3 %)** | то же |
-| Generation (live) | Citation rate | **81,3 %** (218/268) | `generation/stage4_gen_eval_results.json`, `eval_rag_generation.py` |
-| Generation (live) | Citation в ответе | **70,9 %** (190/268) | то же |
-| Generation (live) | Groundedness | **0,89** | то же |
-| Generation (live) | Relevance | **0,79** | то же |
+| Generation (live) | Citation rate | **79,5 %** (31/39) | `generation/stage4_gen_eval_results.json`, `eval_rag_generation.py` |
+| Generation (live) | Citation в ответе | **71,8 %** (28/39) | то же |
+| Generation (live) | Groundedness | **0,90** | то же |
+| Generation (live) | Relevance | **0,76** | то же |
 | LLM-as-a-Judge | Faithfulness | **0,4347** | `generation/stage4_llm_judge_metrics.json`, `eval_rag_llm_judge.py` |
 | LLM-as-a-Judge | Answer relevancy | **0,1847** | то же |
 | LLM-as-a-Judge | Context recall | **0,5060** | то же |
@@ -414,7 +414,16 @@ Inference эмбеддингов при прогоне eval: **cuda**.
 | Operations | RPS | **0,11** зап/с | то же |
 | Operations | Availability | **100.0 %** | то же |
 
-MRR и nDCG@5 в текущих скриптах **не рассчитываются** (только Hit@1/3/5). Нагрузочный тест performance — упрощённый промпт к Ollama (см. `pipeline_note` в JSON), не latency полного RAG.
+**MRR / nDCG@k** (top-10, тот же реестр; retrieval без LLM). Дата rank-прогона: **28.10.2026 01:00**. Сводка: `scripts/stage4_eval/results/retrieval/rank_metrics_comparison.md`, теория — `manual/mrr_ndcg.md`.
+
+
+| Опыт | MRR | MRR@5 | nDCG@5 | nDCG@10 |
+|------|-----|-------|--------|---------|
+| Опыт 0 base | **0,681** | **0,673** | **0,708** | **0,729** |
+| Опыт 1 E5 | **0,696** | **0,689** | **0,726** | **0,743** |
+| Опыт 2 реранкер | **0,793** | **0,787** | **0,812** | **0,826** |
+
+Нагрузочный тест performance — упрощённый промпт к Ollama (см. `pipeline_note` в JSON), не latency полного RAG.
 <!-- stage4-eval:5.4:end -->
 
 #### 5.4.2. Детализация опыта 1 (E5, `passage:` / `query:`)
@@ -786,10 +795,10 @@ python scripts/stage4_eval/eval_rag_generation.py --mode live
 <!-- stage4-eval:7:start -->
 1. **База ПУЭ** подготовлена и проиндексирована; **прототип рабочего контура RAG** опирается на чанки с метаданными пунктов.
 2. **Retrieval** — **SentenceTransformer + Milvus** (`search_text`) — реализован; конфиг `rag_runtime.json`.
-3. **Hit@k (268 вопросов):** опыт 0 — Hit@1 **58.2%**, Hit@5 **81.3%** (`diplom_multimodal`); опыт 1 E5 — Hit@1 **60.1%**, Hit@5 **83.6%** (`diplom_multimodal_e5`, префиксы). Сводка — §5.4.
-4. **Generation live:** опыт 0 — citation **81.3%**, g **0.89**, r **0.79** (18.10); опыт 1 — citation **83.6%**, g **0.908**, r **0.81** (25.10).
-5. **Performance / LLM-judge:** availability **100%** в обоих прогонах; judge faithfulness ~**0.43** (шаблонный контекст, см. **§5.4**).
-6. **Ограничения:** промахи retrieval; LLM — только при опоре на top-k; сравнение E5 — **§5.3.1** и **§5.4**.
+3. **Первая измеримая точность** — **Hit@k** (268 вопросов, один поиск на вопрос); скрипт `eval_retrieval_hitk.py` и график. На прогоне **25.10.2026 20:00**: Hit@1 **58.2%**, Hit@3 **76.1%**, Hit@5 **81.3%** (`eval_retrieval_hitk.py`, `scripts/stage4_eval/results/retrieval/stage4_hitk_results.json`).
+4. **Generation (live RAG)** — `eval_rag_generation.py` + `src/rag/rag_service.py`: citation **79.5%**, groundedness **0.897**, relevance **0.762** (25.10.2026 20:05, `scripts/stage4_eval/results/generation/stage4_gen_eval_results.json`).
+5. **Эксплуатация и качество (доп.)** — availability **100.0%**, RPS **0.11** (TTFT avg **18.7199** с); LLM-judge faithfulness **0.4347** (2026-10-18 18:24:52).
+6. **Ограничения:** промахи retrieval; LLM — только при опоре на top-k; judge использует шаблонный контекст (см. `scripts/stage4_eval/docs/Сводка_метрик_этапа_4.md`).
 <!-- stage4-eval:7:end -->
 
 ---

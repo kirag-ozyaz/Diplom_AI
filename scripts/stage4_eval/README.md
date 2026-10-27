@@ -39,6 +39,8 @@ stage4_eval/
 | `run_infra.ps1` | Docker (Milvus / Ollama) |
 | `run_hitk.ps1` | Обёртка над `retrieval/eval_retrieval_hitk.py` |
 | `run_hitk_e5.ps1` | Как `run_hitk.ps1`, коллекция `diplom_multimodal_e5` |
+| `retrieval/mrr_ndcg/` | MRR, MRR@k, nDCG@k (`eval_retrieval_rank.py`, `rank_metrics.py`) |
+| `run_rank.ps1` / `run_rank_all.ps1` / `run_rank_metrics.ps1` | MRR/nDCG; см. `retrieval/mrr_ndcg/README_mrr_ndcg.md`, теория — `manual/mrr_ndcg.md` |
 | `run_generation.ps1` | Обёртка над `generation/eval_rag_generation.py` |
 | `run_generation_e5.ps1` | Как `run_generation.ps1`, JSON `stage4_gen_eval_results_e5.json` |
 | `run_all.ps1` | Полная цепочка метрик. Лог `results/logs/pipeline_<дата>.log` |
@@ -176,12 +178,12 @@ docker compose ps
 
 ### `run_all.ps1`
 
-Основной способ полного прогона метрик (эквивалент `run_infra` → `run_hitk` → `run_generation -Mode live` → `run_perf_and_judge`).
+Основной способ полного прогона метрик (эквивалент `run_infra` → `run_hitk` → `run_rank` → `run_generation -Mode live` → `run_perf_and_judge`).
 
 | Параметр | Описание |
 |----------|----------|
-| без параметров | Инфраструктура → Hit@k → generation (`live`) → performance + LLM-judge |
-| `-MilvusOnlyHitk` | После Hit@k generation и performance/judge не выполняются |
+| без параметров | Инфраструктура → Hit@k → MRR/nDCG (rank) → generation (`live`) → performance + LLM-judge |
+| `-MilvusOnlyHitk` | После Hit@k и rank generation и performance/judge не выполняются |
 | `-SkipPerfJudge` | После generation не вызывать `run_perf_and_judge.ps1` |
 | `-SnapshotMilvusLogs` | В конце (или при ошибке infra/Hit@k/generation/judge) вызвать `start_milvus_logs.py` |
 

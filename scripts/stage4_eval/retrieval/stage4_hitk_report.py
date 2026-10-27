@@ -21,6 +21,8 @@ from report_paths import (  # noqa: E402
     STAGE4_LLM_JUDGE_METRICS,
     STAGE4_PERF_METRICS,
     STAGE4_QUESTIONS,
+    STAGE4_RANK_COMPARISON_MD,
+    STAGE4_RANK_JSON_BY_MODE,
     md_link,
 )
 
@@ -231,6 +233,45 @@ def _fmt_num(value: float | int | None, *, decimals: int = 2) -> str:
     return f"**{s}**"
 
 
+def build_rank_metrics_appendix_markdown() -> str:
+    """Блок §5.4: MRR/nDCG по трём rank JSON (если все на месте)."""
+    paths = [STAGE4_RANK_JSON_BY_MODE[k] for k in ("base", "e5", "rerank")]
+    if not all(p.is_file() for p in paths):
+        return (
+            "\n\n*MRR / nDCG@k (три опыта, top-10): после `run_rank_all.ps1` "
+            "или трёх прогонов `eval_retrieval_rank.py` появятся "
+            f"{md_link(STAGE4_RANK_COMPARISON_MD)} и строки ниже.*"
+        )
+    rows: list[tuple[str, dict, str]] = []
+    for key in ("base", "e5", "rerank"):
+        p = STAGE4_RANK_JSON_BY_MODE[key]
+        data = json.loads(p.read_text(encoding="utf-8"))
+        rows.append((key, data.get("metrics") or {}, str(data.get("evaluated_at") or "—")))
+    dates = [d for _, _, d in rows if d != "—"]
+    date_line = max(dates) if dates else "—"
+    labels = {
+        "base": "Опыт 0 base",
+        "e5": "Опыт 1 E5",
+        "rerank": "Опыт 2 реранкер",
+    }
+    lines = [
+        f"\n\n**MRR / nDCG@k** (top-10, тот же реестр; retrieval без LLM). "
+        f"Дата rank-прогона: **{date_line}**. "
+        f"Сводка: {md_link(STAGE4_RANK_COMPARISON_MD)}, теория — `manual/mrr_ndcg.md`.\n",
+        "",
+        "| Опыт | MRR | MRR@5 | nDCG@5 | nDCG@10 |",
+        "|------|-----|-------|--------|---------|",
+    ]
+    for key, m, _ in rows:
+        lines.append(
+            f"| {labels[key]} | {_fmt_num(m.get('mrr'), decimals=3)} | "
+            f"{_fmt_num(m.get('mrr@5'), decimals=3)} | "
+            f"{_fmt_num(m.get('ndcg@5'), decimals=3)} | "
+            f"{_fmt_num(m.get('ndcg@10'), decimals=3)} |"
+        )
+    return "\n".join(lines)
+
+
 def build_section_54_markdown(
     hitk: dict,
     *,
@@ -331,9 +372,8 @@ def build_section_54_markdown(
             ]
         )
 
-    note = (
-        "\n\nMRR и nDCG@5 в текущих скриптах **не рассчитываются** (только Hit@1/3/5). "
-        "Нагрузочный тест performance — упрощённый промпт к Ollama (см. `pipeline_note` в JSON), "
+    note = build_rank_metrics_appendix_markdown() + (
+        "\n\nНагрузочный тест performance — упрощённый промпт к Ollama (см. `pipeline_note` в JSON), "
         "не latency полного RAG."
     )
     if gen and gen.get("mode_effective") != "live":

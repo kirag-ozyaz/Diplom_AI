@@ -120,6 +120,72 @@ def _fmt(v) -> str:
     return f"{v:.3f}" if isinstance(v, float) else str(v)
 
 
+def _retrieval_results_dir() -> Path:
+    return Path(__file__).resolve().parent.parent.parent / "results" / "retrieval"
+
+
+def default_rank_json_paths() -> list[Path]:
+    try:
+        import sys
+
+        sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "lib"))
+        from report_paths import STAGE4_RANK_JSON_BY_MODE  # noqa: E402
+
+        return [STAGE4_RANK_JSON_BY_MODE[k] for k in ("base", "e5", "rerank")]
+    except ImportError:
+        d = _retrieval_results_dir()
+        return [
+            d / "stage4_rank_results_base.json",
+            d / "stage4_rank_results_e5.json",
+            d / "stage4_rank_results_rerank.json",
+        ]
+
+
+def default_hitk_json_paths() -> list[Path]:
+    try:
+        import sys
+
+        sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "lib"))
+        from report_paths import STAGE4_HITK_JSON_BY_MODE  # noqa: E402
+
+        return [STAGE4_HITK_JSON_BY_MODE[k] for k in ("base", "e5", "rerank")]
+    except ImportError:
+        d = _retrieval_results_dir()
+        return [
+            d / "stage4_hitk_results.json",
+            d / "stage4_hitk_results_e5.json",
+            d / "stage4_hitk_results_rerank.json",
+        ]
+
+
+def comparison_rows_from_rank_json(
+    files: Sequence[Path], ks: Sequence[int] = DEFAULT_KS
+) -> list[tuple[str, dict]]:
+    rows = []
+    for p in files:
+        data = json.loads(p.read_text(encoding="utf-8"))
+        ranks = [d.get("rank") for d in data["details"]]
+        rows.append((guess_label(p), summarize_ranks(ranks, ks, data.get("k_max"))))
+    return rows
+
+
+def refresh_rank_comparison(
+    out_dir: Path | None = None,
+    ks: Sequence[int] = DEFAULT_KS,
+    files: Sequence[Path] | None = None,
+) -> Path | None:
+    """Пересобрать rank_metrics_comparison.*, если есть все три stage4_rank_results_*.json."""
+    paths = list(files or default_rank_json_paths())
+    if not paths or not all(p.is_file() for p in paths):
+        return None
+    rows = comparison_rows_from_rank_json(paths, ks)
+    out_dir = out_dir or paths[0].parent
+    cols = [f"hit@{k}" for k in ks] + ["mrr"] + [f"mrr@{k}" for k in ks] + [f"ndcg@{k}" for k in ks]
+    title = "Сравнение экспериментов: Hit@k, MRR, nDCG@k"
+    write_table(rows, cols, out_dir, "rank_metrics_comparison", title)
+    return out_dir / "rank_metrics_comparison.md"
+
+
 def write_table(rows: list[tuple[str, dict]], cols: list[str], out_dir: Path, stem: str, title: str) -> str:
     header = ["Эксперимент", "N"] + cols
     md = [f"### {title}", "", "| " + " | ".join(header) + " |", "|" + "---|" * len(header)]
@@ -143,13 +209,24 @@ def write_table(rows: list[tuple[str, dict]], cols: list[str], out_dir: Path, st
 
 def main(argv=None) -> None:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("files", nargs="+", type=Path)
+    ap.add_argument("files", nargs="*", type=Path)
+    ap.add_argument(
+        "--refresh-default",
+        action="store_true",
+        help="сравнение из stage4_rank_results_{base,e5,rerank}.json в results/retrieval",
+    )
     ap.add_argument("--from-hitk", action="store_true", help="входные файлы — stage4_hitk_results*.json; выводятся ГРАНИЦЫ")
     ap.add_argument("--ks", default="1,3,5,10")
-    ap.add_argument("--out-dir", type=Path, default=Path("."))
+    ap.add_argument("--out-dir", type=Path, default=None)
     ap.add_argument("--labels", default=None, help="подписи через запятую (по умолчанию из имени файла)")
     a = ap.parse_args(argv)
     ks = tuple(int(x) for x in a.ks.split(","))
+    if a.refresh_default:
+        a.files = default_hitk_json_paths() if a.from_hitk else default_rank_json_paths()
+    if not a.files:
+        ap.error("укажите JSON или --refresh-default")
+    if a.out_dir is None:
+        a.out_dir = a.files[0].parent if a.files else _retrieval_results_dir()
     labels = a.labels.split(",") if a.labels else [guess_label(p) for p in a.files]
     rows = []
     for p, lab in zip(a.files, labels):

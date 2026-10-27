@@ -26,7 +26,7 @@ if ($SkipPerfJudge) { $flags += "-SkipPerfJudge" }
 if ($SnapshotMilvusLogs) { $flags += "-SnapshotMilvusLogs" }
 $flagStr = if ($flags.Count) { $flags -join ", " } else { "(нет)" }
 
-Write-Stage4Banner -Step "[0/5]" -Title "Полный прогон метрик этапа 4 (опыт 2, реранкер)" -Detail "infra -> Hit@k rerank -> generation live rerank -> performance rerank -> LLM-judge rerank"
+Write-Stage4Banner -Step "[0/6]" -Title "Полный прогон метрик этапа 4 (опыт 2, реранкер)" -Detail "infra -> Hit@k rerank -> MRR/nDCG (rerank) -> generation -> performance -> LLM-judge"
 Write-Stage4Log ("run_all_rerank.ps1 | флаги: " + $flagStr)
 
 function Invoke-MilvusLogSnapshot {
@@ -37,7 +37,7 @@ function Invoke-MilvusLogSnapshot {
     }
 }
 
-$env:STAGE4_BANNER_STEP = "[1/5]"
+$env:STAGE4_BANNER_STEP = "[1/6]"
 Write-Stage4Log "-> run_infra.ps1"
 & (Join-Path $here "run_infra.ps1")
 if ($LASTEXITCODE -ne 0) {
@@ -45,7 +45,7 @@ if ($LASTEXITCODE -ne 0) {
     exit $LASTEXITCODE
 }
 
-$env:STAGE4_BANNER_STEP = "[2/5]"
+$env:STAGE4_BANNER_STEP = "[2/6]"
 Write-Stage4Log "-> run_hitk_rerank.ps1"
 & (Join-Path $here "run_hitk_rerank.ps1")
 if ($LASTEXITCODE -ne 0) {
@@ -53,13 +53,21 @@ if ($LASTEXITCODE -ne 0) {
     exit $LASTEXITCODE
 }
 
+$env:STAGE4_BANNER_STEP = "[3/6]"
+Write-Stage4Log "-> run_rank.ps1 -Mode rerank"
+& (Join-Path $here "run_rank.ps1") -Mode rerank
+if ($LASTEXITCODE -ne 0) {
+    Invoke-MilvusLogSnapshot
+    exit $LASTEXITCODE
+}
+
 if ($MilvusOnlyHitk) {
-    Write-Host "Hit@k rerank done (-MilvusOnlyHitk: generation skipped)."
+    Write-Host "Hit@k + MRR/nDCG (rerank) done (-MilvusOnlyHitk: generation skipped)."
     if ($SnapshotMilvusLogs) { Invoke-MilvusLogSnapshot }
     exit 0
 }
 
-$env:STAGE4_BANNER_STEP = "[3/5]"
+$env:STAGE4_BANNER_STEP = "[4/6]"
 Write-Stage4Log "-> run_generation_rerank.ps1 -Mode live"
 & (Join-Path $here "run_generation_rerank.ps1") -Mode live
 $genExit = $LASTEXITCODE
@@ -69,7 +77,7 @@ if ($genExit -ne 0) {
 }
 
 if (-not $SkipPerfJudge) {
-    $env:STAGE4_BANNER_STEP = "[4/5]"
+    $env:STAGE4_BANNER_STEP = "[5/6]"
     Write-Stage4Log "-> run_perf_and_judge_rerank.ps1"
     & (Join-Path $here "run_perf_and_judge_rerank.ps1")
     $genExit = $LASTEXITCODE

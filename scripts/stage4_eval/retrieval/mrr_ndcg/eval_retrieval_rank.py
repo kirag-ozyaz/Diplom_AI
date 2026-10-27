@@ -10,8 +10,8 @@
   --mode e5     → как eval_retrieval_hitk_e5.py     (diplom_multimodal_e5, query:/passage:)
   --mode rerank → как eval_retrieval_hitk_rerank.py (diplom_multimodal_e5_rerank, ANN top-20 → bge-reranker-v2-m3)
 
-Положить в scripts/stage4_eval/retrieval/. Запуск из корня проекта:
-  python scripts/stage4_eval/retrieval/eval_retrieval_rank.py --mode base
+Запуск из корня проекта:
+  python scripts/stage4_eval/retrieval/mrr_ndcg/eval_retrieval_rank.py --mode base
 """
 from __future__ import annotations
 
@@ -24,10 +24,16 @@ from datetime import datetime
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
+STAGE4 = HERE.parent.parent
 sys.path.insert(0, str(HERE))
-from rank_metrics import DEFAULT_KS, summarize_ranks, summarize_rel_lists  # noqa: E402
+from rank_metrics import (  # noqa: E402
+    DEFAULT_KS,
+    refresh_rank_comparison,
+    summarize_ranks,
+    summarize_rel_lists,
+)
 
-DEFAULT_RESULTS_DIR = HERE.parent / "results" / "retrieval"   # там же, где stage4_hitk_results*.json
+DEFAULT_RESULTS_DIR = STAGE4 / "results" / "retrieval"
 OUT_NAMES = {"base": "stage4_rank_results_base.json",
              "e5": "stage4_rank_results_e5.json",
              "rerank": "stage4_rank_results_rerank.json"}
@@ -76,7 +82,7 @@ def rank_info(results: list[dict], expected, dedup: bool = False) -> dict:
 
 def open_rag(mode: str):
     """Открывает RAG так же, как соответствующий оригинальный скрипт."""
-    sys.path.insert(0, str(HERE.parent / "lib"))
+    sys.path.insert(0, str(STAGE4 / "lib"))
     from _bootstrap import setup_paths  # noqa: E402
 
     root = setup_paths(embed=True)
@@ -119,7 +125,7 @@ def open_rag(mode: str):
 
 
 def default_questions_path() -> Path:
-    sys.path.insert(0, str(HERE.parent / "lib"))
+    sys.path.insert(0, str(STAGE4 / "lib"))
     from _bootstrap import setup_paths  # noqa: E402
     setup_paths(embed=True)
     from report_paths import STAGE4_QUESTIONS  # noqa: E402
@@ -144,6 +150,11 @@ def parse_args(argv=None):
     ap.add_argument("--out", type=Path, default=None, help="по умолчанию results/retrieval/stage4_rank_results_<mode>.json")
     ap.add_argument("--dedup", action="store_true", help="считать каждый ожидаемый пункт один раз (см. rank_info)")
     ap.add_argument("--limit-questions", type=int, default=None, help="для отладки: первые N вопросов")
+    ap.add_argument(
+        "--no-refresh-readme",
+        action="store_true",
+        help="не обновлять Readme-4.md после полного набора rank JSON",
+    )
     a = ap.parse_args(argv)
     a.ks = tuple(int(x) for x in a.ks.split(","))
     if max(a.ks) > a.k_max:
@@ -189,7 +200,7 @@ def main(argv=None) -> int:
         "embedding_device": getattr(rag, "text_device", None), **extra,
         "k_max": a.k_max, "ks": list(a.ks), "dedup": a.dedup,
         "evaluated_at": datetime.now().strftime("%d.%m.%Y %H:%M"),
-        "source": "scripts/stage4_eval/retrieval/eval_retrieval_rank.py",
+        "source": "scripts/stage4_eval/retrieval/mrr_ndcg/eval_retrieval_rank.py",
         "questions": str(qpath), "metrics": metrics,
         "metrics_percent": {k: round(100 * v, 1) for k, v in metrics.items() if k.startswith("hit@")},
         "details": details,
@@ -204,7 +215,30 @@ def main(argv=None) -> int:
         if k != "n":
             print(f"  {k}: {v:.4f}")
     print(f"Результаты: {a.out}")
+    _postprocess_rank_results(refresh_readme=not a.no_refresh_readme)
     return 0
+
+
+def _postprocess_rank_results(*, refresh_readme: bool) -> None:
+    """Сводка md/csv и (при полном наборе JSON) Readme-4 — как после Hit@k."""
+    comparison = refresh_rank_comparison()
+    if comparison:
+        print(f"Сводка MRR/nDCG: {comparison}")
+    elif refresh_readme:
+        print("Сводка MRR/nDCG: ждём все три stage4_rank_results_{base,e5,rerank}.json")
+    if not refresh_readme or not comparison:
+        return
+    try:
+        sys.path.insert(0, str(STAGE4.parent / "reports"))
+        from update_readme4_eval_docs import refresh_readme4_eval_docs  # noqa: E402
+
+        refresh_readme4_eval_docs(sync_notebook=True)
+        print("Readme-4.md обновлён (в т.ч. §5.4, MRR/nDCG)")
+    except Exception as exc:
+        print(
+            f"Readme-4.md не обновлён ({exc}). "
+            "Вручную: python scripts/stage4_eval/reports/update_readme4_eval_docs.py"
+        )
 
 
 if __name__ == "__main__":

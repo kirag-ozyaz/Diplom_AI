@@ -43,6 +43,15 @@ def _replace_block(text: str, start: str, end: str, body: str) -> str:
 
 
 def refresh_readme4_eval_docs(*, sync_notebook: bool = True) -> None:
+    mrr_ndcg = Path(__file__).resolve().parents[1] / "retrieval" / "mrr_ndcg"
+    sys.path.insert(0, str(mrr_ndcg))
+    try:
+        from rank_metrics import refresh_rank_comparison  # noqa: E402
+
+        refresh_rank_comparison()
+    except Exception:
+        pass
+
     from stage4_hitk_report import (  # noqa: E402
         QUESTIONS_PATH,
         RESULTS_PATH,

@@ -1,67 +1,126 @@
-# MRR и nDCG@k для retrieval (этап 4)
+# MRR / nDCG@k — прогон и артефакты (этап 4)
 
-## Что считаем
-Для каждого вопроса известен ожидаемый пункт ПУЭ (`expected_clause`); релевантность бинарная.
-`rank` — позиция (1…k_max) первого чанка в выдаче, где найден пункт (та же проверка `clause_in_text`, что в `eval_retrieval_hitk*.py`); если не найден в top-k_max — `null`.
+**Теория, формулы, как читать MRR рядом с Hit@k:** `manual/mrr_ndcg.md`.
 
-| Метрика | Смысл | Формула (N вопросов) |
-|---|---|---|
-| Hit@k | доля вопросов, где пункт есть в top-k | `(1/N)·Σ [rank ≤ k]` |
-| MRR | насколько высоко стоит первый правильный ответ | `(1/N)·Σ 1/rank` (0, если не найден в top-k_max) |
-| MRR@k | то же, но учитываются только позиции ≤ k | `(1/N)·Σ [rank ≤ k]/rank` |
-| nDCG@k | качество ранжирования с логарифмическим штрафом за позицию | `DCG@k = Σ_{i≤k} rel_i / log2(i+1)`, `nDCG@k = DCG@k / IDCG@k` |
+Этот файл — **как устроен расчёт в репозитории** и что получается после прогона.
 
-При одном релевантном пункте `nDCG@k = 1/log2(rank+1)` при `rank ≤ k`, иначе 0 (nDCG@1 = Hit@1).
-Если `expected_clause` — список из m пунктов, `IDCG@k = Σ_{i≤min(m,k)} 1/log2(i+1)`, rank — первый найденный любой из пунктов (для nDCG рекомендуется флаг `--dedup`).
+---
 
-## Куда положить файлы
-```
-scripts/stage4_eval/retrieval/eval_retrieval_rank.py
-scripts/stage4_eval/retrieval/rank_metrics.py
-scripts/stage4_eval/retrieval/test_rank_metrics.py   (необязательно)
-```
-Результаты пишутся рядом с существующими: `scripts/stage4_eval/results/retrieval/stage4_rank_results_{base,e5,rerank}.json`. Старые `stage4_hitk_results*.json` не перезаписываются.
+## 1. Что делает пайплайн
 
-## Запуск (PowerShell, из корня проекта)
-Ollama для retrieval не нужна, нужен только Milvus.
+1. Для каждого вопроса из `eval_questions.json` выполняется `search_text` в Milvus (как в Hit@k, но глубина **top-10** по умолчанию).
+2. По выдаче ищется **первый** чанк, где есть `expected_clause` → записывается **rank** (1…10 или «не найден»).
+3. По всем вопросам считаются Hit@k, MRR, MRR@k, nDCG@k → один JSON на опыт (`base` / `e5` / `rerank`).
+4. Когда лежат **все три** JSON, `rank_metrics.py` собирает общую таблицу `rank_metrics_comparison.md` / `.csv`.
+5. При полном наборе JSON может обновиться блок MRR в `Readme-4.md` §5.4 (через `update_readme4_eval_docs`, как после Hit@k).
+
+Hit@1/3/5 в rank-JSON **должны совпасть** с `stage4_hitk_results*.json` при тех же коллекциях: та же проверка пункта, тот же поиск (у реранкера top-5 для Hit@k — подмножество top-10 после реранка).
+
+**В общем прогоне:** после Hit@k автоматически идёт rank для того же опыта — шаг `[3/6]` в `run_all.ps1` (base), `run_all_e5.ps1` (e5), `run_all_rerank.ps1` (rerank). Сводка `rank_metrics_comparison.*` собирается, когда на диске есть все три `stage4_rank_results_*.json` (после трёх полных прогонов или `run_rank_all.ps1`).
+
+**Отдельно:** `run_rank_all.ps1` — все три режима rank подряд без generation (~7 мин Milvus), если нужно пересчитать только retrieval.
+
+---
+
+## 2. Файлы в репозитории
+
+| Путь | Назначение |
+|------|------------|
+| `eval_retrieval_rank.py` | Прогон одного опыта, запись JSON |
+| `rank_metrics.py` | Сводная таблица трёх опытов или **границы** по старым Hit@k |
+| `test_rank_metrics.py` | Unit-тесты формул (без Milvus) |
+| `run_rank.ps1` | Обёртка: один `--mode` |
+| `run_rank_all.ps1` | infra (опционально) + base + e5 + rerank + сводка |
+| `run_rank_metrics.ps1` | Только пересборка таблицы из готовых JSON |
+
+**Артефакты** (не коммитить лишнее по желанию, но пути фиксированы):
+
+- `scripts/stage4_eval/results/retrieval/stage4_rank_results_{base,e5,rerank}.json`
+- `rank_metrics_comparison.md`, `rank_metrics_comparison.csv`
+- `rank_metrics_bounds_from_hitk.md` — оценочные границы, если есть только Hit@1/3/5 (без нового прогона rank)
+
+`stage4_hitk_results*.json` **не перезаписываются**.
+
+---
+
+## 3. Три режима (`--mode`)
+
+Соответствуют трём контурам Hit@k на реестре 268:
+
+| Режим | Коллекция | Особенности |
+|-------|-----------|-------------|
+| `base` | `diplom_multimodal` | Без префиксов E5 |
+| `e5` | `diplom_multimodal_e5` | Префиксы `query:` / `passage:` |
+| `rerank` | `diplom_multimodal_e5_rerank` | E5 + ANN top-20 → реранкер → top-10 в метрике |
+
+Параметры по умолчанию: `--k-max 10`, `--ks 1,3,5,10`. Для отладки: `--limit-questions 5`. Отключить обновление Readme: `--no-refresh-readme`.
+
+---
+
+## 4. Запуск (PowerShell, корень проекта)
+
+Нужен **Milvus**; **Ollama не нужна**.
+
 ```powershell
 .\.venv\Scripts\Activate.ps1
 $env:PYTHONIOENCODING = "utf-8"
-python scripts\infra_start_system\start_milvus.py
 
-# Опыт 1 — base (diplom_multimodal)
-python scripts\stage4_eval\retrieval\eval_retrieval_rank.py --mode base
-# Опыт 2 — E5 prefixes query:/passage: (diplom_multimodal_e5)
-python scripts\stage4_eval\retrieval\eval_retrieval_rank.py --mode e5
-# Опыт 3 — E5 + реранкер bge-reranker-v2-m3, ANN top-20 → top-10 (diplom_multimodal_e5_rerank)
-python scripts\stage4_eval\retrieval\eval_retrieval_rank.py --mode rerank
+# Всё сразу: три опыта + сводная таблица
+.\scripts\stage4_eval\run_rank_all.ps1
 
-# Сводная таблица (md + csv)
-$R = "scripts\stage4_eval\results\retrieval"
-python scripts\stage4_eval\retrieval\rank_metrics.py "$R\stage4_rank_results_base.json" "$R\stage4_rank_results_e5.json" "$R\stage4_rank_results_rerank.json" --out-dir $R
+# Milvus уже запущен
+.\scripts\stage4_eval\run_rank_all.ps1 -SkipInfra
 
-# Только границы по уже имеющимся Hit@1/3/5 (без Milvus)
-python scripts\stage4_eval\retrieval\rank_metrics.py --from-hitk "$R\stage4_hitk_results.json" "$R\stage4_hitk_results_e5.json" "$R\stage4_hitk_results_rerank.json" --out-dir $R
-```
-Флаги: `--k-max 10` (глубина выдачи), `--ks 1,3,5,10`, `--questions <json>`, `--out <json>`, `--dedup`, `--limit-questions 5` (быстрая проверка).
+# Один опыт
+.\scripts\stage4_eval\run_rank.ps1 -Mode rerank
 
-``` метрики MRR и nDCG@k
-Запустить Milvus и прогнать скрипт по очереди с --mode base, --mode e5 и --mode rerank.
-После этого rank_metrics.py соберёт таблицу трёх опытов.
+# Быстрая проверка (5 вопросов)
+.\scripts\stage4_eval\run_rank.ps1 -Mode base -LimitQuestions 5
+
+# Только пересобрать comparison из готовых JSON
+.\scripts\stage4_eval\run_rank_metrics.ps1
+
+# Оценочные границы MRR/nDCG из Hit@1/3/5 без Milvus
+.\scripts\stage4_eval\run_rank_metrics.ps1 -FromHitk
 ```
 
-## Ожидаемый результат
-- `stage4_rank_results_<mode>.json`: `metrics` (hit@k, mrr, mrr@k, ndcg@k в долях 0…1), `metrics_percent` (hit@k в %), `details[]` с `rank`, `rels`, `scores` по каждому из 268 вопросов.
-- Hit@1/3/5 должны совпасть с `stage4_hitk_results*.json` (та же проверка и та же выдача; у реранкера top-5 из top-10 совпадает, т.к. кандидатов всё равно 20). Небольшие расхождения возможны из-за недетерминизма ANN/GPU.
-- `rank_metrics_comparison.md/.csv` — таблица трёх опытов.
+Прямой Python:
 
-## Границы по старым Hit@k (до прогона)
-Ранг известен только с точностью до корзины 1 / 2–3 / 4–5 / >5. Нижняя граница: худшая позиция в корзине (3, 5, не найден); верхняя: лучшая (2, 4, позиция 6).
+```powershell
+python scripts\stage4_eval\retrieval\mrr_ndcg\eval_retrieval_rank.py --mode base
+python scripts\stage4_eval\retrieval\mrr_ndcg\rank_metrics.py --refresh-default
+```
 
-| Эксперимент | MRR@5 | MRR (top-10) | nDCG@3 | nDCG@5 | nDCG@10 |
-|---|---|---|---|---|---|
-| Опыт 1 base | 0.652–0.685 | 0.652–0.716 | 0.672–0.695 | 0.692–0.718 | 0.692–0.784 |
-| Опыт 2 E5 prefixes | 0.672–0.704 | 0.672–0.732 | 0.690–0.714 | 0.712–0.738 | 0.712–0.796 |
-| Опыт 3 E5+rerank | 0.772–0.796 | 0.772–0.814 | 0.787–0.805 | 0.800–0.819 | 0.800–0.859 |
+Тесты:
 
-nDCG@1 = Hit@1 точно: 0.582 / 0.601 / 0.720.
+```powershell
+cd scripts\stage4_eval\retrieval\mrr_ndcg
+python test_rank_metrics.py
+```
+
+---
+
+## 5. Автообновление (что срабатывает само)
+
+| Событие | Результат |
+|---------|-----------|
+| Завершился `eval_retrieval_rank.py` | Записан `stage4_rank_results_<mode>.json` |
+| Есть все три rank JSON | Пересобраны `rank_metrics_comparison.*` |
+| Полный набор rank JSON + не `--no-refresh-readme` | Вызов `update_readme4_eval_docs` → §5.4 в Readme-4 |
+| Запуск `update_readme4_eval_docs` после Hit@k | Сводка rank тоже пересобирается, если JSON на месте |
+
+---
+
+## 6. Последний зафиксированный прогон (*N* = 268, 28.10.2026)
+
+Источник истины: JSON и `rank_metrics_comparison.md` в `results/retrieval/`. Краткая выжимка:
+
+| Опыт | MRR | MRR@5 | nDCG@5 | nDCG@10 |
+|------|-----|-------|--------|---------|
+| base | 0.681 | 0.673 | 0.708 | 0.729 |
+| E5 | 0.696 | 0.690 | 0.726 | 0.743 |
+| E5+rerank | 0.793 | 0.787 | 0.812 | 0.826 |
+
+Hit@1/3/5 совпали с `stage4_hitk_results*.json`. Реранкер даёт наибольший скачок по **MRR** (+0,10 к E5) — см. разбор в `manual/mrr_ndcg.md` §7.
+
+**Границы без Milvus:** если есть только Hit@1/3/5, rank известен с точностью до корзин (1 / 2–3 / 4–5 / >5). Тогда `run_rank_metrics.ps1 -FromHitk` пишет `rank_metrics_bounds_from_hitk.md` — это **не** точные MRR, а интервал возможных значений.
