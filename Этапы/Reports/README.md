@@ -20,7 +20,8 @@
 | `Этапы/Reports/etap4/Etap4-hitk-otchet-N38.md` | Отчёт Hit@k, *N* = **38** (вход / итог) |
 | `Этапы/Reports/etap4/Etap4-hitk-otchet-N73.md` | Отчёт Hit@k, *N* = **73** (+ performance на 73) |
 | `Этапы/Reports/etap4/Etap4-hitk-otchet-N300.md` | Полный прогон *N* = **300** (Hit@k + generation + perf + judge) |
-| `Этапы/Reports/etap4/Readme-4 (ver. 2).ipynb` | Исполняемый отчёт (Docker, Hit@k, демо Milvus) |
+| `Этапы/Reports/etap4/Etap4_final.ipynb` | Итоговый ноутбук этапа 4 (таблицы и графики по сохранённым JSON) |
+| `Этапы/Reports/etap4/Otchet_etap4_v3.docx` | Word-отчёт для сдачи |
 | `scripts/stage4_eval/Сводка_метрик_этапа_4.md` | Перечень метрик и ссылки на JSON |
 | `scripts/stage4_eval/results/` | JSON/PNG прогонов (retrieval, generation) |
 | `data/rag_eval_questions/eval_questions.json` | Рабочий реестр контрольных вопросов (300) |

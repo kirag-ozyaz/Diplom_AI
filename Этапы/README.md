@@ -8,7 +8,7 @@
     ├── etap1/          Readme-1.md
     ├── etap2/          Readme-2.md
     ├── etap3/          Readme-3 (ver. 4).ipynb
-    ├── etap4/          Readme-4.md, Readme-4 (ver. 2).ipynb
+    ├── etap4/          Readme-4.md, Etap4_final.ipynb, Otchet_etap4_v3.docx
     └── trash/          черновики и старые версии
 ```
 

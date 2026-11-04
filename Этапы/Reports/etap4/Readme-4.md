@@ -2,31 +2,38 @@
 
 **Проект:** интеллектуальный Telegram-бот с RAG по Правилам устройства электроустановок (ПУЭ), 7-е издание.  
 **Каталог проекта:** `Итоговы_Проект` (материалы дипломной работы).  
-**Дата отчёта:** 18.10.2026.
+**Дата отчёта:** 28.10.2026.
 
-**Итоговый отчёт этапа 4** (разделы **1–8**): baseline и опыт E5 на реестре **268** вопросов. Текст предназначен для пояснительной записки (Microsoft Word); графики Hit@k — PNG в каталоге результатов оценки retrieval. Исполняемое воспроизведение — ноутбук **Readme-4 (ver. 2).ipynb**.
+**Итоговый отчёт этапа 4** (разделы **1–8**): три опыта на реестре **268** вопросов — опыт 1 (база), опыт 2 (префиксы E5), опыт 3 (E5 + реранкер). Текст предназначен для пояснительной записки (Microsoft Word). Исполняемая версия — ноутбук **`Etap4_final.ipynb`** (этот же каталог): читает только сохранённые JSON результатов, Milvus и Ollama не нужны; ячейки заполняются после *Run All*.
+
+**Нумерация опытов.** В отчёте опыты пронумерованы с 1. В файлах и скриптах проекта те же опыты обозначены 0, 1, 2: опыт 1 = «опыт 0 / base» (JSON без суффикса), опыт 2 = «опыт 1 / E5» (`*_e5.json`), опыт 3 = «опыт 2 / rerank» (`*_rerank.json`).
 
 | Источник | Содержание |
 |----------|------------|
 | `data/rag_eval_questions/eval_questions.json` | Реестр **268** контрольных вопросов и эталонные пункты ПУЭ |
-| `scripts/stage4_eval/results/` | Первичные JSON метрик (retrieval, generation, performance, judge) |
-| `scripts/stage4_eval/results/retrieval/` | Диаграммы Hit@k (PNG) для вставки в отчёт |
+| `scripts/stage4_eval/results/retrieval/` | Hit@k (`stage4_hitk_results*.json`), MRR/nDCG (`stage4_rank_results_{base,e5,rerank}.json`), журнал прогонов опыта 1 (`stage4_hitk_runs.jsonl`) |
+| `scripts/stage4_eval/results/generation/` | Генерация, нагрузочный тест, оценка моделью (LLM-judge) (без суффикса / `_e5` / `_rerank`) |
+| `Этапы/Reports/etap4/Etap4_final.ipynb` | Итоговый ноутбук: сводные таблицы и графики по трём опытам |
 
 ### Сводка результатов (N = 268)
 
-Один реестр `eval_questions.json`, одна модель эмбеддингов `intfloat/multilingual-e5-base`, одна LLM Ollama `qwen2.5:14b-instruct-q4_K_M`. Отличаются **коллекция Milvus** и **префиксы E5** при индексации/поиске.
+Один реестр `eval_questions.json`, одна модель эмбеддингов `intfloat/multilingual-e5-base`, одна LLM Ollama `qwen2.5:14b-instruct-q4_K_M`. Отличаются коллекция Milvus, префиксы E5 и реранкер.
 
-| | **Опыт 0 (baseline)** | **Опыт 1 (E5)** |
-|---|------------------------|------------------|
-| Коллекция | `diplom_multimodal` | `diplom_multimodal_e5` |
-| Префиксы `passage:` / `query:` | нет | да |
-| Полный прогон | `run_all.ps1` (18.10.2026; Hit@k повтор 25.10.2026) | `run_all_e5.ps1` (**25.10.2026**) |
-| Hit@1 / @3 / @5 | **58,2 / 76,1 / 81,3 %** | **60,1 / 78,0 / 83,6 %** |
-| Citation (live) | **81,3 %** (18.10) | **83,6 %** |
-| Groundedness / relevance | **0,89 / 0,79** | **0,908 / 0,81** |
-| JSON-суффикс | без `_e5` | `*_e5.json` |
+| | **Опыт 1 (база)** | **Опыт 2 (E5)** | **Опыт 3 (E5 + реранкер)** |
+|---|---|---|---|
+| Коллекция | `diplom_multimodal` | `diplom_multimodal_e5` | `diplom_multimodal_e5_rerank` |
+| Префиксы `passage:` / `query:` | нет | да | да |
+| Реранкер | нет | нет | `BAAI/bge-reranker-v2-m3` (20 → 5) |
+| Полный прогон | `run_all.ps1` (18.10.2026; Hit@k повтор 25.10.2026) | `run_all_e5.ps1` (25.10.2026) | `run_all_rerank.ps1` (26.10.2026) |
+| Hit@1 / @3 / @5 | **58,2 / 76,1 / 81,3 %** | **60,1 / 78,0 / 83,6 %** | **72,0 / 85,4 / 88,8 %** |
+| MRR / nDCG@5 (глубина 10) | **0,681 / 0,708** | **0,696 / 0,726** | **0,793 / 0,812** |
+| Citation (live) | **81,3 %** | **83,6 %** | **88,8 %** |
+| Groundedness / relevance | **0,893 / 0,794** | **0,908 / 0,810** | **0,908 / 0,839** |
+| Время полного запроса RAG, с | 6,35 | 6,91 | 10,15 |
+| Время только поиска, с (среднее) | 0,049 | 0,049 | 0,929 |
+| JSON-суффикс | нет | `_e5` | `_rerank` / `_base`, `_e5`, `_rerank` для MRR |
 
-Детали: **§5.3** / **§5.3.1** (Hit@k по опытам), **§5.4** (generation, performance, judge).
+Детали: **§5.3** (Hit@k по опытам и серия прогонов опыта 1), **§5.4** (MRR/nDCG, generation, performance, judge, время).
 
 ---
 
@@ -139,7 +146,7 @@
 |----------|----------|
 | Среда | Ollama в Docker (`infra/docker/Dockerfile.ollama/`) |
 | API | `http://localhost:11434` |
-| Рекомендуемая модель (6 ГБ VRAM) | `qwen2.5:3b` |
+| Модель в прогонах этапа 4 | `qwen2.5:14b-instruct-q4_K_M` (temperature 0,2, num_predict 512); для 6 ГБ VRAM — `qwen2.5:3b` |
 | Роль в RAG | На вход: системный промпт + top-k фрагментов ПУЭ + вопрос пользователя; на выход: краткий ответ с номерами пунктов |
 
 ---
@@ -161,6 +168,12 @@
         │      Milvus (HNSW)       │
         │      search_text()       │
         │   top-k чанков ПУЭ       │
+        │ (опыт 3: top-20)         │
+        └────────────┬─────────────┘
+                     ▼
+        ┌──────────────────────────┐
+        │ [опыт 3] bge-reranker-v2 │
+        │   -m3 → top-5            │
         └────────────┬─────────────┘
                      ▼
         ┌──────────────────────────┐
@@ -184,7 +197,9 @@
 | Интерактивный поиск | `src/preprocessing/Create_embeddings/query.py` | да |
 | Быстрый тест запроса | `src/preprocessing/Create_embeddings/query_test.py` | да |
 | Runtime-конфиг | `config/rag_runtime.json` | да |
-| Оценка Hit@k | `scripts/stage4_eval/eval_retrieval_hitk.py` | да (прогон при запущенном Milvus) |
+| Загрузка в Milvus, опыты 2 / 3 | `src/preprocessing/Create_embeddings/E5/load_data_e5.py`, `Rerank/load_data_rerank.py` | да |
+| Оценка Hit@k | `scripts/stage4_eval/retrieval/eval_retrieval_hitk.py` (`_e5.py`, `_rerank.py`) | да (прогон при запущенном Milvus) |
+| Оценка MRR/nDCG | `scripts/stage4_eval/retrieval/mrr_ndcg/eval_retrieval_rank.py` | да |
 | RAG + Ollama | `src/rag/rag_service.py`, `ollama_client.py` | да |
 
 ### 4.3. Логика «распознавания» пункта ПУЭ
@@ -233,7 +248,7 @@ Precision@k при одном эталоне равна 1/*k* при попад�
 
 #### Как считается в коде
 
-Скрипт `scripts/stage4_eval/eval_retrieval_hitk.py`: один вызов `search_text` на вопрос; успех, если в поле `text` одного из первых *k* чанков встречается номер пункта (`1.1.4`, `п. 1.1.4`, `Пункт 1.1.4`). Оценивается **только retrieval**, не качество ответа LLM: если эталон не попал в контекст, генерация не может опереться на нужную норму.
+Скрипт `scripts/stage4_eval/retrieval/eval_retrieval_hitk.py`: один вызов `search_text` на вопрос; успех, если в поле `text` одного из первых *k* чанков встречается номер пункта (`1.1.4`, `п. 1.1.4`, `Пункт 1.1.4`). Оценивается **только retrieval**, не качество ответа LLM: если эталон не попал в контекст, генерация не может опереться на нужную норму.
 
 Источники: список в **Приложениях**.
 
@@ -243,14 +258,11 @@ Precision@k при одном эталоне равна 1/*k* при попад�
 
 Классический график **loss / accuracy по эпохам обучения** для данного проекта **не применим**: модели эмбеддингов и LLM не дообучались на ПУЭ.
 
-Вместо этого используются:
+Вместо этого используются столбчатые диаграммы по трём опытам: Hit@k, Hit@5 по разделам ПУЭ, MRR/nDCG, метрики генерации и цитирования, время, нагрузочный тест, оценка моделью (LLM-judge). Все диаграммы строит ноутбук **`Etap4_final.ipynb`** (интерактивный Plotly) из сохранённых JSON; PNG Hit@k опыта 1 — также в `scripts/stage4_eval/results/retrieval/` (`stage4_hitk_chart.png`, `stage4_hitk_report.png`).
 
-1. **Столбчатая диаграмма Hit@1, Hit@3, Hit@5** (%) — в ноутбуке интерактивно (Plotly); для печатного отчёта — файлы PNG ниже.
-2. **Пример выдачи** `query_test.py` — скрин или текст: запрос, score, фрагмент текста, глава.
+Hit@k и MRR/nDCG — только retrieval (Milvus + SentenceTransformer, для опыта 3 — реранкер). **Ollama / LLM к ним не относятся.**
 
-**§5.2 — прогон**, **§5.3 — результаты:** метрики только из `eval_retrieval_hitk.py` (JSON на диске). **Ollama / LLM к Hit@k не относятся**; §5.3 в ноутбуке — форматирование JSON, не «ответ нейросети».
-
-### 5.1. Как получить график
+### 5.1. Как получить данные для графиков
 
 1. Запустить Docker-сервисы (Milvus + Ollama для этапа 4):
 
@@ -259,11 +271,9 @@ cd X:\Учеба_УИИ\Итоговы_Проект
 python scripts/infra_start_system/start_report_docker.py
 ```
 
-Только Milvus (Hit@k / поиск без LLM): `python scripts/infra_start_system/start_milvus.py` или `python scripts/infra_start_system/start_report_docker.py --skip-ollama`.
+Только Milvus (Hit@k / поиск без LLM): `python scripts/infra_start_system/start_report_docker.py --skip-ollama`.
 
-В ноутбуке: вторая code-ячейка после bootstrap вызывает `start_report_docker.py` (в ячейке — комментарий с установкой PyTorch CUDA при предупреждении про `torch.cuda`).
-
-**Если в выводе:** «GPU виден в nvidia-smi, но torch.cuda недоступен» — LLM (Ollama) может быть на GPU; **эмбеддинги** (Hit@k, `search_text`) идут через PyTorch в `.venv`. Установка (PowerShell, venv активен):
+**Если в выводе:** «GPU виден в nvidia-smi, но torch.cuda недоступен» — эмбеддинги идут через PyTorch в `.venv`. Установка CUDA-сборки (PowerShell, venv активен):
 
 ```powershell
 pip uninstall torch torchvision -y
@@ -271,222 +281,173 @@ pip install torch torchvision --index-url https://download.pytorch.org/whl/cu128
 python -c "import torch; print('cuda:', torch.cuda.is_available())"
 ```
 
-Для RTX 5060 Ti и новее — сборка PyTorch **cu128** (инструкция в каталоге `start/` проекта). Оставить эмбеддинги на CPU: `python scripts/infra_start_system/compute_detect.py --apply-config`.
+2. Убедиться, что коллекции загружены: `src/preprocessing/Create_embeddings/load_data.py` (опыт 1), `E5/load_data_e5.py` (опыт 2), `Rerank/load_data_rerank.py` (опыт 3).
 
-Проверка Milvus:
+**Важно:** скрипты повторного прогона берут пути из `scripts/stage4_eval/lib/_bootstrap.py`, а имена файлов результатов — из `scripts/lib/report_paths.py`. Оба модуля в проекте есть. Ноутбук `Etap4_final.ipynb` их не импортирует: он читает уже сохранённые JSON.
 
-```powershell
-cd infra\milvus
-docker compose ps
-```
-2. Убедиться, что коллекция загружена: `python src/preprocessing/Create_embeddings/load_data.py` (при необходимости)
-
-### 5.2. Прогон оценки Hit@k
-
-Полная процедура (Docker, Hit@k, generation) описана в **§5–§6** и в скриптах каталога `scripts/stage4_eval/`.
-
-В ноутбуке: **code-ячейка §5.2** (после этого заголовка) — полный прогон по Milvus без терминала.
-
-Альтернатива из PowerShell (тот же код):
+### 5.2. Прогон оценки
 
 ```powershell
 cd X:\Учеба_УИИ\Итоговы_Проект
 .\.venv\Scripts\Activate.ps1
-python scripts/stage4_eval/eval_retrieval_hitk.py
+powershell -ExecutionPolicy Bypass -File scripts/stage4_eval/run_all.ps1          # опыт 1
+powershell -ExecutionPolicy Bypass -File scripts/stage4_eval/run_all_e5.ps1       # опыт 2
+powershell -ExecutionPolicy Bypass -File scripts/stage4_eval/run_all_rerank.ps1   # опыт 3
+powershell -ExecutionPolicy Bypass -File scripts/stage4_eval/run_rank_all.ps1     # MRR/nDCG, три опыта
 ```
 
-Сохраняются в `scripts/stage4_eval/results/retrieval/`: `stage4_hitk_results.json`, `stage4_hitk_chart.png`, `stage4_hitk_report.png`; обновляется блок §5.3 в этом файле.
+Отдельно Hit@k опыта 1: `python scripts/stage4_eval/retrieval/eval_retrieval_hitk.py` (опыты 2 и 3 — `eval_retrieval_hitk_e5.py`, `eval_retrieval_hitk_rerank.py`). Результаты — в `scripts/stage4_eval/results/retrieval/` и `.../generation/`. После прогона откройте `Etap4_final.ipynb` и нажмите *Run All*.
 
-### 5.3. Hit@k — опыт 0 (baseline, `diplom_multimodal`)
+### 5.3. Hit@k по трём опытам
 
-Контрольный набор — **268** вопросов. Блок ниже — **опыт 0** (`eval_retrieval_hitk.py`, `stage4_hitk_results.json`). **Опыт 1 (E5)** — **§5.3.1**; сравнение — в начале отчёта и **§5.4**.
+#### 5.3.1. Опыт 1 (база, `diplom_multimodal`): серия прогонов
 
-Таблица заполняется **автоматически** из последнего `stage4_hitk_results.json`.
+Для опыта 1 проведена серия прогонов на последовательных версиях набора вопросов: **25, 38, 50, 73, 300** и итоговый **268**. Источник — журнал `scripts/stage4_eval/results/retrieval/stage4_hitk_runs.jsonl` (каждый вызов `eval_retrieval_hitk.py`); повторные прогоны на одном *N* дали одинаковые значения.
 
-В ноутбуке: **code-ячейка §5.3** — таблица и Plotly по актуальному `stage4_hitk_results.json` (после §5.2 в той же сессии или `force_eval=True` в ячейке).
+| № | N | Дата (первый … последний прогон) | Прогонов | Hit@1 | Hit@3 | Hit@5 |
+|---|---:|---|---:|---:|---:|---:|
+| 1.1 | 25 | 29.09.2026 00:36 … 07.10.2026 01:36 | 12 | 40,0 % | 44,0 % | 48,0 % |
+| 1.2 | 38 | 07.10.2026 22:11 … 08.10.2026 00:48 | 3 | 55,3 % | 63,2 % | 68,4 % |
+| 1.3 | 50 | 08.10.2026 01:03 | 1 | 46,0 % | 54,0 % | 58,0 % |
+| 1.4 | 73 | 08.10.2026 01:10 | 1 | 68,5 % | 76,7 % | 79,5 % |
+| 1.5 | 300 | 18.10.2026 12:15 | 1 | 12,3 % | 23,0 % | 28,0 % |
+| 1.6 | 268 | 18.10.2026 16:58 … 25.10.2026 20:00 | 2 | 58,2 % | 76,1 % | 81,3 % |
 
-<!-- stage4-eval:5.3:start -->
-**Источник:** только последний прогон **`scripts/stage4_eval/retrieval/eval_retrieval_hitk.py`** (Milvus + SentenceTransformer, поле `details` в JSON). **Ollama / LLM не используются.** Текст §5.3 — автоматическое форматирование чисел из JSON, не генерация ответа моделью.
+Разный *N* — эволюция реестра вопросов. Падение на 300 вопросах вызвано составом набора (в том числе автоматической разметкой эталонных пунктов); после проверки набор сокращён до 268.
 
-Коллекция: `diplom_multimodal`, **2912** записей в Milvus. Модель при оценке: `intfloat/multilingual-e5-base`.
-Последний прогон: **25.10.2026 20:00** (`python scripts/stage4_eval/retrieval/eval_retrieval_hitk.py`).
-Inference эмбеддингов при прогоне eval: **cuda**.
-Число запросов *N* — поле `n_questions` в реестре `data/rag_eval_questions/eval_questions.json`; метрики прогона — из `scripts/stage4_eval/results/retrieval/stage4_hitk_results.json`.
-Полный JSON: `scripts/stage4_eval/results/retrieval/stage4_hitk_results.json`.
+Итоговый прогон опыта 1 (**25.10.2026 20:00**, `stage4_hitk_results.json`, коллекция **2912** записей, inference эмбеддингов **cuda**): Hit@1 **156 / 268 (58,2 %)**, Hit@3 **204 / 268 (76,1 %)**, Hit@5 **218 / 268 (81,3 %)**. Промахи Hit@5: **50** вопросов. Средний cosine top-1: при Hit@5 **0,879**, при промахе **0,872**.
 
-| Метрика | Значение | Комментарий |
-|---------|----------|-------------|
-| Hit@1 | **156 / 268 (58,2 %)** | Эталонный пункт на 1-м месте |
-| Hit@3 | **204 / 268 (76,1 %)** | Эталонный пункт в top-3 |
-| Hit@5 | **218 / 268 (81,3 %)** | Эталонный пункт в top-5 |
-| Число запросов | **268** | `data/rag_eval_questions/eval_questions.json` |
-| Сводка JSON | Hit@1 58.2 %, Hit@3 76.1 %, Hit@5 81.3 % | `metrics_percent` в JSON |
+#### 5.3.2. Опыт 2 (E5, `diplom_multimodal_e5`)
 
-Примеры успешных Hit@5: id 1, id 2, id 4, id 6, id 7, id 8, id 9, id 10 … (всего 218).
-Промахи Hit@5: **50** вопросов (id: 3, 5, 20, 24, 30, 34, 35, 37, 42, 45, 54, 56, 57, 61, 62, 64, 66, 67, 68, 75, 76, 79, 82, 84, 90, 92, 96, 97, 101, 126, 127, 128, 129, 131, 141, 144, 154, 158, 179, 188, 199, 228, 234, 235, 236, 246, 252, 253, 260, 267).
-Средний cosine top-1: при Hit@5 **0.879**, при промахе Hit@5 **0.872**.
+Скрипт `scripts/stage4_eval/retrieval/eval_retrieval_hitk_e5.py`, префикс запроса `query:`, индексация с `passage:`. Источник: `stage4_hitk_results_e5.json`, прогон **25.10.2026 21:04** (`run_all_e5.ps1`).
 
+Hit@1 **161 / 268 (60,1 %)**, Hit@3 **209 / 268 (78,0 %)**, Hit@5 **224 / 268 (83,6 %)**. Промахи Hit@5: **44** (опыт 2 исправил 9 промахов опыта 1 и добавил 3). Средний cosine top-1: при Hit@5 **0,883**, при промахе **0,876**.
 
-**История прогонов** (каждый вызов `eval_retrieval_hitk.py`, файл `scripts/stage4_eval/results/retrieval/stage4_hitk_runs.jsonl`):
+#### 5.3.3. Опыт 3 (E5 + реранкер, `diplom_multimodal_e5_rerank`)
 
-| Прогон (eval) | N | Hit@1 | Hit@3 | Hit@5 | Модель |
-|---|---:|---:|---:|---:|---|
-| 25.10.2026 20:00 | 268 | 58.2 % | 76.1 % | 81.3 % | `intfloat/multilingual-e5-base` |
-| 18.10.2026 16:58 | 268 | 58.2 % | 76.1 % | 81.3 % | `intfloat/multilingual-e5-base` |
-| 18.10.2026 12:15 | 300 | 12.3 % | 23.0 % | 28.0 % | `intfloat/multilingual-e5-base` |
-| 08.10.2026 01:10 | 73 | 68.5 % | 76.7 % | 79.5 % | `intfloat/multilingual-e5-base` |
-| 08.10.2026 01:03 | 50 | 46.0 % | 54.0 % | 58.0 % | `intfloat/multilingual-e5-base` |
-| 08.10.2026 00:48 | 38 | 55.3 % | 63.2 % | 68.4 % | `intfloat/multilingual-e5-base` |
-| 07.10.2026 23:40 | 38 | 55.3 % | 63.2 % | 68.4 % | `intfloat/multilingual-e5-base` |
-| 07.10.2026 22:11 | 38 | 55.3 % | 63.2 % | 68.4 % | `intfloat/multilingual-e5-base` |
+Скрипт `scripts/stage4_eval/retrieval/eval_retrieval_hitk_rerank.py`: Milvus возвращает 20 кандидатов, `BAAI/bge-reranker-v2-m3` оставляет 5 лучших. Источник: `stage4_hitk_results_rerank.json`, прогон **26.10.2026 00:40** (`run_all_rerank.ps1`).
 
-После изменения реестра контрольных вопросов снова выполните прогон оценки — блок обновится автоматически.
-<!-- stage4-eval:5.3:end -->
+Hit@1 **193 / 268 (72,0 %)**, Hit@3 **229 / 268 (85,4 %)**, Hit@5 **238 / 268 (88,8 %)**. Промахи Hit@5: **30** (опыт 3 исправил 19 промахов опыта 2 и добавил 5). Не найдено в top-5 ни в одном опыте: **23** вопроса.
 
-**История в таблице выше** — журнал **только baseline** (`stage4_hitk_runs.jsonl`, скрипт `eval_retrieval_hitk.py`). Разный *N* (38 → 300 → 268) — эволюция реестра вопросов. Две строки на 268 с одинаковыми 58,2 % — повторный прогон **25.10.2026** и эталон **18.10.2026**, не опыт E5. Прогоны E5 в этот журнал **не попадают**.
+#### 5.3.4. Сравнение Hit@k и Hit@5 по разделам ПУЭ
 
-Полный JSON и графики: `scripts/stage4_eval/results/retrieval/`. Таблицы **§5.3**, **§5.4.1**, **§6.1** и пункты **§7** для опыта 0 согласованы с последним `stage4_hitk_results.json` и связанными JSON generation.
+| Метрика | Опыт 1 (база) | Опыт 2 (E5) | Опыт 3 (реранкер) |
+|---|---|---|---|
+| Hit@1 | 58,2 % (156/268) | 60,1 % (161/268) | 72,0 % (193/268) |
+| Hit@3 | 76,1 % (204/268) | 78,0 % (209/268) | 85,4 % (229/268) |
+| Hit@5 | 81,3 % (218/268) | 83,6 % (224/268) | 88,8 % (238/268) |
+| Промахов Hit@5 | 50 | 44 | 30 |
 
-### 5.3.1. Hit@k — опыт 1 (E5, `diplom_multimodal_e5`)
+| Раздел ПУЭ | Вопросов | Опыт 1 | Опыт 2 | Опыт 3 |
+|---|---:|---:|---:|---:|
+| Р.1 | 42 | 78,6 % | 81,0 % | 88,1 % |
+| Р.2 | 45 | 66,7 % | 73,3 % | 82,2 % |
+| Р.3 | 35 | 82,9 % | 85,7 % | 91,4 % |
+| Р.4 | 41 | 78,0 % | 78,0 % | 85,4 % |
+| Р.5 | 39 | 97,4 % | 97,4 % | 92,3 % |
+| Р.6 | 31 | 93,5 % | 93,5 % | 96,8 % |
+| Р.7 | 35 | 77,1 % | 80,0 % | 88,6 % |
 
-Тот же реестр **268** вопросов. Скрипт `eval_retrieval_hitk_e5.py`, префикс запроса `query:`, индексация с `passage:`. Источник: `scripts/stage4_eval/results/retrieval/stage4_hitk_results_e5.json`. Прогон **25.10.2026 21:04** (`run_all_e5.ps1`). **Ollama не используется.**
+Реранкер снизил Hit@5 только в разделе 5.
 
-| Метрика | Значение | Комментарий |
-|---------|----------|-------------|
-| Hit@1 | **161 / 268 (60,1 %)** | Эталонный пункт на 1-м месте |
-| Hit@3 | **209 / 268 (78,0 %)** | Эталонный пункт в top-3 |
-| Hit@5 | **224 / 268 (83,6 %)** | Эталонный пункт в top-5 |
-| Число запросов | **268** | `eval_questions.json` |
-| Коллекция | `diplom_multimodal_e5`, **2912** сущностей | `rag_runtime_e5.json` |
+### 5.4. Полный контур метрик (MRR/nDCG, generation, performance, judge, время)
 
-Промахи Hit@5: **44** вопроса (на **6** меньше, чем у опыта 0 в §5.3): id 3, 5, 20, 24, 30, 34, 35, 54, 56, 59, 61, 62, 64, 66, 67, 75, 76, 79, 82, 84, 92, 93, 97, 101, 126, 127, 128, 129, 131, 141, 144, 154, 158, 179, 188, 199, 228, 234, 236, 246, 252, 253, 260, 264.
+#### 5.4.1. MRR и nDCG@k
 
-Средний cosine top-1: при Hit@5 **0,883**, при промахе Hit@5 **0,876**. Отдельный журнал прогонов E5 (аналог `stage4_hitk_runs.jsonl`) в проекте **не ведётся** — в сводный отчёт попадает последний JSON `stage4_hitk_results_e5.json`.
+Скрипт `scripts/stage4_eval/retrieval/mrr_ndcg/eval_retrieval_rank.py` (`--mode base / e5 / rerank`), выдача глубиной 10, ранг первого фрагмента с эталонным пунктом; при одном релевантном пункте nDCG@k = 1/log2(rank+1). Результаты: `stage4_rank_results_{base,e5,rerank}.json`, сводка — `rank_metrics_comparison.md` (`rank_metrics.py`). Прогон **28.10.2026 00:54–01:00**. Hit@1/3/5 в этих файлах совпадают с основными прогонами Hit@k.
 
-### 5.4. Полный контур метрик (retrieval + generation + performance + judge)
+| Метрика | Опыт 1 (база) | Опыт 2 (E5) | Опыт 3 (реранкер) |
+|---|---:|---:|---:|
+| Hit@10 | 0,877 | 0,888 | 0,929 |
+| MRR | 0,681 | 0,696 | 0,793 |
+| MRR@3 | 0,661 | 0,677 | 0,779 |
+| MRR@5 | 0,673 | 0,689 | 0,787 |
+| nDCG@3 | 0,687 | 0,703 | 0,799 |
+| nDCG@5 | 0,708 | 0,726 | 0,812 |
+| nDCG@10 | 0,729 | 0,743 | 0,826 |
 
-Сводное сравнение опытов на **268** вопросах (актуальные JSON на **25.10.2026**):
+#### 5.4.2. Генерация и цитирование (live)
 
-| Слой | Метрика | Опыт 0 | Опыт 1 (E5) |
-|------|---------|--------|-------------|
-| Retrieval | Hit@1 | **58,2 %** (156/268) | **60,1 %** (161/268) |
-| Retrieval | Hit@3 | **76,1 %** | **78,0 %** |
-| Retrieval | Hit@5 | **81,3 %** | **83,6 %** |
-| Generation live | Citation rate | **81,3 %** (18.10.2026) | **83,6 %** |
-| Generation live | Citation в ответе | **70,9 %** | **72,0 %** |
-| Generation live | Groundedness | **0,89** | **0,908** |
-| Generation live | Relevance | **0,79** | **0,81** |
-| LLM-as-a-Judge | Faithfulness | **0,4347** (18.10) | **0,4459** |
-| LLM-as-a-Judge | Answer relevancy | **0,1847** | **0,1802** |
-| LLM-as-a-Judge | Context recall | **0,5060** | **0,4735** |
-| Operations | TTFT (среднее) | **18,72 с** (18.10) | **18,31 с** |
-| Operations | Availability | **100 %** | **100 %** |
+Скрипт `scripts/stage4_eval/generation/eval_rag_generation.py --mode live` (Milvus + Ollama, `src/rag/rag_service.py`).
 
-#### 5.4.1. Детализация опыта 0 (baseline)
+| Метрика | Опыт 1 (база) | Опыт 2 (E5) | Опыт 3 (реранкер) |
+|---|---:|---:|---:|
+| citation_rate, % | 81,3 | 83,6 | 88,8 |
+| citation_in_answer_rate, % | 69,8 | 72,0 | 74,6 |
+| citation_in_context_rate, % | 81,3 | 83,6 | 88,8 |
+| groundedness_avg | 0,893 | 0,908 | 0,908 |
+| relevance_avg | 0,794 | 0,810 | 0,839 |
+| Среднее время запроса, с | 6,35 | 6,91 | 10,15 |
+| Ошибок live | 0 | 0 | 0 |
+| Дата | 04.11.2026 15:12 | 25.10.2026 21:36 | 26.10.2026 01:26 |
 
-Помимо Hit@k (§5.3) сохранены JSON без суффикса `_e5`:
+#### 5.4.3. Время
 
-| Слой | Метрики | Скрипт | Артефакт |
-|------|---------|--------|----------|
-| Generation (полный RAG) | citation rate, groundedness, relevance | `eval_rag_generation.py` | `generation/stage4_gen_eval_results.json` |
-| Эксплуатация | TTFT, TPS, latency (avg, p95, p99), RPS, availability | `eval_rag_performance.py` | `generation/stage4_performance_metrics.json` |
-| LLM-as-a-Judge (судья-модель) | обоснованность, релевантность ответа, полнота контекста | `eval_rag_llm_judge.py` | `generation/stage4_llm_judge_metrics.json` |
+| Время | Опыт 1 | Опыт 2 | Опыт 3 |
+|---|---:|---:|---:|
+| Полный запрос RAG (generation live), с | 6,35 | 6,91 | 10,15 |
+| Только поиск, среднее по 268 вопросам, с | 0,049 | 0,049 | 0,929 |
+| Только поиск, медиана, с | 0,042 | 0,042 | 0,694 |
+| Первый запрос (холодный старт), с | 1,53 | 1,27 | 12,87 |
 
-**Расшифровка полей:** имена метрик в таблице соответствуют ключам JSON (citation rate, groundedness, relevance, faithfulness, TTFT, availability и т.д.); итоговая оценка опирается на прогон **268** вопросов.  
-<!-- stage4-eval:5.4:start -->
-**Сводная таблица** — полный прогон `run_all.ps1`, *N* = **268** вопросов (реестр `data/rag_eval_questions/eval_questions.json`); retrieval **25.10.2026 20:00**, generation live **25.10.2026 20:05**, performance **2026-10-18 18:10:17**, LLM-judge **2026-10-18 18:24:52**. Ollama: `qwen2.5:14b-instruct-q4_K_M`. Артефакты: `scripts/stage4_eval/results/`.
+Время поиска — поле `duration_sec` в `stage4_rank_results_{base,e5,rerank}.json`. Реранкер добавляет к поиску около 0,9 с на вопрос.
 
-| Слой | Метрика | Факт (прогон) | Артефакт / скрипт |
-|------|---------|---------------|-------------------|
-| Retrieval | Hit@1 | **156 / 268 (58,2 %)** | `retrieval/stage4_hitk_results.json`, `eval_retrieval_hitk.py` |
-| Retrieval | Hit@3 | **204 / 268 (76,1 %)** | то же |
-| Retrieval | Hit@5 | **218 / 268 (81,3 %)** | то же |
-| Generation (live) | Citation rate | **79,5 %** (31/39) | `generation/stage4_gen_eval_results.json`, `eval_rag_generation.py` |
-| Generation (live) | Citation в ответе | **71,8 %** (28/39) | то же |
-| Generation (live) | Groundedness | **0,90** | то же |
-| Generation (live) | Relevance | **0,76** | то же |
-| LLM-as-a-Judge | Faithfulness | **0,4347** | `generation/stage4_llm_judge_metrics.json`, `eval_rag_llm_judge.py` |
-| LLM-as-a-Judge | Answer relevancy | **0,1847** | то же |
-| LLM-as-a-Judge | Context recall | **0,5060** | то же |
-| Operations | TTFT (среднее) | **18,72** с | `generation/stage4_performance_metrics.json`, `eval_rag_performance.py` |
-| Operations | TPS (среднее) | **38,19** ток/с | то же |
-| Operations | Latency p95 | **39,58** с | то же |
-| Operations | RPS | **0,11** зап/с | то же |
-| Operations | Availability | **100.0 %** | то же |
+#### 5.4.4. Нагрузочный тест Ollama и LLM-as-a-Judge
 
-**MRR / nDCG@k** (top-10, тот же реестр; retrieval без LLM). Дата rank-прогона: **28.10.2026 01:00**. Сводка: `scripts/stage4_eval/results/retrieval/rank_metrics_comparison.md`, теория — `manual/mrr_ndcg.md`.
+Скрипты `generation/eval_rag_performance.py` и `generation/eval_rag_llm_judge.py` (цепочка `run_perf_and_judge*.ps1`).
 
+| Метрика | Опыт 1 | Опыт 2 | Опыт 3 |
+|---|---:|---:|---:|
+| TTFT avg, с | 18,72 | 18,31 | 18,73 |
+| Latency avg, с | 27,81 | 27,20 | 27,83 |
+| Latency p95, с | 39,58 | 39,93 | 41,51 |
+| Latency p99, с | 47,62 | 43,86 | 50,48 |
+| TPS, ток/с | 38,19 | 38,96 | 38,77 |
+| RPS | 0,11 | 0,11 | 0,11 |
+| Доступность | 100 % (268/268) | 100 % (268/268) | 100 % (268/268) |
+| Faithfulness | 0,4347 | 0,4459 | 0,4396 |
+| Answer relevancy | 0,1847 | 0,1802 | 0,1888 |
+| Context recall | 0,5060 | 0,4735 | 0,4933 |
+| Оценено судьёй без сбоя | 268/268 | 268/268 | 267/268 (сбой вызова, id 178) |
 
-| Опыт | MRR | MRR@5 | nDCG@5 | nDCG@10 |
-|------|-----|-------|--------|---------|
-| Опыт 0 base | **0,681** | **0,673** | **0,708** | **0,729** |
-| Опыт 1 E5 | **0,696** | **0,689** | **0,726** | **0,743** |
-| Опыт 2 реранкер | **0,793** | **0,787** | **0,812** | **0,826** |
-
-Нагрузочный тест performance — упрощённый промпт к Ollama (см. `pipeline_note` в JSON), не latency полного RAG.
-<!-- stage4-eval:5.4:end -->
-
-#### 5.4.2. Детализация опыта 1 (E5, `passage:` / `query:`)
-
-Коллекция **`diplom_multimodal_e5`**, конфиг `src/preprocessing/Create_embeddings/E5/rag_runtime_e5.json`. Полный прогон **`run_all_e5.ps1`**, **25.10.2026 21:03–22:31** (лог `scripts/stage4_eval/results/logs/pipeline_2026-10-25_21-03-38_e5.log`). Hit@k — **§5.3.1**.
-
-| Слой | Артефакт (`*_e5.json`) |
-|------|-------------------------|
-| Hit@k | `retrieval/stage4_hitk_results_e5.json` |
-| Generation live | `generation/stage4_gen_eval_results_e5.json` (среднее **6,91 с**/вопрос, **0** ошибок live) |
-| Performance | `generation/stage4_performance_metrics_e5.json` |
-| LLM-judge | `generation/stage4_llm_judge_metrics_e5.json` |
-
-Префиксы E5 при том же `multilingual-e5-base`: Hit@1 **+1,9 п.п.**, Hit@5 **+2,3 п.п.** к baseline; citation и groundedness live generation выше. LLM-judge на шаблонном контексте — сопоставим с опытом 0 (методика не менялась).
+Нагрузочный тест — упрощённый промпт к Ollama (`pipeline_note` в JSON), не задержка полного RAG; различия между опытами — разброс очереди GPU. Судья получает шаблонный контекст, поэтому его оценки почти не различаются и не заменяют citation и groundedness.
 
 ### 5.5. Типовые точки отказа RAG (для защиты)
 
 1. **Неполный контрольный набор** — снижен риск реестром **268** вопросов по разделам ПУЭ (`data/rag_eval_questions/eval_questions.json`).
-2. **Пропуск при retrieval** — эталонный пункт не в top-5 (сложные формулировки; см. Hit@5).
-3. **Ошибка ранжирования** — без реранкера общие определения иногда выше конкретных требований.
+2. **Пропуск при retrieval** — эталонный пункт не в top-5 (30 вопросов в опыте 3, 23 — ни в одном опыте).
+3. **Ошибка ранжирования** — без реранкера общие определения иногда выше конкретных требований (опыт 3 поднял Hit@1 с 60,1 до 72,0 %).
 4. **Шум в контексте** — смежные пункты в top-k усложняют точное цитирование.
 5. **Галлюцинации LLM** — при отсутствии числа в контексте; снижается жёстким промптом «только по фрагментам ПУЭ».
-6. **Таймауты Ollama** — при нагрузке; в конфиге задан разумный timeout.
-7. **Milvus / Docker** — диагностика: `python scripts/infra_start_system/start_milvus_logs.py` (хранение данных — каталог `infra/milvus/`).
-
-Оценка LLM-as-a-Judge — вспомогательная; судья получает упрощённый шаблон контекста, поэтому faithfulness и relevancy не заменяют citation и groundedness live-generation (**§5.4**).
-
-### 6.3. Запуск прогонов generation, performance и LLM-judge
-
-| Скрипт | Назначение | Артефакт |
-|--------|------------|----------|
-| `eval_rag_generation.py` | Citation, groundedness, relevance (`live` / `mock`) | `generation/stage4_gen_eval_results.json` |
-| `eval_rag_performance.py` | Задержка, TTFT, пропускная способность | `generation/stage4_performance_metrics.json` |
-| `eval_rag_llm_judge.py` | Faithfulness, relevancy, context recall (LLM-as-a-Judge) | `generation/stage4_llm_judge_metrics.json` |
-
-Все прогоны читают тот же реестр вопросов, что и Hit@k (**268** записей в `eval_questions.json`). В итоговые цифры **§5.4** входит только режим **live** generation; ранние прогоны в режиме mock не использовались. Цепочка performance и judge: `run_perf_and_judge.ps1`.
-
-```powershell
-python scripts/stage4_eval/eval_rag_generation.py --mode live
-# или: powershell -ExecutionPolicy Bypass -File scripts/stage4_eval/run_generation.ps1 -Mode live
-```
+6. **Таймауты Ollama** — при нагрузке; в конфиге задан timeout.
+7. **Milvus / Docker** — диагностика: `python scripts/infra_start_system/start_milvus_logs.py`.
 
 ---
 
 ## 6. Ноутбук или .py файл (прототип)
 
-**Прототип этапа 4** представлен ноутбуком **Readme-4 (ver. 2).ipynb** (разделы 1–8, исполняемые ячейки: Docker, Hit@k, демо Milvus) и эквивалентными скриптами Python (запуск из терминала без ноутбука).
+**Основной ноутбук этапа 4 — `Этапы/Reports/etap4/Etap4_final.ipynb`.** Разделы 1–8 и приложения как в этом отчёте; читает сохранённые JSON (корень репозитория определяется автоматически). Ноутбук сохранён с выполненными ячейками: таблицы и графики видны при открытии. Графики интерактивные (Plotly). Ячейка повторного прогона оценки выключена флагом `RUN_LIVE = False`.
 
-**Python-скрипты** (логика прототипа):
+Старый ноутбук перенесён в `trash/Readme-4 (ver. 2).ipynb` и в сдачу не входит.
+
+**Python-скрипты** (запуск из корня проекта):
 
 | Файл | Назначение |
 |------|------------|
-| `scripts/lib/notebook_bootstrap.py` | Корень проекта и `sys.path` (первая ячейка ноутбука) |
-| `scripts/infra_start_system/start_report_docker.py` | Milvus + Ollama через Docker (вторая code-ячейка ноутбука) |
-| `scripts/stage4_eval/demo_stage4_milvus_search.py` | Демо `search_text` к Milvus (ячейка §6 ноутбука) |
+| `scripts/stage4_eval/retrieval/eval_retrieval_hitk.py`, `_e5.py`, `_rerank.py` | Hit@k, опыты 1 / 2 / 3 |
+| `scripts/stage4_eval/retrieval/mrr_ndcg/eval_retrieval_rank.py` | MRR, MRR@k, nDCG@k, Hit@10 (`--mode base/e5/rerank`) |
+| `scripts/stage4_eval/retrieval/mrr_ndcg/rank_metrics.py` | Сводка `rank_metrics_comparison.md/.csv` |
+| `scripts/stage4_eval/retrieval/stage4_hitk_report.py`, `plot_stage4_hitk.py` | Текст и PNG Hit@k опыта 1 |
+| `scripts/stage4_eval/generation/eval_rag_generation.py` | Generation live: citation, groundedness, relevance, время |
+| `scripts/stage4_eval/generation/eval_rag_performance.py` | Нагрузочный тест Ollama |
+| `scripts/stage4_eval/generation/eval_rag_llm_judge.py` | LLM-as-a-Judge |
+| `scripts/stage4_eval/reports/update_readme4_eval_docs.py` | Автоблоки этого файла (только опыт 1) |
+| `scripts/stage4_eval/reports/build_stage4_summary.py` | Сводка всех метрик трёх опытов (`stage4_summary.md/.csv/.json`) с проверкой неполных прогонов |
+| `scripts/stage4_eval/demo/demo_stage4_milvus_search.py` | Демо `search_text` к Milvus |
 | `src/preprocessing/Create_embeddings/query_test.py` | То же из терминала |
-| `scripts/stage4_eval/eval_retrieval_hitk.py` | Прототип оценки «первой точности» (Hit@k) |
-| `scripts/stage4_eval/eval_rag_generation.py` | Метрики generation / citation / groundedness (live или mock) |
-| `scripts/stage4_eval/stage4_hitk_notebook.py` | §5.2 / §5.3 ноутбука (прогон и графики) |
-| `scripts/stage4_eval/stage4_hitk_report.py` | Текст §5.3 / §6.1 / §7 из JSON |
-| `scripts/stage4_eval/plot_stage4_hitk.py` | PNG и Plotly для Hit@k |
-| `scripts/lib/report_paths.py` | Единые пути к данным и артефактам этапа 4 |
-| `data/rag_eval_questions/eval_questions.json` | Реестр **268** контрольных вопросов и эталонные пункты ПУЭ |
+| `scripts/infra_start_system/start_report_docker.py` | Milvus + Ollama через Docker |
+| `scripts/stage4_eval/run_all.ps1`, `run_all_e5.ps1`, `run_all_rerank.ps1`, `run_rank_all.ps1` | Полный прогон опыта 1 / 2 / 3, MRR/nDCG |
+| `data/rag_eval_questions/eval_questions.json` | Реестр **268** контрольных вопросов |
 
 ### 6.1. Контрольный набор (эталоны)
 
@@ -765,7 +726,7 @@ python scripts/stage4_eval/eval_rag_generation.py --mode live
 | 268 | К каким помещениям по опасности поражения электрическим... | 7.10.12 |
 <!-- stage4-eval:6.1:end -->
 
-*(Полный реестр — в `eval_questions.json`; в Word удобнее ссылаться на файл и сводный отчёт §5.4.)*
+*(Полный реестр — в `eval_questions.json`; в Word удобнее ссылаться на файл и сводные таблицы §5.3–5.4.)*
 
 ### 6.2. Пример прототипа generation (промпт для Ollama)
 
@@ -788,41 +749,45 @@ python scripts/stage4_eval/eval_rag_generation.py --mode live
 
 ## 7. Выводы
 
-Отчёт сопоставляет **два опыта** на одном реестре **268** вопросов: Hit@k — **§5.3** (baseline) и **§5.3.1** (E5); полный контур RAG — **§5.4**.
-
-В ноутбуке **Readme-4 (ver. 2).ipynb** выводы дублируются в code-ячейке §7.
+Отчёт сопоставляет **три опыта** на одном реестре **268** вопросов.
 
 <!-- stage4-eval:7:start -->
-1. **База ПУЭ** подготовлена и проиндексирована; **прототип рабочего контура RAG** опирается на чанки с метаданными пунктов.
-2. **Retrieval** — **SentenceTransformer + Milvus** (`search_text`) — реализован; конфиг `rag_runtime.json`.
-3. **Первая измеримая точность** — **Hit@k** (268 вопросов, один поиск на вопрос); скрипт `eval_retrieval_hitk.py` и график. На прогоне **25.10.2026 20:00**: Hit@1 **58.2%**, Hit@3 **76.1%**, Hit@5 **81.3%** (`eval_retrieval_hitk.py`, `scripts/stage4_eval/results/retrieval/stage4_hitk_results.json`).
-4. **Generation (live RAG)** — `eval_rag_generation.py` + `src/rag/rag_service.py`: citation **79.5%**, groundedness **0.897**, relevance **0.762** (25.10.2026 20:05, `scripts/stage4_eval/results/generation/stage4_gen_eval_results.json`).
-5. **Эксплуатация и качество (доп.)** — availability **100.0%**, RPS **0.11** (TTFT avg **18.7199** с); LLM-judge faithfulness **0.4347** (2026-10-18 18:24:52).
-6. **Ограничения:** промахи retrieval; LLM — только при опоре на top-k; judge использует шаблонный контекст (см. `scripts/stage4_eval/docs/Сводка_метрик_этапа_4.md`).
+1. Прототип рабочего контура RAG по ПУЭ собран и протестирован на едином реестре из 268 вопросов: эмбеддинг запроса, поиск фрагментов в Milvus, генерация ответа Ollama на основе найденных фрагментов. Нагрузочное тестирование подтвердило 100% доступность LLM и полное отсутствие ошибок live-генерации во всех трёх опытах, что доказывает сквозную работоспособность контура от ввода запроса до формирования ответа на всём объёме тестовых данных.
+2. Ранние прогоны опыта 1 на наборах разного размера и состава (от 25 до 300 вопросов) показали вариативность Hit@5 от 28,0% до 81,3%, обусловленную сменой списка вопросов. Сравнение трёх опытов ниже выполнено строго на одном фиксированном реестре из 268 вопросов, что гарантирует корректность сравнения метрик и исключает влияние состава выборки на результаты.
+3. Опыт 1 (базовый поиск без префиксов E5 и без реранкера): Hit@1 составляет 58,2% (156 из 268), Hit@5 — 81,3% (218 из 268). В 156 случаях эталонный пункт занимает первую позицию среди фрагментов, передаваемых в промпт. Ещё в 62 случаях он присутствует в топ-5, но ниже первого места. В оставшихся 50 вопросах его нет в топ-5, и модель формирует ответ на основе нерелевантных фрагментов. Для нормативной документации это критично: при попадании в контекст нескольких соседних пунктов фрагмент, стоящий выше, оказывает доминирующее влияние на формулировку ответа.
+4. Опыт 2 добавляет к той же модели эмбеддингов префиксы passage: и query:. Hit@1 составляет 60,1% (161 из 268), Hit@5 — 83,6% (224 из 268), что даёт прирост в 5 вопросов на первом месте и 6 вопросов в пятёрке. Время поиска осталось на уровне ~0,05 с, полное время запроса выросло с 6,35 с до 6,91 с. MRR изменился с 0,681 до 0,696. Префиксы незначительно корректируют вектор запроса; данная конфигурация была принята за основу для проверки эффективности реранкера.
+5. Опыт 3 сохраняет префиксы и модифицирует механизм выдачи: Milvus возвращает 20 кандидатов, после чего bge-reranker-v2-m3 отбирает из них 5 лучших. Hit@1 достигает 72,0% (193 из 268), Hit@5 — 88,8% (238 из 268). По сравнению с опытом 2 это прирост в 32 вопроса на первом месте и чистый прирост в 14 вопросов в пятёрке (19 прежних промахов устранено, 5 новых появилось). В разделе 5 Hit@5 незначительно снизился с 97,4% до 92,3%. Показатели цитирования (88,8%) и relevance (0,839) не являются независимым преимуществом: первый полностью совпадает с Hit@5, второй рассчитывается по той же логике («пункт назван в ответе» / «пункт есть в контексте»). Полное время запроса составило 10,15 с против 6,91 с. Из дополнительных 3,24 с на работу реранкера приходится ~0,9 с (среднее 0,93 с, медиана 0,69 с против 0,05 с в опыте 2); остальная задержка распределена между этапами генерации и сетевым взаимодействием. Данная конфигурация целесообразна, если приоритетом является вывод верного пункта на первую позицию, а время ответа около 10 с является приемлемым компромиссом.
+6. Ранговые метрики на глубине 10 характеризуют именно позицию эталонного пункта, а не факт его попадания в топ-5. MRR: 0,681 → 0,696 → 0,793; nDCG@5: 0,708 → 0,726 → 0,812 (опыты 1 → 2 → 3). Значение MRR 0,793 соответствует среднему рангу ~1,3, тогда как 0,696 — рангу ~1,4. Основной качественный сдвиг обеспечивает опыт 3, что коррелирует с ростом Hit@1 на 11,9 п.п., в то время как Hit@5 за тот же шаг вырос лишь на 5,2 п.п. Это подтверждает, что реранкер преимущественно оптимизирует порядок выдачи, поднимая нужный пункт на первое место. Часть прироста Hit@5 обусловлена расширением пула кандидатов до 20 перед финальным отбором: внутри фиксированной пятёрки реранкер меняет порядок, но не создает новые попадания.
+7. Генерация текста ответа не полностью реализует потенциал найденного поиском контекста. Показатель citation_rate совпадает с Hit@5 во всех трёх опытах (81,3% / 83,6% / 88,8%), так как методика расчёта фиксирует лишь наличие номера пункта в извлеченном фрагменте. Лексическая опора на контекст (groundedness) в опытах 2 и 3 идентична и составляет 0,908. При этом номер пункта явно фигурирует в тексте ответа лишь в 69,8%, 72,0% и 74,6% случаев соответственно. В опыте 3 наблюдается разрыв в ~14 п.п. между фактом наличия пункта в контексте (88,8%) и его явным упоминанием в ответе (74,6%): фрагмент передан модели, но в итоговой формулировке номер не указан. Оценки моделью (LLM-judge) по опытам демонстрируют незначительные расхождения и не опираются на фактические ответы прогона, поэтому выбор конфигурации на их основе не производился.
+8. Для дальнейшей разработки утверждена конфигурация опыта 3, демонстрирующая наилучшие результаты по Hit@1 и MRR при известной и приемлемой временнóй стоимости. Дальнейшая оптимизация имеет два вектора. По направлению поиска: анализ 30 промахов Hit@5 в опыте 3 (из которых 23 не найдены ни в одном из опытов), включая аудит разметки и логики нарезки (чанкинга) пунктов. По направлению генерации: доработка промпта для гарантированного явного указания номера пункта в ответе, а также перевод оценки моделью (LLM-judge) на фактические ответы и контекст конкретного прогона. Увеличение показателя Hit@5 само по себе не решает задачу повышения доли явных ссылок в тексте с текущих 74,6%.
 <!-- stage4-eval:7:end -->
 
 ---
 
 ## 8. План дальнейшей работы (этап 5 и защита)
 
-| Приоритет | Задача |
-|-----------|--------|
-| 1 | Подключить RAG к Telegram-боту (`src/bot/__main__.py`) |
-| 2 | Довести Hit@k и качество ответов LLM на тестовом наборе |
-| 3 | Docker Compose: бот + Milvus + Ollama в одной сети |
-| 4 | **Этап 5:** финальная версия системы + повторная оценка метрик |
-| 5 | **Этап 6:** презентация и demo-сценарий для интервью |
-| 6 | Опционально: SQLite-история, ПТЭЭП, reranker |
+К моменту этого отчёта перечисленные работы ещё впереди.
+
+| Приоритет | Что предстоит |
+|-----------|----------------|
+| 1 | Подключить RAG (конфигурация опыта 3) к Telegram-боту (`src/bot/__main__.py`) |
+| 2 | Разобрать промахи опыта 3 и общие промахи трёх опытов, исправить разметку набора |
+| 3 | Доработать промпт и перевести оценку моделью (LLM-judge) на фактические ответы и контекст |
+| 4 | Измерить задержку полного контура; собрать бот, Milvus и Ollama в один Docker Compose |
+| 5 | На этапе 6 подготовить презентацию и demo-сценарий; по возможности добавить ПТЭЭП и SQLite-историю |
 
 ---
 
 ## Приложения
 
-- Конфигурация RAG: `config/rag_runtime.json`, для опыта E5 — `src/preprocessing/Create_embeddings/E5/rag_runtime_e5.json`
+- Конфигурация RAG: `config/rag_runtime.json` (опыт 1), `src/preprocessing/Create_embeddings/E5/rag_runtime_e5.json` (опыт 2), `src/preprocessing/Create_embeddings/Rerank/rag_runtime_rerank.json` (опыт 3)
+- Паспорта прогонов: `Etap4-hitk-otchet-N268.md` (опыт 1), `Etap4-opyt1-e5-N268.md` (опыт 2), `Etap4-opyt2-rerank-N268.md` (опыт 3), сводка `Etap4-hitk-svod.md` (этот каталог)
 - Инструкция запуска окружения: каталог `start/` репозитория проекта
 - Ноутбук этапа 3 (подготовка данных): `Этапы/Reports/etap3/Readme-3 (ver. 4).ipynb`
-- Ноутбук этапа 4 (прототип и метрики): `Этапы/Reports/etap4/Readme-4 (ver. 2).ipynb`
-- Справочные материалы по Hit@k: каталог `manual/` репозитория проекта
+- **Ноутбук этапа 4 (итоговый): `Этапы/Reports/etap4/Etap4_final.ipynb`**
+- Word-отчёт для сдачи: `Этапы/Reports/etap4/Otchet_etap4_v3.docx`
+- Справочные материалы по Hit@k и MRR/nDCG: каталог `manual/` репозитория проекта
+
 
 ### Источники по метрике Hit@k (п. 4.4)
 
