@@ -61,7 +61,9 @@ def hit_at_k(results: list[dict], expected_clause: str, k: int) -> bool:
     return False
 
 
-def run_hitk_eval(*, refresh_readme: bool = True) -> dict:
+def run_hitk_eval(*, refresh_readme: bool = False) -> dict:
+    # refresh_readme оставлен для совместимости со stage4_hitk_notebook.py и больше не используется:
+    # автообновление Readme-4.md (update_readme4_eval_docs.py) убрано 05.11.2026.
     """Прогон Hit@k по Milvus; пишет JSON/PNG. Для ноутбука и CLI."""
     from stage4_console import log_run_start  # noqa: E402
 
@@ -186,17 +188,6 @@ def run_hitk_eval(*, refresh_readme: bool = True) -> dict:
         print(f"PNG 2 (Word/md): {REPORT_CHART_PATH}")
     except ImportError:
         print("matplotlib не установлен — график не сохранён (pip install matplotlib)")
-
-    if refresh_readme:
-        try:
-            from update_readme4_eval_docs import refresh_readme4_eval_docs  # noqa: E402
-
-            refresh_readme4_eval_docs(sync_notebook=True)
-        except Exception as exc:
-            print(
-                f"Readme-4.md не обновлён ({exc}). "
-                "Вручную: python scripts/stage4_eval/reports/update_readme4_eval_docs.py"
-            )
 
     rag.close()
     from stage4_console import log_run_end  # noqa: E402
