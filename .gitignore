@@ -89,6 +89,11 @@ Thumbs.db
 # trash/
 # trash_2/
 
+# любой файл или каталог .trash в любой папке
+.trash
+**/.trash
+**/.trash/**
+
 # Jupyter Notebook контрольные точки уже игнорируются правилом .*
 .ipynb_checkpoints/
 **/.ipynb_checkpoints/
