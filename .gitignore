@@ -27,6 +27,9 @@ eggs/
 lib/
 !scripts/lib/
 !scripts/lib/**
+!scripts/stage4_eval/lib/
+!scripts/stage4_eval/lib/**
+scripts/stage4_eval/lib/__pycache__/
 lib64/
 parts/
 sdist/
