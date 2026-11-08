@@ -1,0 +1,24 @@
+{
+  "extraction_version": "v2-documents-2-sdt",
+  "source_file": "data/raw/Нормативная база/ПУЭ/DOCX/7.5.docx",
+  "source_sha256": "674d7b4bbb9b8ead9caaa36d42710d7e588c24466e066fff14a88e03aa5ab7b2",
+  "markdown": "V2/results/retrieval/documents_20261108_152653_863842/640b0e1cf49435bb/document.md",
+  "document_id": "data/raw/Нормативная база/ПУЭ/DOCX/7.5.docx",
+  "warnings": [
+    "headers_footers_footnotes_and_automatic_numbering_require_manual_review",
+    "merged_cells_preserved_in_XML_require_review:table_03377e7ec0514551.xml",
+    "merged_cells_preserved_in_XML_require_review:table_099c697316055e90.xml",
+    "merged_cells_preserved_in_XML_require_review:table_0d8404babab51033.xml",
+    "merged_cells_preserved_in_XML_require_review:table_205b6dcfa22ad30b.xml",
+    "merged_cells_preserved_in_XML_require_review:table_226fb1fc0895d235.xml",
+    "merged_cells_preserved_in_XML_require_review:table_48a3834e2ee832bc.xml",
+    "merged_cells_preserved_in_XML_require_review:table_72f82c1ea054e795.xml",
+    "merged_cells_preserved_in_XML_require_review:table_8446a0e1d78bb59b.xml",
+    "merged_cells_preserved_in_XML_require_review:table_8f076c60d4233a32.xml",
+    "merged_cells_preserved_in_XML_require_review:table_976c72cc184eeb23.xml",
+    "merged_cells_preserved_in_XML_require_review:table_cff80cc59f697aea.xml",
+    "merged_cells_preserved_in_XML_require_review:table_daeffdda8f6a5919.xml",
+    "unhandled_structure_requires_review:tblPrEx"
+  ],
+  "extraction_review_status": "unreviewed"
+}

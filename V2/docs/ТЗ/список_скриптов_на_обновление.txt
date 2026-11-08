@@ -1,0 +1,39 @@
+**Создать:**
+
+- `scripts/run_pipeline.py`
+- `src/retrieval_eval/corpus_manifest.py`
+- `src/retrieval_eval/validate_chunks.py`
+- `src/retrieval_eval/qrels_io.py`
+- `src/retrieval_eval/scoring.py`
+- `scripts/tests/test_retrieval_v2.py`
+- `configs/pipeline.json`
+
+**Адаптировать копии в V2:**
+
+- `load_data.py`
+- `load_data_e5.py`
+- `load_data_rerank.py`
+- `query.py`
+- `query_e5.py`
+- `query_rerank.py`
+- `runtime_config.py` — для base, E5 и rerank.
+- `eval_questions_io.py`
+- `eval_retrieval_hitk.py`
+- `eval_retrieval_hitk_e5.py`
+- `eval_retrieval_hitk_rerank.py`
+- `eval_retrieval_rank.py`
+- `rank_metrics.py`
+- `test_rank_metrics.py`
+- `report_paths.py`
+- Необходимые конфиги, служебные модули и PowerShell-запуски.
+
+**Если меняем чанки:**
+
+- `Create_mds/generator.py`
+- `docx_to_md_images_1.py`
+- `Create_chunkeds/generator.py`
+- `md_to_chunked_2.py`
+
+**Уже передан:**
+
+- `prepare_retrieval_qrels.py`

@@ -1,0 +1,70 @@
+{
+  "schema_version": "v2-pipeline-1",
+  "paths": {
+    "raw": "data/raw",
+    "chunks": "V2/data/chunked",
+    "questions": "V2/data/rag_eval_questions/eval_questions.json",
+    "qrels": "V2/data/rag_eval_questions/retrieval_qrels.json",
+    "results": "V2/results/retrieval"
+  },
+  "milvus_uri": "http://localhost:19530",
+  "allowed_collections": [
+    "diplom_v2_base",
+    "diplom_v2_e5",
+    "diplom_v2_clip"
+  ],
+  "device": "cuda",
+  "clip_device": "cuda",
+  "local_files_only": true,
+  "batch_size": 16,
+  "search_depth": 20,
+  "k_values": [
+    1,
+    3,
+    5,
+    10,
+    20
+  ],
+  "strict_chunks": false,
+  "modes": {
+    "base": {
+      "collection": "diplom_v2_base",
+      "model": "intfloat/multilingual-e5-base",
+      "dimension": 768,
+      "query_prefix": "query: ",
+      "passage_prefix": "passage: ",
+      "normalize_embeddings": true
+    },
+    "e5": {
+      "collection": "diplom_v2_e5",
+      "model": "intfloat/multilingual-e5-base",
+      "dimension": 768,
+      "query_prefix": "query: ",
+      "passage_prefix": "passage: ",
+      "normalize_embeddings": true
+    },
+    "rerank": {
+      "collection": "diplom_v2_e5",
+      "model": "intfloat/multilingual-e5-base",
+      "dimension": 768,
+      "query_prefix": "query: ",
+      "passage_prefix": "passage: ",
+      "normalize_embeddings": true,
+      "rerank_model": "BAAI/bge-reranker-v2-m3",
+      "candidate_depth": 50
+    }
+  },
+  "clip": {
+    "collection": "diplom_v2_clip",
+    "model": "sentence-transformers/clip-ViT-B-32",
+    "dimension": 512,
+    "candidate_depth": 50,
+    "rrf_k": 60,
+    "weight": 1.0
+  },
+  "model_selection": {
+    "auto_select_text_model": false,
+    "reason": "Явно закреплены модели из models.text_model_name исходных runtime; автоподбор по GPU не воспроизводится неявно."
+  },
+  "max_chunk_bytes": 60000
+}

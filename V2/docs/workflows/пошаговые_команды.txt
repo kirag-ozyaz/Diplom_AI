@@ -1,0 +1,44 @@
+1. проверим существующие чанки, без моделей и Milvus:
+python V2/scripts/run_pipeline.py validate --corpus-only
+
+2. первые пять предупреждений — выполните:
+python -c "import json; d=json.load(open('V2/results/retrieval/20261108_140601_120036/validation.json',encoding='utf-8')); print(json.dumps(d['warnings'][:5],ensure_ascii=False,indent=2))"
+
+3. Сначала выполняем только извлечение, **без создания чанков**
+python V2/scripts/run_pipeline.py prepare-documents --from-raw data/raw
+
+
+4. Отдельная проверка извлечения
+python V2/scripts/check_extraction.py
+создрются `audit.json` и `audit.md` в новой папке `V2/results/extraction_audit/`
+и выводится отчет
+{
+  "report": "X:\\Учеба_УИИ\\Итоговы_Проект\\V2\\results\\extraction_audit\\20261108_144525_961542\\audit.json",
+  "input": "X:\\Учеба_УИИ\\Итоговы_Проект\\V2\\results\\retrieval\\documents_20261108_141723_743877",
+  "selection": "latest_completed_by_folder_timestamp",
+  "ignored_incomplete": [],
+  "status": "failed",
+  "documents": 46,
+  "errors": 1,
+  "review": 24
+}
+
+Проверка ошибок аудита в папке 20261108_144525_961542, 20261108_145853_712170
+а. Выбираем error
+python -c "import json; d=json.load(open('V2/results/extraction_audit/20261108_145853_712170/audit.json',encoding='utf-8')); e=[{'source': 'общая проверка', **f} for f in d['global_findings'] if f['level']=='error']; e += [{'source': x['source_file'], **f} for x in d['documents'] for f in x['findings'] if f['level']=='error']; print(json.dumps(e,ensure_ascii=False,indent=2))"
+
+b. Выбираем review
+python -c "import json; d=json.load(open('V2/results/extraction_audit/20261108_145853_712170/audit.json',encoding='utf-8')); e=[{'document': 'общая проверка', **f} for f in d['global_findings'] if f['level']=='review']; e += [{'document': x['source_file'], **f} for x in d['documents'] for f in x['findings'] if f['level']=='review']; print(json.dumps(e,ensure_ascii=False,indent=2))"
+
+с. python -c "import json; from collections import Counter; d=json.load(open('V2/results/extraction_audit/20261108_144525_961542/audit.json',encoding='utf-8')); print(json.dumps([{'document': x['source_file'], 'missing': dict(Counter(f['source'])-Counter(f['extracted'])), 'extra': dict(Counter(f['extracted'])-Counter(f['source']))} for x in d['documents'] for f in x['findings'] if f['code']=='image_content_or_occurrences_differ'],ensure_ascii=False,indent=2))"
+
+в. $r = Get-ChildItem V2/results/extraction_audit/*/audit.json | Sort-Object FullName | Select-Object -Last 1
+(Get-Content $r.FullName -Raw -Encoding UTF8 | ConvertFrom-Json).issue_counts
+
+5.  
+python V2/scripts/run_pipeline.py prepare-documents --from-raw data/raw
+python V2/scripts/check_extraction.py
+
+*************************************************************************
+6. Подготовим новые чанки из исходников:
+python V2/scripts/run_pipeline.py prepare --from-raw data/raw

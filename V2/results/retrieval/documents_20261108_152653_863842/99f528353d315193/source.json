@@ -1,0 +1,11 @@
+{
+  "extraction_version": "v2-documents-2-sdt",
+  "source_file": "data/raw/Нормативная база/ПУЭ/link.md",
+  "source_sha256": "431275effe3353060e492bd42196e3b17f8c56e07d05a86945792c97232f4afa",
+  "markdown": "V2/results/retrieval/documents_20261108_152653_863842/99f528353d315193/document.md",
+  "document_id": "data/raw/Нормативная база/ПУЭ/link.md",
+  "warnings": [
+    "Markdown HTML/resources require source review; only local Markdown image links are copied"
+  ],
+  "extraction_review_status": "unreviewed"
+}

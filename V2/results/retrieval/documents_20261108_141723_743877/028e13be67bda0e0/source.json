@@ -1,0 +1,10 @@
+{
+  "source_file": "data/raw/Нормативная база/ПУЭ/DOCX/5.2.docx",
+  "source_sha256": "4a3cd17c164f625a94c49869d45a560ff31d8c7802b0af6172f1f8016c7b170f",
+  "markdown": "V2/results/retrieval/documents_20261108_141723_743877/028e13be67bda0e0/document.md",
+  "document_id": "data/raw/Нормативная база/ПУЭ/DOCX/5.2.docx",
+  "warnings": [
+    "headers_footers_footnotes_and_automatic_numbering_require_manual_review"
+  ],
+  "extraction_review_status": "unreviewed"
+}

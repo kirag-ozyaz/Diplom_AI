@@ -1,0 +1,11 @@
+{
+  "extraction_version": "v2-documents-2-sdt",
+  "source_file": "data/raw/Нормативная база/ПУЭ/DOCX/7.10.docx",
+  "source_sha256": "c5692b6d33699963fe335ca2a0cd50c6cb910b8a8c07b6ade259051dd37e699a",
+  "markdown": "V2/results/retrieval/documents_20261108_152653_863842/8a5279dd4f98f726/document.md",
+  "document_id": "data/raw/Нормативная база/ПУЭ/DOCX/7.10.docx",
+  "warnings": [
+    "headers_footers_footnotes_and_automatic_numbering_require_manual_review"
+  ],
+  "extraction_review_status": "unreviewed"
+}

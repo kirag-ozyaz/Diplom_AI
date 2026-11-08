@@ -1,0 +1,22 @@
+{
+  "comment": "Словарь «модель → размерность». default_text_model — модель по умолчанию, если метаданные коллекции недоступны.",
+  "default_text_model": "BAAI/bge-small-en-v1.5",
+  "default_dim": 384,
+  "text_model_dim": {
+    "sentence-transformers/paraphrase-MiniLM-L3-v2": 384,
+    "sentence-transformers/all-MiniLM-L6-v2": 384,
+    "BAAI/bge-small-en-v1.5": 384,
+    "intfloat/e5-small-v2": 384,
+    "Cohere/embed-multilingual-light-v3.0": 384,
+    "BAAI/bge-base-en-v1.5": 768,
+    "sentence-transformers/all-mpnet-base-v2": 768,
+    "intfloat/e5-base-v2": 768,
+    "Alibaba-NLP/gte-base-en-v1.5": 768,
+    "nomic-embed-text-v1.5": 768,
+    "intfloat/multilingual-e5-base": 768,
+    "mixedbread-ai/mxbai-embed-large-v1": 1024,
+    "BAAI/bge-large-en-v1.5": 1024,
+    "BAAI/bge-m3": 1024,
+    "jina-embeddings-v3": 1024
+  }
+}

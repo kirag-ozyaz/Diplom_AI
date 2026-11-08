@@ -1,0 +1,14 @@
+{
+  "extraction_version": "v2-documents-2-sdt",
+  "source_file": "data/raw/Нормативная база/ПУЭ/DOCX/2.4.docx",
+  "source_sha256": "6687168ae51156fc30b1810dc40331e79a21642913c15f5f9c59583a37beaf0c",
+  "markdown": "V2/results/retrieval/documents_20261108_152653_863842/7f9d8fa9af0d750e/document.md",
+  "document_id": "data/raw/Нормативная база/ПУЭ/DOCX/2.4.docx",
+  "warnings": [
+    "headers_footers_footnotes_and_automatic_numbering_require_manual_review",
+    "merged_cells_preserved_in_XML_require_review:table_162497ad06c956aa.xml",
+    "merged_cells_preserved_in_XML_require_review:table_4babc113b3d75b08.xml",
+    "unhandled_structure_requires_review:tblPrEx"
+  ],
+  "extraction_review_status": "unreviewed"
+}

@@ -1,0 +1,275 @@
+{
+  "note": "Карта размещения, не тест и не обещание API-совместимости. Для каждого активного CLI используется общий код retrieval_eval.",
+  "files": [
+    {
+      "planned_path": "V2/scripts/prepare_retrieval_qrels.py",
+      "packaged_path": "V2/scripts/prepare_retrieval_qrels.py",
+      "delivery": "new_source_or_adapter"
+    },
+    {
+      "planned_path": "V2/scripts/run_pipeline.py",
+      "packaged_path": "V2/scripts/run_pipeline.py",
+      "delivery": "new_source_or_adapter"
+    },
+    {
+      "planned_path": "V2/configs/pipeline.json",
+      "packaged_path": "V2/configs/pipeline.json",
+      "delivery": "new_source_or_adapter"
+    },
+    {
+      "planned_path": "V2/src/retrieval_eval/__init__.py",
+      "packaged_path": "V2/src/retrieval_eval/__init__.py",
+      "delivery": "new_source_or_adapter"
+    },
+    {
+      "planned_path": "V2/src/retrieval_eval/corpus_manifest.py",
+      "packaged_path": "V2/src/retrieval_eval/corpus_manifest.py",
+      "delivery": "new_source_or_adapter"
+    },
+    {
+      "planned_path": "V2/src/retrieval_eval/validate_chunks.py",
+      "packaged_path": "V2/src/retrieval_eval/validate_chunks.py",
+      "delivery": "new_source_or_adapter"
+    },
+    {
+      "planned_path": "V2/src/retrieval_eval/qrels_io.py",
+      "packaged_path": "V2/src/retrieval_eval/qrels_io.py",
+      "delivery": "new_source_or_adapter"
+    },
+    {
+      "planned_path": "V2/src/retrieval_eval/scoring.py",
+      "packaged_path": "V2/src/retrieval_eval/scoring.py",
+      "delivery": "new_source_or_adapter"
+    },
+    {
+      "planned_path": "V2/scripts/tests/test_retrieval_v2.py",
+      "packaged_path": "V2/scripts/tests/test_retrieval_v2.py",
+      "delivery": "new_source_or_adapter"
+    },
+    {
+      "planned_path": "V2/configs/rag_runtime.json",
+      "packaged_path": "V2/configs/rag_runtime.json",
+      "delivery": "new_source_or_adapter"
+    },
+    {
+      "planned_path": "V2/configs/model_profiles.json",
+      "packaged_path": "V2/configs/model_profiles.json",
+      "delivery": "new_source_or_adapter"
+    },
+    {
+      "planned_path": "V2/configs/embedding_config.json",
+      "packaged_path": "V2/configs/embedding_config.json",
+      "delivery": "new_source_or_adapter"
+    },
+    {
+      "planned_path": "V2/configs/rag_runtime_e5.json",
+      "packaged_path": "V2/configs/rag_runtime_e5.json",
+      "delivery": "new_source_or_adapter"
+    },
+    {
+      "planned_path": "V2/configs/rag_runtime_rerank.json",
+      "packaged_path": "V2/configs/rag_runtime_rerank.json",
+      "delivery": "new_source_or_adapter"
+    },
+    {
+      "planned_path": "V2/src/preprocessing/Create_mds/generator.py",
+      "packaged_path": "V2/src/preprocessing/Create_mds/generator.py",
+      "delivery": "new_source_or_adapter"
+    },
+    {
+      "planned_path": "V2/src/preprocessing/Create_mds/docx_to_md_images_1.py",
+      "packaged_path": "V2/src/preprocessing/Create_mds/docx_to_md_images_1.py",
+      "delivery": "new_source_or_adapter"
+    },
+    {
+      "planned_path": "V2/src/preprocessing/Create_chunkeds/generator.py",
+      "packaged_path": "V2/src/preprocessing/Create_chunkeds/generator.py",
+      "delivery": "new_source_or_adapter"
+    },
+    {
+      "planned_path": "V2/src/preprocessing/Create_chunkeds/md_to_chunked_2.py",
+      "packaged_path": "V2/src/preprocessing/Create_chunkeds/md_to_chunked_2.py",
+      "delivery": "new_source_or_adapter"
+    },
+    {
+      "planned_path": "V2/src/preprocessing/Create_embeddings/load_data.py",
+      "packaged_path": "V2/src/preprocessing/Create_embeddings/load_data.py",
+      "delivery": "new_source_or_adapter"
+    },
+    {
+      "planned_path": "V2/src/preprocessing/Create_embeddings/E5/load_data_e5.py",
+      "packaged_path": "V2/src/preprocessing/Create_embeddings/E5/load_data_e5.py",
+      "delivery": "new_source_or_adapter"
+    },
+    {
+      "planned_path": "V2/src/preprocessing/Create_embeddings/Rerank/load_data_rerank.py",
+      "packaged_path": "V2/src/preprocessing/Create_embeddings/Rerank/load_data_rerank.py",
+      "delivery": "new_source_or_adapter"
+    },
+    {
+      "planned_path": "V2/src/preprocessing/Create_embeddings/query.py",
+      "packaged_path": "V2/src/preprocessing/Create_embeddings/query.py",
+      "delivery": "new_source_or_adapter"
+    },
+    {
+      "planned_path": "V2/src/preprocessing/Create_embeddings/E5/query_e5.py",
+      "packaged_path": "V2/src/preprocessing/Create_embeddings/E5/query_e5.py",
+      "delivery": "new_source_or_adapter"
+    },
+    {
+      "planned_path": "V2/src/preprocessing/Create_embeddings/Rerank/query_rerank.py",
+      "packaged_path": "V2/src/preprocessing/Create_embeddings/Rerank/query_rerank.py",
+      "delivery": "new_source_or_adapter"
+    },
+    {
+      "planned_path": "V2/src/preprocessing/Create_embeddings/runtime_config.py",
+      "packaged_path": "V2/src/preprocessing/Create_embeddings/runtime_config.py",
+      "delivery": "new_source_or_adapter"
+    },
+    {
+      "planned_path": "V2/src/preprocessing/Create_embeddings/E5/runtime_config.py",
+      "packaged_path": "V2/src/preprocessing/Create_embeddings/E5/runtime_config.py",
+      "delivery": "new_source_or_adapter"
+    },
+    {
+      "planned_path": "V2/src/preprocessing/Create_embeddings/Rerank/runtime_config.py",
+      "packaged_path": "V2/src/preprocessing/Create_embeddings/Rerank/runtime_config.py",
+      "delivery": "new_source_or_adapter"
+    },
+    {
+      "planned_path": "V2/src/preprocessing/Create_embeddings/model_selector.py",
+      "packaged_path": "V2/src/preprocessing/Create_embeddings/model_selector.py",
+      "delivery": "new_source_or_adapter"
+    },
+    {
+      "planned_path": "V2/src/preprocessing/Create_embeddings/multimodal_rag.py",
+      "packaged_path": "V2/src/preprocessing/Create_embeddings/multimodal_rag.py",
+      "delivery": "new_source_or_adapter"
+    },
+    {
+      "planned_path": "V2/src/preprocessing/Create_embeddings/E5/e5_rag.py",
+      "packaged_path": "V2/src/preprocessing/Create_embeddings/E5/e5_rag.py",
+      "delivery": "new_source_or_adapter"
+    },
+    {
+      "planned_path": "V2/src/preprocessing/Create_embeddings/Rerank/rerank_rag.py",
+      "packaged_path": "V2/src/preprocessing/Create_embeddings/Rerank/rerank_rag.py",
+      "delivery": "new_source_or_adapter"
+    },
+    {
+      "planned_path": "V2/scripts/lib/report_paths.py",
+      "packaged_path": "V2/scripts/lib/report_paths.py",
+      "delivery": "new_source_or_adapter"
+    },
+    {
+      "planned_path": "V2/scripts/stage4_eval/lib/_bootstrap.py",
+      "packaged_path": "V2/scripts/stage4_eval/lib/_bootstrap.py",
+      "delivery": "new_source_or_adapter"
+    },
+    {
+      "planned_path": "V2/scripts/stage4_eval/lib/eval_questions_io.py",
+      "packaged_path": "V2/scripts/stage4_eval/lib/eval_questions_io.py",
+      "delivery": "new_source_or_adapter"
+    },
+    {
+      "planned_path": "V2/scripts/stage4_eval/lib/print_run_done.py",
+      "packaged_path": "V2/scripts/stage4_eval/lib/print_run_done.py",
+      "delivery": "new_source_or_adapter"
+    },
+    {
+      "planned_path": "V2/scripts/stage4_eval/lib/stage4_console.py",
+      "packaged_path": "V2/scripts/stage4_eval/lib/stage4_console.py",
+      "delivery": "new_source_or_adapter"
+    },
+    {
+      "planned_path": "V2/scripts/stage4_eval/retrieval/eval_retrieval_hitk.py",
+      "packaged_path": "V2/scripts/stage4_eval/retrieval/eval_retrieval_hitk.py",
+      "delivery": "new_source_or_adapter"
+    },
+    {
+      "planned_path": "V2/scripts/stage4_eval/retrieval/eval_retrieval_hitk_e5.py",
+      "packaged_path": "V2/scripts/stage4_eval/retrieval/eval_retrieval_hitk_e5.py",
+      "delivery": "new_source_or_adapter"
+    },
+    {
+      "planned_path": "V2/scripts/stage4_eval/retrieval/eval_retrieval_hitk_rerank.py",
+      "packaged_path": "V2/scripts/stage4_eval/retrieval/eval_retrieval_hitk_rerank.py",
+      "delivery": "new_source_or_adapter"
+    },
+    {
+      "planned_path": "V2/scripts/stage4_eval/retrieval/mrr_ndcg/eval_retrieval_rank.py",
+      "packaged_path": "V2/scripts/stage4_eval/retrieval/mrr_ndcg/eval_retrieval_rank.py",
+      "delivery": "new_source_or_adapter"
+    },
+    {
+      "planned_path": "V2/scripts/stage4_eval/retrieval/mrr_ndcg/rank_metrics.py",
+      "packaged_path": "V2/scripts/stage4_eval/retrieval/mrr_ndcg/rank_metrics.py",
+      "delivery": "new_source_or_adapter"
+    },
+    {
+      "planned_path": "V2/scripts/stage4_eval/retrieval/mrr_ndcg/test_rank_metrics.py",
+      "packaged_path": "V2/scripts/stage4_eval/retrieval/mrr_ndcg/test_rank_metrics.py",
+      "delivery": "new_source_or_adapter"
+    },
+    {
+      "planned_path": "V2/scripts/stage4_eval/retrieval/plot_stage4_hitk.py",
+      "packaged_path": "V2/scripts/stage4_eval/retrieval/plot_stage4_hitk.py",
+      "delivery": "new_source_or_adapter"
+    },
+    {
+      "planned_path": "V2/scripts/stage4_eval/retrieval/stage4_hitk_report.py",
+      "packaged_path": "V2/scripts/stage4_eval/retrieval/stage4_hitk_report.py",
+      "delivery": "new_source_or_adapter"
+    },
+    {
+      "planned_path": "V2/scripts/stage4_eval/retrieval/stage4_hitk_notebook.py",
+      "packaged_path": "V2/scripts/stage4_eval/retrieval/stage4_hitk_notebook.py",
+      "delivery": "new_source_or_adapter"
+    },
+    {
+      "planned_path": "V2/scripts/stage4_eval/_root.ps1",
+      "packaged_path": "V2/scripts/stage4_eval/_root.ps1",
+      "delivery": "new_source_or_adapter"
+    },
+    {
+      "planned_path": "V2/scripts/stage4_eval/_banner.ps1",
+      "packaged_path": "V2/scripts/stage4_eval/_banner.ps1",
+      "delivery": "new_source_or_adapter"
+    },
+    {
+      "planned_path": "V2/scripts/stage4_eval/run_hitk.ps1",
+      "packaged_path": "V2/scripts/stage4_eval/run_hitk.ps1",
+      "delivery": "new_source_or_adapter"
+    },
+    {
+      "planned_path": "V2/scripts/stage4_eval/run_hitk_e5.ps1",
+      "packaged_path": "V2/scripts/stage4_eval/run_hitk_e5.ps1",
+      "delivery": "new_source_or_adapter"
+    },
+    {
+      "planned_path": "V2/scripts/stage4_eval/run_hitk_rerank.ps1",
+      "packaged_path": "V2/scripts/stage4_eval/run_hitk_rerank.ps1",
+      "delivery": "new_source_or_adapter"
+    },
+    {
+      "planned_path": "V2/scripts/stage4_eval/run_rank.ps1",
+      "packaged_path": "V2/scripts/stage4_eval/run_rank.ps1",
+      "delivery": "new_source_or_adapter"
+    },
+    {
+      "planned_path": "V2/scripts/stage4_eval/run_rank_all.ps1",
+      "packaged_path": "V2/scripts/stage4_eval/run_rank_all.ps1",
+      "delivery": "new_source_or_adapter"
+    },
+    {
+      "planned_path": "V2/scripts/stage4_eval/run_rank_metrics.ps1",
+      "packaged_path": "V2/scripts/stage4_eval/run_rank_metrics.ps1",
+      "delivery": "new_source_or_adapter"
+    },
+    {
+      "planned_path": "V2/scripts/stage4_eval/run_load_rerank.ps1",
+      "packaged_path": "V2/scripts/stage4_eval/run_load_rerank.ps1",
+      "delivery": "new_source_or_adapter"
+    }
+  ]
+}

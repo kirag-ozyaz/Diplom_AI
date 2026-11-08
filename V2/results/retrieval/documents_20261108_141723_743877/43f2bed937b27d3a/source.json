@@ -1,0 +1,31 @@
+{
+  "source_file": "data/raw/Нормативная база/ПУЭ/DOCX/1.8.docx",
+  "source_sha256": "a814d168ca69867acf8abccb8619fcf65b98e97e61141db20258c7db6eec0b30",
+  "markdown": "V2/results/retrieval/documents_20261108_141723_743877/43f2bed937b27d3a/document.md",
+  "document_id": "data/raw/Нормативная база/ПУЭ/DOCX/1.8.docx",
+  "warnings": [
+    "headers_footers_footnotes_and_automatic_numbering_require_manual_review",
+    "merged_cells_preserved_in_XML_require_review:table_024b1fc0c703ca46.xml",
+    "merged_cells_preserved_in_XML_require_review:table_19f2918cb37fddfd.xml",
+    "merged_cells_preserved_in_XML_require_review:table_1b370f2fef250d7a.xml",
+    "merged_cells_preserved_in_XML_require_review:table_20db865ff165f642.xml",
+    "merged_cells_preserved_in_XML_require_review:table_245827d0b15370db.xml",
+    "merged_cells_preserved_in_XML_require_review:table_30d8607fc3bbab23.xml",
+    "merged_cells_preserved_in_XML_require_review:table_3706a79c22244923.xml",
+    "merged_cells_preserved_in_XML_require_review:table_3c1f94146b1917c2.xml",
+    "merged_cells_preserved_in_XML_require_review:table_427bf9bc7c63c713.xml",
+    "merged_cells_preserved_in_XML_require_review:table_43c7634a90078692.xml",
+    "merged_cells_preserved_in_XML_require_review:table_54a8d6ec6e6859be.xml",
+    "merged_cells_preserved_in_XML_require_review:table_5b6be41585622cb2.xml",
+    "merged_cells_preserved_in_XML_require_review:table_6d1c8a4aab35d1ce.xml",
+    "merged_cells_preserved_in_XML_require_review:table_713aa43dce2a82cf.xml",
+    "merged_cells_preserved_in_XML_require_review:table_7a8cb881cb8ad806.xml",
+    "merged_cells_preserved_in_XML_require_review:table_c303078a5170afdf.xml",
+    "merged_cells_preserved_in_XML_require_review:table_c561416302f7c666.xml",
+    "merged_cells_preserved_in_XML_require_review:table_c7a62de1c7eaee99.xml",
+    "merged_cells_preserved_in_XML_require_review:table_c7cf17368e1c40b7.xml",
+    "merged_cells_preserved_in_XML_require_review:table_e11a5ccb277372e8.xml",
+    "merged_cells_preserved_in_XML_require_review:table_e82c6d0347bb5488.xml"
+  ],
+  "extraction_review_status": "unreviewed"
+}

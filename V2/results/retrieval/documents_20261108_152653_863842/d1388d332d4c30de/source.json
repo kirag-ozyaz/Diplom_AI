@@ -1,0 +1,13 @@
+{
+  "extraction_version": "v2-documents-2-sdt",
+  "source_file": "data/raw/Нормативная база/ПТЭ/DOCX/Приказ Минэнерго РФ от 12.08.2022 N 811 Об утверждении Правил технической эксплуатации.docx",
+  "source_sha256": "16251a2d541ed034c85585689fb68453e767055df5e4082c7cd6fb60505f0adc",
+  "markdown": "V2/results/retrieval/documents_20261108_152653_863842/d1388d332d4c30de/document.md",
+  "document_id": "data/raw/Нормативная база/ПТЭ/DOCX/Приказ Минэнерго РФ от 12.08.2022 N 811 Об утверждении Правил технической эксплуатации.docx",
+  "warnings": [
+    "headers_footers_footnotes_and_automatic_numbering_require_manual_review",
+    "merged_cells_preserved_in_XML_require_review:table_9bf3db4025f4ed8d.xml",
+    "unhandled_structure_requires_review:tblPrEx"
+  ],
+  "extraction_review_status": "unreviewed"
+}

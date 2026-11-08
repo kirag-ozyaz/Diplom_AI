@@ -1,0 +1,13 @@
+{
+  "extraction_version": "v2-documents-2-sdt",
+  "source_file": "data/raw/Нормативная база/ПУЭ/DOCX/ПРИЛОЖЕНИЯ.docx",
+  "source_sha256": "9baf2426261cf86a09e90ddf7fe2bb387e8a0fafc09a8e7a974bef17c30b5543",
+  "markdown": "V2/results/retrieval/documents_20261108_152653_863842/1334ade19d478de0/document.md",
+  "document_id": "data/raw/Нормативная база/ПУЭ/DOCX/ПРИЛОЖЕНИЯ.docx",
+  "warnings": [
+    "headers_footers_footnotes_and_automatic_numbering_require_manual_review",
+    "merged_cells_preserved_in_XML_require_review:table_6bd19aa91f6e6b9c.xml",
+    "unhandled_structure_requires_review:tblPrEx"
+  ],
+  "extraction_review_status": "unreviewed"
+}

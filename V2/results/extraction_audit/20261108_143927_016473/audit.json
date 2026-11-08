@@ -1,0 +1,1076 @@
+{
+  "schema_version": "extraction-audit-1.0",
+  "script_sha256": "41a15df3912fd034e2fadf096ff49f445aba5460444bcccfbcc5f81eca374896",
+  "extraction_manifest_sha256": "2efacbc302e701e2ac4dd855499197fd1aee4d1dc2efab0068d9d13a279b0440",
+  "audited_at": "2026-11-08T14:39:27.014955+04:00",
+  "status": "failed",
+  "automatically_approved_for_chunking": false,
+  "scope": "Structural evidence only; no semantic, visual, OCR, qrels or indexing approval.",
+  "counts": {
+    "documents": 46,
+    "errors": 1,
+    "review": 24
+  },
+  "issue_counts": {
+    "other_document_formats_not_extracted": 1,
+    "no_literal_numbered_clauses_found": 3,
+    "merged_table_visual_layout_requires_review": 17,
+    "paragraph_text_occurrences_not_confirmed": 2,
+    "image_content_or_occurrences_differ": 1,
+    "markdown_html_layout_and_nonimage_resources_not_verified": 1
+  },
+  "global_findings": [
+    {
+      "level": "review",
+      "code": "other_document_formats_not_extracted",
+      "paths": [
+        "data\\raw\\База исходники\\Приказ Минэнерго РФ от 12.08.2022 N 811 Об утверждении Правил технической эксплуатации.rtf"
+      ]
+    }
+  ],
+  "documents": [
+    {
+      "source_file": "data/raw/Нормативная база/ПТЭ/DOCX/Приказ Минэнерго РФ от 12.08.2022 N 811 Об утверждении Правил технической эксплуатации.docx",
+      "markdown": "V2/results/retrieval/documents_20261108_141723_743877/d1388d332d4c30de/document.md",
+      "findings": [
+        {
+          "level": "review",
+          "code": "no_literal_numbered_clauses_found"
+        },
+        {
+          "level": "review",
+          "code": "merged_table_visual_layout_requires_review",
+          "count": 1
+        }
+      ],
+      "source_sha256": "16251a2d541ed034c85585689fb68453e767055df5e4082c7cd6fb60505f0adc",
+      "markdown_sha256": "89d7eb4f986fd91c1c68d9a5f1373040dc398e7f1d8b19bc9a723876d253bcae",
+      "paragraphs_checked": 457,
+      "literal_clauses": 0,
+      "tables": {
+        "source_top_level": 2,
+        "markdown": 2,
+        "merged": 1
+      },
+      "formula_blocks": 0,
+      "image_occurrences": 0
+    },
+    {
+      "source_file": "data/raw/Нормативная база/ПУЭ/DOCX/1.1.docx",
+      "markdown": "V2/results/retrieval/documents_20261108_141723_743877/8225f53d54784638/document.md",
+      "findings": [],
+      "source_sha256": "f162ac93ae44471f66723ebf51cbecdc6fbdc65685df43098e7ee2e2d07c758c",
+      "markdown_sha256": "d978c65859a3468811ba85c7cc733d07bc0bbc961a0752728021dfd262f1d96a",
+      "paragraphs_checked": 121,
+      "literal_clauses": 39,
+      "tables": {
+        "source_top_level": 0,
+        "markdown": 0,
+        "merged": 0
+      },
+      "formula_blocks": 0,
+      "image_occurrences": 38
+    },
+    {
+      "source_file": "data/raw/Нормативная база/ПУЭ/DOCX/1.2.docx",
+      "markdown": "V2/results/retrieval/documents_20261108_141723_743877/55f5c9a51b81aeb7/document.md",
+      "findings": [],
+      "source_sha256": "cfee22786a189b66568be204f25b0904863038d26908303bf91468479ae2a2ce",
+      "markdown_sha256": "8df501870ed8226cfdff034bd48dac77a14031fe1ff8c008eff3b1a3f0517e60",
+      "paragraphs_checked": 79,
+      "literal_clauses": 24,
+      "tables": {
+        "source_top_level": 0,
+        "markdown": 0,
+        "merged": 0
+      },
+      "formula_blocks": 0,
+      "image_occurrences": 0
+    },
+    {
+      "source_file": "data/raw/Нормативная база/ПУЭ/DOCX/1.3.docx",
+      "markdown": "V2/results/retrieval/documents_20261108_141723_743877/10e501879e40aeb0/document.md",
+      "findings": [
+        {
+          "level": "review",
+          "code": "merged_table_visual_layout_requires_review",
+          "count": 32
+        }
+      ],
+      "source_sha256": "63b55efb21cb3951bcff3fb486ad25b0fbb29daa72d4cdf5ac0efb6ef55c3c89",
+      "markdown_sha256": "7718722e5381104427291488a2bf3323bea2a980b8d1c899e66a9a9a9a7fb24c",
+      "paragraphs_checked": 3248,
+      "literal_clauses": 33,
+      "tables": {
+        "source_top_level": 40,
+        "markdown": 40,
+        "merged": 32
+      },
+      "formula_blocks": 0,
+      "image_occurrences": 79
+    },
+    {
+      "source_file": "data/raw/Нормативная база/ПУЭ/DOCX/1.4.docx",
+      "markdown": "V2/results/retrieval/documents_20261108_141723_743877/4950f7060f822810/document.md",
+      "findings": [],
+      "source_sha256": "e9a6623b7a0d0dcc7f3f2f071f24c30f0709322d83f90bdcdea7096b5f677988",
+      "markdown_sha256": "53bc5f6658a2cc4d90370625ff0d618d9cd630adc121e7ef984ebe9b6ed16072",
+      "paragraphs_checked": 111,
+      "literal_clauses": 21,
+      "tables": {
+        "source_top_level": 5,
+        "markdown": 5,
+        "merged": 0
+      },
+      "formula_blocks": 0,
+      "image_occurrences": 3
+    },
+    {
+      "source_file": "data/raw/Нормативная база/ПУЭ/DOCX/1.5.docx",
+      "markdown": "V2/results/retrieval/documents_20261108_141723_743877/bfcdf445b3f85c9e/document.md",
+      "findings": [
+        {
+          "level": "review",
+          "code": "merged_table_visual_layout_requires_review",
+          "count": 1
+        }
+      ],
+      "source_sha256": "4fe40920817625c34a97e5339fd3080bf0715cbfad3f8f494fc8cb79b2e8bc1a",
+      "markdown_sha256": "b1e38ac1c6064f6a33f05eec2e48fe804e8a175a0ceb529894f76d876385f07c",
+      "paragraphs_checked": 129,
+      "literal_clauses": 44,
+      "tables": {
+        "source_top_level": 2,
+        "markdown": 2,
+        "merged": 1
+      },
+      "formula_blocks": 0,
+      "image_occurrences": 1
+    },
+    {
+      "source_file": "data/raw/Нормативная база/ПУЭ/DOCX/1.6.docx",
+      "markdown": "V2/results/retrieval/documents_20261108_141723_743877/8e20b94c342824fb/document.md",
+      "findings": [
+        {
+          "level": "review",
+          "code": "merged_table_visual_layout_requires_review",
+          "count": 1
+        }
+      ],
+      "source_sha256": "7856a085b5774bfd273c4ba4001d265479a1c85402f5e86d499f0d1acde5e150",
+      "markdown_sha256": "14c19e8af55950b50529b82168abaca16e4a47efac4fc0c49422aec15105cdf9",
+      "paragraphs_checked": 183,
+      "literal_clauses": 23,
+      "tables": {
+        "source_top_level": 3,
+        "markdown": 3,
+        "merged": 1
+      },
+      "formula_blocks": 0,
+      "image_occurrences": 0
+    },
+    {
+      "source_file": "data/raw/Нормативная база/ПУЭ/DOCX/1.7.docx",
+      "markdown": "V2/results/retrieval/documents_20261108_141723_743877/6568e01eba0ca3d6/document.md",
+      "findings": [
+        {
+          "level": "review",
+          "code": "merged_table_visual_layout_requires_review",
+          "count": 4
+        }
+      ],
+      "source_sha256": "dde457f08e321b4399904fd9afdf1d387bfeb62ea34473ce35c44ff00d8a39d4",
+      "markdown_sha256": "41dc3a5596098ee3412fb4551436f9d56dd4a4087c60741f6b3df87fdd7b0748",
+      "paragraphs_checked": 865,
+      "literal_clauses": 177,
+      "tables": {
+        "source_top_level": 11,
+        "markdown": 11,
+        "merged": 4
+      },
+      "formula_blocks": 0,
+      "image_occurrences": 263
+    },
+    {
+      "source_file": "data/raw/Нормативная база/ПУЭ/DOCX/1.8.docx",
+      "markdown": "V2/results/retrieval/documents_20261108_141723_743877/43f2bed937b27d3a/document.md",
+      "findings": [
+        {
+          "level": "review",
+          "code": "paragraph_text_occurrences_not_confirmed",
+          "count": 1,
+          "examples": [
+            {
+              "text_excerpt": "Характеристикахолостогоходаиндукторногогенераторасовместносвыпрямительнойустановкой(ВУ),[,где-токвобмоткенезависимоговозбуждения],определяемаядозначения,соответствующегоудвоенномуноминальномузначениюнапряженияротора,недолжнаотличатьсяотзаво",
+              "expected_occurrences": 1,
+              "observed_occurrences": 0
+            }
+          ]
+        },
+        {
+          "level": "review",
+          "code": "merged_table_visual_layout_requires_review",
+          "count": 21
+        },
+        {
+          "level": "error",
+          "code": "image_content_or_occurrences_differ",
+          "source": {
+            "f472a1084d3be66de8bbbfc50155425c5a3feb7c89022c4ac1d3abb34c9855a7": 1,
+            "edbeabf36d64172b674f6218ec6cc8dddd3a7b92e119b94eb648a5e05070d1c6": 1,
+            "5a35c6258ab90a2b7a05c4227de0059357a687e8ef931e7eff2e89ce33d9d45b": 1,
+            "d71837163e134e05ff322a5a42fb65e0febd1201089734a57bbc9775927b217f": 1,
+            "7a07eb290fb45b3967465322ec3f0f90bcb6ff37f78c9f6b9acb52b50b9803b4": 1,
+            "c39ca330c09e7d1530d672f85b2d41ee71a090707ca6db654eb27cb6153794e5": 1,
+            "58315547444febb28dd1d28194a1810b28744d15f2442024396b6d973470d5b2": 2,
+            "48a3ab08f0b2d56c57b9e6e354cf46753ffaf3f321754dddcd8db0fcd59038f8": 2,
+            "6ff3d0737ecab0dfa24ac4809b8525248343c56f8b285b6c40b46a34bc23d049": 2,
+            "cf864bd959c5ac4224995a1b595353046d59bd8fbfa0202f014fb8fc479192fb": 2,
+            "07aa5f2a1fa34510980403370725f26c781179bc539f6824f240c59704df270c": 1,
+            "a727ce997f9983e1f50c0065705a74ee6c3891bb57e63d137a90efc699d75f98": 1,
+            "7dbfe34e8f12dc5c24b013b4d6b83972b8f28fc5bad4fa76978d737b38a5879b": 1,
+            "c6bd4f152aee3ded91d5807d073d1cf408482abf6b97dce7a3c3c151154a062b": 1,
+            "9f2127bcb491e848a5e09ffd8b4dc840bb6a4ce58df59f77ebfcd1d12649f4d1": 1,
+            "b4f65bd0a767f4bd24ffba2728a612409216147f27b5d0efb9fca1fb59dc7570": 2,
+            "75c483171282b98b1b9797e35a12437e36ea89f3ee4b1d32bfcf16dfcbb98791": 2,
+            "3a69b3ba9fa90cce3de4ec6e475517c5c555f4db992b5d2bdf20f5a7943e7313": 2,
+            "00a41ca03edda147e932f3ff176661fe1d3bdc45fd9ac6c7778d183f985199a1": 1,
+            "d9149f315340af07ba664f979b262bf16d695802c1e5fdbd931f694748dd04a7": 1,
+            "3e67e2fc572d4fbc4087170dabd3480f1d8a3116437db683d2b134d590d74a95": 1,
+            "2d9bd7544b5eeda1ba8111b61b1d0d7d0963dbe720b737ede6f5a2ac028378f2": 1,
+            "0ad2beb548f22b45276a56fdee67291f776217a86c33b785fe8cbeff1be66fe2": 1,
+            "9a005576b707c3cd8ea60ead71f74bb0fbff347134c8f02042651ac802dfa541": 2,
+            "6cedeb45e9a55e623af35ef5b894c83f2e9675c3e494a6e1680b6f95e610e2a2": 1,
+            "25745a23785e2678a4742fb8aa15e33320cbefa16a138202fad0acd8e97c25fc": 1,
+            "a07d181448d88595dd100005dfe4625bbaa20f920c03a30a52a8d3b623b14af4": 1,
+            "c9200d44e53582082f784dfe6040ac188fd7026ba29303c92da85ecf575da872": 1,
+            "5fd2f713299407e4c0de2b10f29ea20aa66464df6ab97ff1a6b608e85ddd5d65": 3,
+            "a8abef2700c14bdb0f74f109742064fa2c955f144417a10cf7455f558e74f9ae": 15,
+            "290b21683a266c3edb60fd3d9baebe326ab844bfebad84cc4246de7ea5b61d60": 2,
+            "78eeff0d35e2eb1c92a5aaf11e9cfa9aa40ce8d4a3d6649bd4bf24a18eb7e51e": 8,
+            "b95a5c4fe5c43893afa32ab0f768b4d09ca70d14bc901d7be60abba85ce54859": 1,
+            "820eaba65266aaded615f7dbdfca6a01b124741505ce79f271217894bb481b44": 1,
+            "5a4f77f2f3829963457b46f501cbd8f9f460b5a37bf73adf543ef7cd159628ae": 3,
+            "073d395d26623d3d8c86646c73c5a66c04122ebaf0cfd2b90fb58f70cc1381f2": 1,
+            "a6250f3141247b57cc4b0ce3a57a69a90c3f3e84d1663b2ec038913e29bcf1c4": 3,
+            "142f0378506db33db254085f434defb5dbd070f6d033903219ad8cb103c62a98": 1,
+            "0c9e2af882f96cd75d48d09c1938327064b192a81b3a5a7e1d760745fa05a2ea": 1,
+            "51c4d848accf13d323b11892f6e063f9a051aa245075af79dbd7c1d23f17b2bb": 3,
+            "7d37d5112430a75bc4a3ec162dcb5881f7adc3e0e9e80bed70c0242d06f8d646": 1,
+            "c5b5e3894979e323ec5cdc55829c70ce9605d6c1ee11be00186bbec8f552c050": 6,
+            "2492b3a25bd3060dbb13a609b1ab9eaef60014efb5a461f83070679e471b85bd": 1,
+            "2dc8702cbece4b3ec13127a7d0c6c8c85c6c56da85147c675204c986d36f51ab": 1,
+            "63c445eeb71c22712982e653f4193191a8d9109bd91e66c8211d520c34ad0ccb": 2,
+            "7ea0ba58ae03f8e6e3b5860a813b991cb862ead78bcdcac84e0d4fdcd332115a": 1,
+            "339f391379da105364eba53aec852bf342c5e4e52448c821febf8e344ae47fb1": 1,
+            "bca632cb50742984022204c4dae23f47e40ba2c0352018d43fc9b632f06e19b3": 9,
+            "e4caca8278b6c20434f837ea980fcc4600d934dc04d7569bf06e2d6fc615346e": 3,
+            "31e7a45c225e0b3d4e8398fa0a37739f4bf103dc5a767e59997643ef6efc5a12": 1,
+            "8f2d71c9d54c2342972c91ab48eeb656343d9dca7d41cfb9e3d2c0d565a43c14": 3,
+            "2110a954ae109ce5d8ec0bc32184ffada7f323671044c3ea839bba0e55c0d3a9": 2,
+            "c2d5b3208ca3c39a74cb13c1480956df7960ad45739653cda0a122d20e66f67f": 2,
+            "c35b7311881f884903b79d8ea75079558f0749d5a11840727c39a27f8512715a": 2,
+            "32c37d1680e263da4c4f635ff1536137269739bc496ae9cbea9ee42ff12b6560": 2,
+            "0c96baa93c82faef89a83090ced3f46e52e27eddfbcf2c4fbb9d98e6c1ac4379": 1,
+            "f59380bfcb433142f2e40055d5b643381596d76f50c6368ec5e0bd808c2f1ecc": 1,
+            "7f446123e06895bf9f5ae21c241e1517fd94d7adf232481503b377e4ccf6ec56": 1,
+            "856ce43f585a53e9eed2c0ee28d3431d5f5c191dbd503764506288398f22b12b": 1,
+            "c4a2ac5fa81e89c03e40b34552a447d28af33006c310551c6ea7de8fca107227": 1,
+            "cd7bd1609932443e343b1f7a3a12d87df86fccc6ccf33a4f9ca66e8c35df7e99": 1,
+            "fea4ed593d8b060cd8898b031892401767798157e1669fbfc5bf68ab79eb8380": 1,
+            "08486b0cd84c606d3e074f1786e56798cdbd53d48aea147ec19cd68622cfd90e": 1,
+            "ec2cae7130c9a8fee0d7baa73e954cc2ea1f8a860bf69e1b7f595307742f907c": 2,
+            "5f71d21be3ef96ed47bddfb6704ca0d1995f848023b9f050b237d0651c0f28d1": 2,
+            "6c42526b382166936e6809b79d56fc1b95a43763702dc14acf2b2fc042e463b3": 1,
+            "74f6d7050849392c0510fd84ccd789545678a848eced0cf2b0337e2196f79264": 2,
+            "bc0f8d7b8f24f5101be791ea0734d99f96fe20df928e881b537c0bfcbc17ed35": 1,
+            "73cbc99ff2b83f54ecfdd3e4d642bef223123fe82ef968e0802a9d8eaf57346c": 2,
+            "f20367f0f19fb244f243581c94d272f5be533374f7e89979fcb17b0579e126ff": 2
+          },
+          "extracted": {
+            "f472a1084d3be66de8bbbfc50155425c5a3feb7c89022c4ac1d3abb34c9855a7": 1,
+            "edbeabf36d64172b674f6218ec6cc8dddd3a7b92e119b94eb648a5e05070d1c6": 1,
+            "5a35c6258ab90a2b7a05c4227de0059357a687e8ef931e7eff2e89ce33d9d45b": 1,
+            "d71837163e134e05ff322a5a42fb65e0febd1201089734a57bbc9775927b217f": 1,
+            "7a07eb290fb45b3967465322ec3f0f90bcb6ff37f78c9f6b9acb52b50b9803b4": 1,
+            "c39ca330c09e7d1530d672f85b2d41ee71a090707ca6db654eb27cb6153794e5": 1,
+            "58315547444febb28dd1d28194a1810b28744d15f2442024396b6d973470d5b2": 2,
+            "48a3ab08f0b2d56c57b9e6e354cf46753ffaf3f321754dddcd8db0fcd59038f8": 2,
+            "6ff3d0737ecab0dfa24ac4809b8525248343c56f8b285b6c40b46a34bc23d049": 2,
+            "cf864bd959c5ac4224995a1b595353046d59bd8fbfa0202f014fb8fc479192fb": 2,
+            "07aa5f2a1fa34510980403370725f26c781179bc539f6824f240c59704df270c": 1,
+            "a727ce997f9983e1f50c0065705a74ee6c3891bb57e63d137a90efc699d75f98": 1,
+            "7dbfe34e8f12dc5c24b013b4d6b83972b8f28fc5bad4fa76978d737b38a5879b": 1,
+            "c6bd4f152aee3ded91d5807d073d1cf408482abf6b97dce7a3c3c151154a062b": 1,
+            "9f2127bcb491e848a5e09ffd8b4dc840bb6a4ce58df59f77ebfcd1d12649f4d1": 1,
+            "b4f65bd0a767f4bd24ffba2728a612409216147f27b5d0efb9fca1fb59dc7570": 2,
+            "75c483171282b98b1b9797e35a12437e36ea89f3ee4b1d32bfcf16dfcbb98791": 2,
+            "3a69b3ba9fa90cce3de4ec6e475517c5c555f4db992b5d2bdf20f5a7943e7313": 2,
+            "00a41ca03edda147e932f3ff176661fe1d3bdc45fd9ac6c7778d183f985199a1": 1,
+            "3e67e2fc572d4fbc4087170dabd3480f1d8a3116437db683d2b134d590d74a95": 1,
+            "2d9bd7544b5eeda1ba8111b61b1d0d7d0963dbe720b737ede6f5a2ac028378f2": 1,
+            "0ad2beb548f22b45276a56fdee67291f776217a86c33b785fe8cbeff1be66fe2": 1,
+            "9a005576b707c3cd8ea60ead71f74bb0fbff347134c8f02042651ac802dfa541": 2,
+            "6cedeb45e9a55e623af35ef5b894c83f2e9675c3e494a6e1680b6f95e610e2a2": 1,
+            "25745a23785e2678a4742fb8aa15e33320cbefa16a138202fad0acd8e97c25fc": 1,
+            "a07d181448d88595dd100005dfe4625bbaa20f920c03a30a52a8d3b623b14af4": 1,
+            "c9200d44e53582082f784dfe6040ac188fd7026ba29303c92da85ecf575da872": 1,
+            "5fd2f713299407e4c0de2b10f29ea20aa66464df6ab97ff1a6b608e85ddd5d65": 3,
+            "a8abef2700c14bdb0f74f109742064fa2c955f144417a10cf7455f558e74f9ae": 15,
+            "290b21683a266c3edb60fd3d9baebe326ab844bfebad84cc4246de7ea5b61d60": 2,
+            "78eeff0d35e2eb1c92a5aaf11e9cfa9aa40ce8d4a3d6649bd4bf24a18eb7e51e": 8,
+            "b95a5c4fe5c43893afa32ab0f768b4d09ca70d14bc901d7be60abba85ce54859": 1,
+            "820eaba65266aaded615f7dbdfca6a01b124741505ce79f271217894bb481b44": 1,
+            "5a4f77f2f3829963457b46f501cbd8f9f460b5a37bf73adf543ef7cd159628ae": 3,
+            "073d395d26623d3d8c86646c73c5a66c04122ebaf0cfd2b90fb58f70cc1381f2": 1,
+            "a6250f3141247b57cc4b0ce3a57a69a90c3f3e84d1663b2ec038913e29bcf1c4": 3,
+            "142f0378506db33db254085f434defb5dbd070f6d033903219ad8cb103c62a98": 1,
+            "0c9e2af882f96cd75d48d09c1938327064b192a81b3a5a7e1d760745fa05a2ea": 1,
+            "51c4d848accf13d323b11892f6e063f9a051aa245075af79dbd7c1d23f17b2bb": 3,
+            "7d37d5112430a75bc4a3ec162dcb5881f7adc3e0e9e80bed70c0242d06f8d646": 1,
+            "c5b5e3894979e323ec5cdc55829c70ce9605d6c1ee11be00186bbec8f552c050": 6,
+            "2492b3a25bd3060dbb13a609b1ab9eaef60014efb5a461f83070679e471b85bd": 1,
+            "2dc8702cbece4b3ec13127a7d0c6c8c85c6c56da85147c675204c986d36f51ab": 1,
+            "63c445eeb71c22712982e653f4193191a8d9109bd91e66c8211d520c34ad0ccb": 2,
+            "7ea0ba58ae03f8e6e3b5860a813b991cb862ead78bcdcac84e0d4fdcd332115a": 1,
+            "339f391379da105364eba53aec852bf342c5e4e52448c821febf8e344ae47fb1": 1,
+            "bca632cb50742984022204c4dae23f47e40ba2c0352018d43fc9b632f06e19b3": 9,
+            "e4caca8278b6c20434f837ea980fcc4600d934dc04d7569bf06e2d6fc615346e": 3,
+            "31e7a45c225e0b3d4e8398fa0a37739f4bf103dc5a767e59997643ef6efc5a12": 1,
+            "8f2d71c9d54c2342972c91ab48eeb656343d9dca7d41cfb9e3d2c0d565a43c14": 3,
+            "2110a954ae109ce5d8ec0bc32184ffada7f323671044c3ea839bba0e55c0d3a9": 2,
+            "c2d5b3208ca3c39a74cb13c1480956df7960ad45739653cda0a122d20e66f67f": 2,
+            "c35b7311881f884903b79d8ea75079558f0749d5a11840727c39a27f8512715a": 2,
+            "32c37d1680e263da4c4f635ff1536137269739bc496ae9cbea9ee42ff12b6560": 2,
+            "0c96baa93c82faef89a83090ced3f46e52e27eddfbcf2c4fbb9d98e6c1ac4379": 1,
+            "f59380bfcb433142f2e40055d5b643381596d76f50c6368ec5e0bd808c2f1ecc": 1,
+            "7f446123e06895bf9f5ae21c241e1517fd94d7adf232481503b377e4ccf6ec56": 1,
+            "856ce43f585a53e9eed2c0ee28d3431d5f5c191dbd503764506288398f22b12b": 1,
+            "c4a2ac5fa81e89c03e40b34552a447d28af33006c310551c6ea7de8fca107227": 1,
+            "cd7bd1609932443e343b1f7a3a12d87df86fccc6ccf33a4f9ca66e8c35df7e99": 1,
+            "fea4ed593d8b060cd8898b031892401767798157e1669fbfc5bf68ab79eb8380": 1,
+            "08486b0cd84c606d3e074f1786e56798cdbd53d48aea147ec19cd68622cfd90e": 1,
+            "ec2cae7130c9a8fee0d7baa73e954cc2ea1f8a860bf69e1b7f595307742f907c": 2,
+            "5f71d21be3ef96ed47bddfb6704ca0d1995f848023b9f050b237d0651c0f28d1": 2,
+            "6c42526b382166936e6809b79d56fc1b95a43763702dc14acf2b2fc042e463b3": 1,
+            "74f6d7050849392c0510fd84ccd789545678a848eced0cf2b0337e2196f79264": 2,
+            "bc0f8d7b8f24f5101be791ea0734d99f96fe20df928e881b537c0bfcbc17ed35": 1,
+            "73cbc99ff2b83f54ecfdd3e4d642bef223123fe82ef968e0802a9d8eaf57346c": 2,
+            "f20367f0f19fb244f243581c94d272f5be533374f7e89979fcb17b0579e126ff": 2
+          }
+        }
+      ],
+      "source_sha256": "a814d168ca69867acf8abccb8619fcf65b98e97e61141db20258c7db6eec0b30",
+      "markdown_sha256": "f8fa0424dbf2b2b0a1c7876fdb0e5854376110c25bd326b4c2787a14fcafe5a7",
+      "paragraphs_checked": 2251,
+      "literal_clauses": 41,
+      "tables": {
+        "source_top_level": 46,
+        "markdown": 46,
+        "merged": 21
+      },
+      "formula_blocks": 0,
+      "image_occurrences": 135
+    },
+    {
+      "source_file": "data/raw/Нормативная база/ПУЭ/DOCX/1.9.docx",
+      "markdown": "V2/results/retrieval/documents_20261108_141723_743877/8c591a96cb787b83/document.md",
+      "findings": [
+        {
+          "level": "review",
+          "code": "merged_table_visual_layout_requires_review",
+          "count": 17
+        }
+      ],
+      "source_sha256": "f48e4fb7aff66c77f602af5b86a102b23e89ef83f0c3dcbf7e02b3de6b71e93c",
+      "markdown_sha256": "ee56e5425b13e44717b6588914ac6a4df57a523dbb2f8d7f23a811164fc3ae25",
+      "paragraphs_checked": 1002,
+      "literal_clauses": 54,
+      "tables": {
+        "source_top_level": 24,
+        "markdown": 24,
+        "merged": 17
+      },
+      "formula_blocks": 0,
+      "image_occurrences": 72
+    },
+    {
+      "source_file": "data/raw/Нормативная база/ПУЭ/DOCX/2.1.docx",
+      "markdown": "V2/results/retrieval/documents_20261108_141723_743877/9a902d47cc7e7d1f/document.md",
+      "findings": [
+        {
+          "level": "review",
+          "code": "merged_table_visual_layout_requires_review",
+          "count": 3
+        }
+      ],
+      "source_sha256": "7edc241b06d1c03cf1a993ce81a519ad3c01fc7d2f0d1f3b62c376f27cdf1593",
+      "markdown_sha256": "a80c0b57d615593d5973475ce047232a6c71583d8a0cbc016ca71e5458e66d59",
+      "paragraphs_checked": 304,
+      "literal_clauses": 79,
+      "tables": {
+        "source_top_level": 4,
+        "markdown": 4,
+        "merged": 3
+      },
+      "formula_blocks": 0,
+      "image_occurrences": 12
+    },
+    {
+      "source_file": "data/raw/Нормативная база/ПУЭ/DOCX/2.2.docx",
+      "markdown": "V2/results/retrieval/documents_20261108_141723_743877/a030e8467f909e5a/document.md",
+      "findings": [],
+      "source_sha256": "261fed0d478a621e349a91232bca815f458b363e7c961e77bc85a34d3be97bfd",
+      "markdown_sha256": "f04080e46bad8ce68924a44bef9e368df3a13280e33378df50115bcba33ec7c8",
+      "paragraphs_checked": 85,
+      "literal_clauses": 40,
+      "tables": {
+        "source_top_level": 0,
+        "markdown": 0,
+        "merged": 0
+      },
+      "formula_blocks": 0,
+      "image_occurrences": 0
+    },
+    {
+      "source_file": "data/raw/Нормативная база/ПУЭ/DOCX/2.3.docx",
+      "markdown": "V2/results/retrieval/documents_20261108_141723_743877/f606a39ec7ce5f1e/document.md",
+      "findings": [
+        {
+          "level": "review",
+          "code": "merged_table_visual_layout_requires_review",
+          "count": 2
+        }
+      ],
+      "source_sha256": "56400b70617e5f7e0e353b41a4c239f606ad324d99b5d47bd7c6304f560a4183",
+      "markdown_sha256": "420f631147b740612ff529a787cf0536da18c561613ebc232d79e7caeaa93726",
+      "paragraphs_checked": 443,
+      "literal_clauses": 148,
+      "tables": {
+        "source_top_level": 2,
+        "markdown": 2,
+        "merged": 2
+      },
+      "formula_blocks": 0,
+      "image_occurrences": 14
+    },
+    {
+      "source_file": "data/raw/Нормативная база/ПУЭ/DOCX/2.4.docx",
+      "markdown": "V2/results/retrieval/documents_20261108_141723_743877/7f9d8fa9af0d750e/document.md",
+      "findings": [
+        {
+          "level": "review",
+          "code": "merged_table_visual_layout_requires_review",
+          "count": 2
+        }
+      ],
+      "source_sha256": "6687168ae51156fc30b1810dc40331e79a21642913c15f5f9c59583a37beaf0c",
+      "markdown_sha256": "b6c96788c4b47a43895e3f9dfe891b54a08c3054ce74623e861d45bac4a117eb",
+      "paragraphs_checked": 399,
+      "literal_clauses": 95,
+      "tables": {
+        "source_top_level": 5,
+        "markdown": 5,
+        "merged": 2
+      },
+      "formula_blocks": 0,
+      "image_occurrences": 32
+    },
+    {
+      "source_file": "data/raw/Нормативная база/ПУЭ/DOCX/2.5.docx",
+      "markdown": "V2/results/retrieval/documents_20261108_141723_743877/5140b64e1bb4a805/document.md",
+      "findings": [
+        {
+          "level": "review",
+          "code": "merged_table_visual_layout_requires_review",
+          "count": 36
+        }
+      ],
+      "source_sha256": "fed4a9ca5c6e96642b36a976dfcfbbe2457d8338a67bdf3d0caa193d676290ca",
+      "markdown_sha256": "7aaac899420906c07f27576beb0b6cc6c84775480c259510faad8e7db63ab6ff",
+      "paragraphs_checked": 5760,
+      "literal_clauses": 292,
+      "tables": {
+        "source_top_level": 55,
+        "markdown": 55,
+        "merged": 36
+      },
+      "formula_blocks": 0,
+      "image_occurrences": 401
+    },
+    {
+      "source_file": "data/raw/Нормативная база/ПУЭ/DOCX/3.1.docx",
+      "markdown": "V2/results/retrieval/documents_20261108_141723_743877/0d9736ba6db05e11/document.md",
+      "findings": [],
+      "source_sha256": "12ff46dc133ec64136d499787acaf908ff2a0ad21ccb397f907368b7f674644e",
+      "markdown_sha256": "8735c88655ca67ae1cc85030145d8469bc1b811b28a0c735f0cfe713084512da",
+      "paragraphs_checked": 57,
+      "literal_clauses": 19,
+      "tables": {
+        "source_top_level": 0,
+        "markdown": 0,
+        "merged": 0
+      },
+      "formula_blocks": 0,
+      "image_occurrences": 0
+    },
+    {
+      "source_file": "data/raw/Нормативная база/ПУЭ/DOCX/3.2.docx",
+      "markdown": "V2/results/retrieval/documents_20261108_141723_743877/ac3f3543e5ef311a/document.md",
+      "findings": [],
+      "source_sha256": "de4cd8c39bc98522a519e5781d45e0b20cb74f90a6e9b37113ab743a844eb1b5",
+      "markdown_sha256": "7c18e660d4f46788564a7b0ff67148d6ed1eb8f4f8724d6daa23c6f9e0f64acb",
+      "paragraphs_checked": 498,
+      "literal_clauses": 133,
+      "tables": {
+        "source_top_level": 0,
+        "markdown": 0,
+        "merged": 0
+      },
+      "formula_blocks": 0,
+      "image_occurrences": 17
+    },
+    {
+      "source_file": "data/raw/Нормативная база/ПУЭ/DOCX/3.3.docx",
+      "markdown": "V2/results/retrieval/documents_20261108_141723_743877/78c46da71a5e1df2/document.md",
+      "findings": [],
+      "source_sha256": "1804d27ffeecc7881f9421acafe4a26a047d1f2a4583388e3d1aa6d43c973180",
+      "markdown_sha256": "632f7fae27c18c8b95d08496d9a7425251f0a25ea96e979866e21cdf893efa81",
+      "paragraphs_checked": 312,
+      "literal_clauses": 103,
+      "tables": {
+        "source_top_level": 0,
+        "markdown": 0,
+        "merged": 0
+      },
+      "formula_blocks": 0,
+      "image_occurrences": 0
+    },
+    {
+      "source_file": "data/raw/Нормативная база/ПУЭ/DOCX/3.4.docx",
+      "markdown": "V2/results/retrieval/documents_20261108_141723_743877/33c6c66ef593b13a/document.md",
+      "findings": [],
+      "source_sha256": "0f249ad928d10a7428652d7901168e14a6ae2d9c2deff0f1cefe659ea5779695",
+      "markdown_sha256": "1e27754f15cbf6d20cfe87929c5ae0e0a015f0325cede1ef7016842f1edfb918",
+      "paragraphs_checked": 108,
+      "literal_clauses": 30,
+      "tables": {
+        "source_top_level": 0,
+        "markdown": 0,
+        "merged": 0
+      },
+      "formula_blocks": 0,
+      "image_occurrences": 15
+    },
+    {
+      "source_file": "data/raw/Нормативная база/ПУЭ/DOCX/4.1.docx",
+      "markdown": "V2/results/retrieval/documents_20261108_141723_743877/fc5fb57746deebd8/document.md",
+      "findings": [],
+      "source_sha256": "b0babcc0dc3a2d5bab21644d3d76f79cacf10265b8b06df44e597494ed3771e1",
+      "markdown_sha256": "40aa758510a6421fb036d0d09f90a91c5523040a9f3115e62bfa9c5b42fde559",
+      "paragraphs_checked": 77,
+      "literal_clauses": 28,
+      "tables": {
+        "source_top_level": 0,
+        "markdown": 0,
+        "merged": 0
+      },
+      "formula_blocks": 0,
+      "image_occurrences": 0
+    },
+    {
+      "source_file": "data/raw/Нормативная база/ПУЭ/DOCX/4.2.docx",
+      "markdown": "V2/results/retrieval/documents_20261108_141723_743877/070e9674d38d885c/document.md",
+      "findings": [
+        {
+          "level": "review",
+          "code": "merged_table_visual_layout_requires_review",
+          "count": 13
+        }
+      ],
+      "source_sha256": "482b19220e9f0dea8fef7a0c7fcf9f17337d877cf4646fb5b8cb583d48183d95",
+      "markdown_sha256": "f2c49e06e6438e5394008d375600c11350842e09866e203182be36ebc91ec807",
+      "paragraphs_checked": 2236,
+      "literal_clauses": 236,
+      "tables": {
+        "source_top_level": 14,
+        "markdown": 14,
+        "merged": 13
+      },
+      "formula_blocks": 0,
+      "image_occurrences": 177
+    },
+    {
+      "source_file": "data/raw/Нормативная база/ПУЭ/DOCX/4.3.docx",
+      "markdown": "V2/results/retrieval/documents_20261108_141723_743877/ffb3bc0542e4f331/document.md",
+      "findings": [],
+      "source_sha256": "cfc856011c1d929cc92e70df461d0913c0795752a409255e27a9ab1a79396e4a",
+      "markdown_sha256": "674cbc94fc1e2ca8736aabb9b8de0fa5a394da46f97b9bc2835e2edda5586a94",
+      "paragraphs_checked": 132,
+      "literal_clauses": 53,
+      "tables": {
+        "source_top_level": 1,
+        "markdown": 1,
+        "merged": 0
+      },
+      "formula_blocks": 0,
+      "image_occurrences": 3
+    },
+    {
+      "source_file": "data/raw/Нормативная база/ПУЭ/DOCX/4.4.docx",
+      "markdown": "V2/results/retrieval/documents_20261108_141723_743877/01b2b85502608557/document.md",
+      "findings": [],
+      "source_sha256": "e12ee53eeef81a8e351484840699c34d4e98f688adad082af5e04fb8b014a934",
+      "markdown_sha256": "99eeddb2c7398907d457412ee3b8ba9d2ff8b3e09569827c2ff8ec4d887b80e7",
+      "paragraphs_checked": 86,
+      "literal_clauses": 46,
+      "tables": {
+        "source_top_level": 0,
+        "markdown": 0,
+        "merged": 0
+      },
+      "formula_blocks": 0,
+      "image_occurrences": 7
+    },
+    {
+      "source_file": "data/raw/Нормативная база/ПУЭ/DOCX/5.1.docx",
+      "markdown": "V2/results/retrieval/documents_20261108_141723_743877/6a4abfad50198f50/document.md",
+      "findings": [],
+      "source_sha256": "831652d8c5784b86957a061ff1a399f1fb79b30d647652edf88657753affc9b8",
+      "markdown_sha256": "f9f3e87e557427eacd953d47c5bf88e8a0458b82d3093b55de19ddf295dbda39",
+      "paragraphs_checked": 85,
+      "literal_clauses": 38,
+      "tables": {
+        "source_top_level": 0,
+        "markdown": 0,
+        "merged": 0
+      },
+      "formula_blocks": 0,
+      "image_occurrences": 0
+    },
+    {
+      "source_file": "data/raw/Нормативная база/ПУЭ/DOCX/5.2.docx",
+      "markdown": "V2/results/retrieval/documents_20261108_141723_743877/028e13be67bda0e0/document.md",
+      "findings": [],
+      "source_sha256": "4a3cd17c164f625a94c49869d45a560ff31d8c7802b0af6172f1f8016c7b170f",
+      "markdown_sha256": "07f22b80e761c590c1691b0e5119e2405ec4f48e98adbdd3c595ac9fee1ac8f2",
+      "paragraphs_checked": 126,
+      "literal_clauses": 62,
+      "tables": {
+        "source_top_level": 0,
+        "markdown": 0,
+        "merged": 0
+      },
+      "formula_blocks": 0,
+      "image_occurrences": 0
+    },
+    {
+      "source_file": "data/raw/Нормативная база/ПУЭ/DOCX/5.3.docx",
+      "markdown": "V2/results/retrieval/documents_20261108_141723_743877/b8aed9f0479ca280/document.md",
+      "findings": [],
+      "source_sha256": "15a7a399c5b4ec7fbd6382b1e67a1d3768b58b8758a7064fbeccad9e36ae9245",
+      "markdown_sha256": "dcbb18b98e168f8b3505c1c342dc96f7c61f0e60f01197c32854ec3a8dba8e83",
+      "paragraphs_checked": 150,
+      "literal_clauses": 62,
+      "tables": {
+        "source_top_level": 0,
+        "markdown": 0,
+        "merged": 0
+      },
+      "formula_blocks": 0,
+      "image_occurrences": 0
+    },
+    {
+      "source_file": "data/raw/Нормативная база/ПУЭ/DOCX/5.4.docx",
+      "markdown": "V2/results/retrieval/documents_20261108_141723_743877/95fb63f16a09c916/document.md",
+      "findings": [],
+      "source_sha256": "1afe395464295917eecdae8271713c7f12cdbd6b485274392074c816eb02cac9",
+      "markdown_sha256": "29aa582c3bd96d413ab10481a95550ead823e44f79841ecb49be6d2275ffc3c4",
+      "paragraphs_checked": 128,
+      "literal_clauses": 69,
+      "tables": {
+        "source_top_level": 0,
+        "markdown": 0,
+        "merged": 0
+      },
+      "formula_blocks": 0,
+      "image_occurrences": 9
+    },
+    {
+      "source_file": "data/raw/Нормативная база/ПУЭ/DOCX/5.5.docx",
+      "markdown": "V2/results/retrieval/documents_20261108_141723_743877/7096171776c952b3/document.md",
+      "findings": [],
+      "source_sha256": "a69079d7159a78cffb3071ddf765c74450694fb7f2d4f5fa1b77efbf341f8325",
+      "markdown_sha256": "3b9e0461732e7c091c726414dc43b6b95487c5d3b3aa337579ed0d75897ad976",
+      "paragraphs_checked": 65,
+      "literal_clauses": 28,
+      "tables": {
+        "source_top_level": 0,
+        "markdown": 0,
+        "merged": 0
+      },
+      "formula_blocks": 0,
+      "image_occurrences": 5
+    },
+    {
+      "source_file": "data/raw/Нормативная база/ПУЭ/DOCX/5.6.docx",
+      "markdown": "V2/results/retrieval/documents_20261108_141723_743877/c5e4961942a99034/document.md",
+      "findings": [],
+      "source_sha256": "de7609674d127b4bf6d0b434a45577539acc115ed9569f8ce9fcd4d92c00fda1",
+      "markdown_sha256": "77971ddb1cd9bbced4bdc68d1fb3f16eeab58e712eb2bdb919dc2184e3277370",
+      "paragraphs_checked": 60,
+      "literal_clauses": 40,
+      "tables": {
+        "source_top_level": 0,
+        "markdown": 0,
+        "merged": 0
+      },
+      "formula_blocks": 0,
+      "image_occurrences": 0
+    },
+    {
+      "source_file": "data/raw/Нормативная база/ПУЭ/DOCX/6.1.docx",
+      "markdown": "V2/results/retrieval/documents_20261108_141723_743877/8371e09ad108ed08/document.md",
+      "findings": [],
+      "source_sha256": "6ae91c7434fb1def0391602b58b08e02731781aa25ca9e586b9281530bfc19b4",
+      "markdown_sha256": "011424753fc9cdbc59e92b86f554e2112953dfc90c30c787e018882cbc51f383",
+      "paragraphs_checked": 112,
+      "literal_clauses": 49,
+      "tables": {
+        "source_top_level": 0,
+        "markdown": 0,
+        "merged": 0
+      },
+      "formula_blocks": 0,
+      "image_occurrences": 5
+    },
+    {
+      "source_file": "data/raw/Нормативная база/ПУЭ/DOCX/6.2.docx",
+      "markdown": "V2/results/retrieval/documents_20261108_141723_743877/c391f3429f746c04/document.md",
+      "findings": [],
+      "source_sha256": "d01b16ac1ac784c1bfa90079f8c6c58cb83182bc6fa677fe167ac8ece77ac38e",
+      "markdown_sha256": "9aabb972c65ea8cb5662eb41ec0ed8f7bde49f2eea8be36348523177baf27428",
+      "paragraphs_checked": 31,
+      "literal_clauses": 15,
+      "tables": {
+        "source_top_level": 0,
+        "markdown": 0,
+        "merged": 0
+      },
+      "formula_blocks": 0,
+      "image_occurrences": 0
+    },
+    {
+      "source_file": "data/raw/Нормативная база/ПУЭ/DOCX/6.3.docx",
+      "markdown": "V2/results/retrieval/documents_20261108_141723_743877/d5ebdccda7c34288/document.md",
+      "findings": [],
+      "source_sha256": "e7e20fcf8c04201246fcee44327e461135707cca5ea4560455164be23e4d9065",
+      "markdown_sha256": "d3d2e941960f3b199fb5c37e3c8af836b6b778b5c983490c3096845727142eeb",
+      "paragraphs_checked": 65,
+      "literal_clauses": 40,
+      "tables": {
+        "source_top_level": 0,
+        "markdown": 0,
+        "merged": 0
+      },
+      "formula_blocks": 0,
+      "image_occurrences": 4
+    },
+    {
+      "source_file": "data/raw/Нормативная база/ПУЭ/DOCX/6.4.docx",
+      "markdown": "V2/results/retrieval/documents_20261108_141723_743877/87410937aac87df4/document.md",
+      "findings": [],
+      "source_sha256": "b19964b23c6bed0509fb2e4383f393b4452ca9cb124a0ea9774c8bcafea87d96",
+      "markdown_sha256": "5cb3c4a175afcd4bb5bf78070bb8369f82b19fd21a3c617bcd4847bc01d75f5e",
+      "paragraphs_checked": 26,
+      "literal_clauses": 18,
+      "tables": {
+        "source_top_level": 0,
+        "markdown": 0,
+        "merged": 0
+      },
+      "formula_blocks": 0,
+      "image_occurrences": 0
+    },
+    {
+      "source_file": "data/raw/Нормативная база/ПУЭ/DOCX/6.5.docx",
+      "markdown": "V2/results/retrieval/documents_20261108_141723_743877/41757616714e4aed/document.md",
+      "findings": [],
+      "source_sha256": "c9c96e46c011004955f157df96f0aec47c3f090406787f7be0413989786d6272",
+      "markdown_sha256": "bcc7f37701713251edbb88d38cd10f4ea395c6d8afc59996f5005fd9a8674480",
+      "paragraphs_checked": 52,
+      "literal_clauses": 29,
+      "tables": {
+        "source_top_level": 0,
+        "markdown": 0,
+        "merged": 0
+      },
+      "formula_blocks": 0,
+      "image_occurrences": 0
+    },
+    {
+      "source_file": "data/raw/Нормативная база/ПУЭ/DOCX/6.6.docx",
+      "markdown": "V2/results/retrieval/documents_20261108_141723_743877/429ca226ce891f0c/document.md",
+      "findings": [],
+      "source_sha256": "e70fe44a9718c26fcf2fc60a325ee263fac1238b8878361b9cadb4a1c9d19e16",
+      "markdown_sha256": "253431f10a8f354a060c4a92cd3e02c46442a20b8072d11e97c673c0ab3fbe6a",
+      "paragraphs_checked": 54,
+      "literal_clauses": 31,
+      "tables": {
+        "source_top_level": 0,
+        "markdown": 0,
+        "merged": 0
+      },
+      "formula_blocks": 0,
+      "image_occurrences": 8
+    },
+    {
+      "source_file": "data/raw/Нормативная база/ПУЭ/DOCX/7.1.docx",
+      "markdown": "V2/results/retrieval/documents_20261108_141723_743877/86443aaaf33003ff/document.md",
+      "findings": [],
+      "source_sha256": "9296ec03b4e9368e2e8807ce09d68f426b309ab32478585bc1e4cd9439735405",
+      "markdown_sha256": "f0516d794d8ab5f75b3492f2fe761db908392d0c5d9fd05b2836cf448dc81bfa",
+      "paragraphs_checked": 194,
+      "literal_clauses": 88,
+      "tables": {
+        "source_top_level": 1,
+        "markdown": 1,
+        "merged": 0
+      },
+      "formula_blocks": 0,
+      "image_occurrences": 13
+    },
+    {
+      "source_file": "data/raw/Нормативная база/ПУЭ/DOCX/7.10.docx",
+      "markdown": "V2/results/retrieval/documents_20261108_141723_743877/8a5279dd4f98f726/document.md",
+      "findings": [],
+      "source_sha256": "c5692b6d33699963fe335ca2a0cd50c6cb910b8a8c07b6ade259051dd37e699a",
+      "markdown_sha256": "77144a00ec4c2e568a8bc608728e673626d9ac46e2a311fc141737b3543045d2",
+      "paragraphs_checked": 238,
+      "literal_clauses": 83,
+      "tables": {
+        "source_top_level": 0,
+        "markdown": 0,
+        "merged": 0
+      },
+      "formula_blocks": 0,
+      "image_occurrences": 4
+    },
+    {
+      "source_file": "data/raw/Нормативная база/ПУЭ/DOCX/7.2.docx",
+      "markdown": "V2/results/retrieval/documents_20261108_141723_743877/c3fd1ace48cae28d/document.md",
+      "findings": [
+        {
+          "level": "review",
+          "code": "merged_table_visual_layout_requires_review",
+          "count": 1
+        }
+      ],
+      "source_sha256": "16f514a574d6c04256d8c3962866e60f767f10df6672c2edf9ea13448ce16fbf",
+      "markdown_sha256": "02e0be81c37581746d1dad8b782ad9b2af017be26b475f42384b3824d2516bd9",
+      "paragraphs_checked": 140,
+      "literal_clauses": 59,
+      "tables": {
+        "source_top_level": 1,
+        "markdown": 1,
+        "merged": 1
+      },
+      "formula_blocks": 0,
+      "image_occurrences": 1
+    },
+    {
+      "source_file": "data/raw/Нормативная база/ПУЭ/DOCX/7.3.docx",
+      "markdown": "V2/results/retrieval/documents_20261108_141723_743877/186f932b90a8dd06/document.md",
+      "findings": [
+        {
+          "level": "review",
+          "code": "merged_table_visual_layout_requires_review",
+          "count": 8
+        }
+      ],
+      "source_sha256": "490a74bf15aebda469bca4123e7f8369cede296603c53503588ebe65d5be148f",
+      "markdown_sha256": "7392b0a059d8db7a94b9201a056e312bc01e2ec9497237dc19d21fcefcc00410",
+      "paragraphs_checked": 1328,
+      "literal_clauses": 142,
+      "tables": {
+        "source_top_level": 16,
+        "markdown": 16,
+        "merged": 8
+      },
+      "formula_blocks": 0,
+      "image_occurrences": 34
+    },
+    {
+      "source_file": "data/raw/Нормативная база/ПУЭ/DOCX/7.4.docx",
+      "markdown": "V2/results/retrieval/documents_20261108_141723_743877/611be5dd8e831342/document.md",
+      "findings": [
+        {
+          "level": "review",
+          "code": "merged_table_visual_layout_requires_review",
+          "count": 4
+        }
+      ],
+      "source_sha256": "6bbfda5dd57a04961aa700b9ccd8850e2841d1d7c10499aaa891dd3f5a0a4017",
+      "markdown_sha256": "d8f59cedd653cf60b998ccb09dfe8281ba938a514a1775034a00f33ce8109808",
+      "paragraphs_checked": 235,
+      "literal_clauses": 44,
+      "tables": {
+        "source_top_level": 5,
+        "markdown": 5,
+        "merged": 4
+      },
+      "formula_blocks": 0,
+      "image_occurrences": 4
+    },
+    {
+      "source_file": "data/raw/Нормативная база/ПУЭ/DOCX/7.5.docx",
+      "markdown": "V2/results/retrieval/documents_20261108_141723_743877/640b0e1cf49435bb/document.md",
+      "findings": [
+        {
+          "level": "review",
+          "code": "merged_table_visual_layout_requires_review",
+          "count": 12
+        }
+      ],
+      "source_sha256": "674d7b4bbb9b8ead9caaa36d42710d7e588c24466e066fff14a88e03aa5ab7b2",
+      "markdown_sha256": "3d5d3b9fa5215965df203a0300b2721b7e569860b8e7d7619d33803f2291df6b",
+      "paragraphs_checked": 1570,
+      "literal_clauses": 75,
+      "tables": {
+        "source_top_level": 18,
+        "markdown": 18,
+        "merged": 12
+      },
+      "formula_blocks": 0,
+      "image_occurrences": 122
+    },
+    {
+      "source_file": "data/raw/Нормативная база/ПУЭ/DOCX/7.6.docx",
+      "markdown": "V2/results/retrieval/documents_20261108_141723_743877/ba658df4f4e2a15b/document.md",
+      "findings": [],
+      "source_sha256": "ddb62718de8738b5a67e43d7b22e01150d286b0b094372413c597444af15d003",
+      "markdown_sha256": "3def47ca61dffbdca4d9b258c402e37fb6612939c17eba6d4bb465c7bf5c0048",
+      "paragraphs_checked": 135,
+      "literal_clauses": 67,
+      "tables": {
+        "source_top_level": 0,
+        "markdown": 0,
+        "merged": 0
+      },
+      "formula_blocks": 0,
+      "image_occurrences": 6
+    },
+    {
+      "source_file": "data/raw/Нормативная база/ПУЭ/DOCX/7.7.docx",
+      "markdown": "V2/results/retrieval/documents_20261108_141723_743877/b62e201ebbb74be0/document.md",
+      "findings": [],
+      "source_sha256": "bae981ce4fe9f5c7ff4518cc00ebf9b62504f0179a52b725e7dfe6f8493a5e1d",
+      "markdown_sha256": "27b099d77b1320cb7f9de559632c23ee2a5d549b755f6d9cd9887df3a7c82aab",
+      "paragraphs_checked": 71,
+      "literal_clauses": 43,
+      "tables": {
+        "source_top_level": 0,
+        "markdown": 0,
+        "merged": 0
+      },
+      "formula_blocks": 0,
+      "image_occurrences": 2
+    },
+    {
+      "source_file": "data/raw/Нормативная база/ПУЭ/DOCX/ПРИЛОЖЕНИЯ.docx",
+      "markdown": "V2/results/retrieval/documents_20261108_141723_743877/1334ade19d478de0/document.md",
+      "findings": [
+        {
+          "level": "review",
+          "code": "no_literal_numbered_clauses_found"
+        },
+        {
+          "level": "review",
+          "code": "merged_table_visual_layout_requires_review",
+          "count": 1
+        }
+      ],
+      "source_sha256": "9baf2426261cf86a09e90ddf7fe2bb387e8a0fafc09a8e7a974bef17c30b5543",
+      "markdown_sha256": "546a09b23711ce64b97c7e0268855cfd782d90766c82035bf700b858730e5ee2",
+      "paragraphs_checked": 309,
+      "literal_clauses": 0,
+      "tables": {
+        "source_top_level": 8,
+        "markdown": 8,
+        "merged": 1
+      },
+      "formula_blocks": 0,
+      "image_occurrences": 42
+    },
+    {
+      "source_file": "data/raw/Нормативная база/ПУЭ/DOCX/СОДЕРЖАНИЕ.docx",
+      "markdown": "V2/results/retrieval/documents_20261108_141723_743877/693aaf59fd358b05/document.md",
+      "findings": [
+        {
+          "level": "review",
+          "code": "paragraph_text_occurrences_not_confirmed",
+          "count": 6,
+          "examples": [
+            {
+              "text_excerpt": "ПОДГОТОВЛЕНООАО\"ВНИИЭ\"",
+              "expected_occurrences": 1,
+              "observed_occurrences": 0
+            },
+            {
+              "text_excerpt": "Правилаустройстваэлектроустановок(ПУЭ)",
+              "expected_occurrences": 1,
+              "observed_occurrences": 0
+            },
+            {
+              "text_excerpt": "Седьмоеиздание",
+              "expected_occurrences": 1,
+              "observed_occurrences": 0
+            },
+            {
+              "text_excerpt": "Датавведения",
+              "expected_occurrences": 1,
+              "observed_occurrences": 0
+            },
+            {
+              "text_excerpt": "01.01.03",
+              "expected_occurrences": 1,
+              "observed_occurrences": 0
+            },
+            {
+              "text_excerpt": "\"Правилаустройстваэлектроустановок\"(ПУЭ)седьмогоизданиявсвязисдлительнымсрокомпереработкивыпускаютсяивводятсявдействиеотдельнымиразделамииглавамипомерезавершенияработпоихпересмотру,согласованиюиутверждению.ТребованияПравилустройстваэлектроу",
+              "expected_occurrences": 1,
+              "observed_occurrences": 0
+            }
+          ]
+        },
+        {
+          "level": "review",
+          "code": "no_literal_numbered_clauses_found"
+        }
+      ],
+      "source_sha256": "7b95c2e689893756312b5a8c5605dee3c498fb533ee767c08e5013dc1a363c41",
+      "markdown_sha256": "d49b211325b5526f68d376012f611c7c79d1238fa4e19adb82957ada086fde6e",
+      "paragraphs_checked": 60,
+      "literal_clauses": 0,
+      "tables": {
+        "source_top_level": 0,
+        "markdown": 0,
+        "merged": 0
+      },
+      "formula_blocks": 0,
+      "image_occurrences": 0
+    },
+    {
+      "source_file": "data/raw/Нормативная база/ПУЭ/link.md",
+      "markdown": "V2/results/retrieval/documents_20261108_141723_743877/99f528353d315193/document.md",
+      "findings": [
+        {
+          "level": "review",
+          "code": "markdown_html_layout_and_nonimage_resources_not_verified"
+        }
+      ],
+      "source_sha256": "431275effe3353060e492bd42196e3b17f8c56e07d05a86945792c97232f4afa",
+      "markdown_sha256": "431275effe3353060e492bd42196e3b17f8c56e07d05a86945792c97232f4afa"
+    }
+  ]
+}

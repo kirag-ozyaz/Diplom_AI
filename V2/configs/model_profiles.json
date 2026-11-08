@@ -1,0 +1,222 @@
+{
+  "default_profile": "rtx2060_baseline",
+  "profiles": [
+    {
+      "name": "rtx2060_baseline",
+      "description": "Безопасный дефолт для 6-8 GB VRAM",
+      "match": {
+        "max_vram_gb": 8
+      },
+      "text_model": "sentence-transformers/all-MiniLM-L6-v2",
+      "ollama_model": "qwen2.5:3b"
+    },
+    {
+      "name": "mid_gpu",
+      "description": "Баланс для 8-12 GB VRAM",
+      "match": {
+        "min_vram_gb": 8,
+        "max_vram_gb": 12
+      },
+      "text_model": "intfloat/multilingual-e5-base",
+      "ollama_model": "llama3.1:8b-instruct-q4_K_M"
+    },
+    {
+      "name": "high_gpu",
+      "description": "Производительный профиль для >=12 GB VRAM",
+      "match": {
+        "min_vram_gb": 12
+      },
+      "text_model": "BAAI/bge-m3",
+      "ollama_model": "qwen2.5:14b-instruct-q4_K_M"
+    }
+  ],
+  "ollama_fallback_cpu_compose": "qwen2.5:3b",
+  "gpu_name_overrides": {
+    "nvidia geforce rtx 2060": "rtx2060_baseline",
+    "nvidia geforce rtx 3060": "high_gpu",
+    "nvidia geforce rtx 5060 ti": "high_gpu"
+  },
+  "candidates": [
+    {
+      "provider": "huggingface",
+      "model": "Alibaba-NLP/gte-multilingual-reranker-base",
+      "kind": "embedding",
+      "downloads": 254793,
+      "source": "huggingface_api"
+    },
+    {
+      "provider": "huggingface",
+      "model": "BAAI/bge-m3",
+      "kind": "embedding",
+      "source": "pinned_help",
+      "pinned": true,
+      "note": "мультиязычная, сильный retrieval",
+      "dim": 1024
+    },
+    {
+      "provider": "huggingface",
+      "model": "Cohere/embed-multilingual-light-v3.0",
+      "kind": "embedding",
+      "source": "pinned_help",
+      "pinned": true,
+      "note": "легкая мультиязычная",
+      "dim": 384
+    },
+    {
+      "provider": "huggingface",
+      "model": "Xenova/bge-m3",
+      "kind": "embedding",
+      "downloads": 21769,
+      "source": "huggingface_api"
+    },
+    {
+      "provider": "huggingface",
+      "model": "Xenova/multilingual-e5-small",
+      "kind": "embedding",
+      "downloads": 116155,
+      "source": "huggingface_api"
+    },
+    {
+      "provider": "huggingface",
+      "model": "intfloat/multilingual-e5-base",
+      "kind": "embedding",
+      "source": "pinned_help",
+      "pinned": true,
+      "note": "качество для русского+английского",
+      "dim": 768
+    },
+    {
+      "provider": "huggingface",
+      "model": "intfloat/multilingual-e5-large",
+      "kind": "embedding",
+      "downloads": 7829638,
+      "source": "huggingface_api"
+    },
+    {
+      "provider": "huggingface",
+      "model": "intfloat/multilingual-e5-large-instruct",
+      "kind": "embedding",
+      "downloads": 1579137,
+      "source": "huggingface_api"
+    },
+    {
+      "provider": "huggingface",
+      "model": "intfloat/multilingual-e5-small",
+      "kind": "embedding",
+      "downloads": 9917794,
+      "source": "huggingface_api"
+    },
+    {
+      "provider": "huggingface",
+      "model": "jina-embeddings-v3",
+      "kind": "embedding",
+      "dim": 1024,
+      "source": "embedding_config"
+    },
+    {
+      "provider": "huggingface",
+      "model": "jinaai/jina-embeddings-v3",
+      "kind": "embedding",
+      "source": "pinned_help",
+      "pinned": true,
+      "note": "мультиязычная, длинный контекст",
+      "dim": 1024
+    },
+    {
+      "provider": "huggingface",
+      "model": "jinaai/jina-embeddings-v4",
+      "kind": "embedding",
+      "downloads": 608789,
+      "source": "huggingface_api"
+    },
+    {
+      "provider": "huggingface",
+      "model": "jinaai/jina-embeddings-v5-omni-nano",
+      "kind": "embedding",
+      "downloads": 44921,
+      "source": "huggingface_api"
+    },
+    {
+      "provider": "huggingface",
+      "model": "jinaai/jina-embeddings-v5-omni-small",
+      "kind": "embedding",
+      "downloads": 197859,
+      "source": "huggingface_api"
+    },
+    {
+      "provider": "huggingface",
+      "model": "jinaai/jina-embeddings-v5-omni-small-retrieval",
+      "kind": "embedding",
+      "downloads": 14223,
+      "source": "huggingface_api"
+    },
+    {
+      "provider": "huggingface",
+      "model": "jinaai/jina-embeddings-v5-omni-small-retrieval-GGUF",
+      "kind": "embedding",
+      "downloads": 2409,
+      "source": "huggingface_api"
+    },
+    {
+      "provider": "huggingface",
+      "model": "jinaai/jina-embeddings-v5-text-nano",
+      "kind": "embedding",
+      "downloads": 686709,
+      "source": "huggingface_api"
+    },
+    {
+      "provider": "huggingface",
+      "model": "jinaai/jina-embeddings-v5-text-nano-classification",
+      "kind": "embedding",
+      "downloads": 3137,
+      "source": "huggingface_api"
+    },
+    {
+      "provider": "huggingface",
+      "model": "jinaai/jina-embeddings-v5-text-nano-retrieval-GGUF",
+      "kind": "embedding",
+      "downloads": 2373,
+      "source": "huggingface_api"
+    },
+    {
+      "provider": "huggingface",
+      "model": "jinaai/jina-embeddings-v5-text-small",
+      "kind": "embedding",
+      "downloads": 394229,
+      "source": "huggingface_api"
+    },
+    {
+      "provider": "huggingface",
+      "model": "sentence-transformers/LaBSE",
+      "kind": "embedding",
+      "source": "pinned_help",
+      "pinned": true,
+      "note": "классическая multilingual-модель"
+    },
+    {
+      "provider": "huggingface",
+      "model": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+      "kind": "embedding",
+      "source": "pinned_help",
+      "pinned": true,
+      "note": "быстрая мультиязычная"
+    },
+    {
+      "provider": "ollama",
+      "model": "bge-m3",
+      "kind": "embedding_or_rag",
+      "source": "ollama_library"
+    }
+  ],
+  "candidate_refresh": {
+    "updated_at_utc": "2026-06-21T17:23:10Z",
+    "total_candidates": 23,
+    "sources": {
+      "embedding_config": 4,
+      "huggingface_api": 19,
+      "ollama_library": 1,
+      "pinned_help": 6
+    },
+    "errors": []
+  }
+}
