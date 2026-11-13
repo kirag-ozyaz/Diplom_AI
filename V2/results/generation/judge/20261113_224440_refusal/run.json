@@ -1,0 +1,71 @@
+{
+  "settings": {
+    "answers": "V2\\results\\generation\\answers\\20261113_223719_refusal\\answers.jsonl",
+    "answers_sha256_at_start": "67771e075675c21b1f3307a19cceb8ae54882d8f95b9d84e619c97d20d0fd2a6",
+    "generation": {
+      "input": "V2\\results\\generation\\refusal_retrieval\\20261113_222139_refusal\\retrieval.json",
+      "input_sha256": "e2ffb15abf1bdb176b786c62283284365b309d4793a37f13ee14cd87dba5977b",
+      "questions": "V2\\data\\rag_eval_questions\\eval_questions_refusal.json",
+      "questions_sha256": "d919f583eb1a381c478e98e3910b77e987abe7412a6bd24bc2e9e56f97a7a35d",
+      "retrieval_mode": "rerank",
+      "search_settings": {
+        "mode": {
+          "collection": "diplom_v2_rerank",
+          "model": "intfloat/multilingual-e5-base",
+          "dimension": 768,
+          "query_prefix": "query: ",
+          "passage_prefix": "passage: ",
+          "normalize_embeddings": true,
+          "rerank_model": "BAAI/bge-reranker-v2-m3",
+          "candidate_depth": 50
+        },
+        "clip": null
+      },
+      "clip_enabled": false,
+      "retrieval_created_at": "2026-11-13T22:21:39+04:00",
+      "top_k": 5,
+      "max_chars": 4000,
+      "model": "qwen2.5:14b-instruct-q4_K_M",
+      "host": "http://localhost:11434",
+      "temperature": 0.2,
+      "num_predict": 512,
+      "num_ctx": 8192,
+      "system_prompt": "Ты помощник по Правилам устройства электроустановок (ПУЭ). Отвечай только на основе приведённого контекста. Если ответа нет в контексте — так и скажи. Указывай номера пунктов ПУЭ из контекста.",
+      "only_originals": false,
+      "limit": 0,
+      "supplied_to_model": [
+        "query",
+        "top-k fragments"
+      ],
+      "started_at": "2026-11-13T22:37:19+04:00"
+    },
+    "judge_model": "qwen2.5:14b-instruct-q4_K_M",
+    "temperature": 0,
+    "num_ctx": 8192,
+    "max_chars": 1500,
+    "criteria": [
+      [
+        "facts",
+        "Соответствие вопросу и обязательным фактам"
+      ],
+      [
+        "numbers",
+        "Точность чисел, единиц, знаков и условий"
+      ],
+      [
+        "exceptions",
+        "Сохранение исключений и области применения"
+      ],
+      [
+        "sources",
+        "Подтверждение утверждений источниками"
+      ],
+      [
+        "refusal",
+        "Обоснованность отказа либо полнота частичного ответа"
+      ]
+    ],
+    "started_at": "2026-11-13T22:44:40+04:00",
+    "limitation": "Судья — та же модель, что генерировала ответы (решение автора 12.11.2026); оценки вспомогательные."
+  }
+}

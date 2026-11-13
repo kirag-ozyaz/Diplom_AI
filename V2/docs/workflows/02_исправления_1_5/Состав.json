@@ -1,0 +1,43 @@
+{
+  "archive": "V2_исправления_1_5.zip",
+  "base": "Installed V2 complete sources plus prior patches; cumulative extraction and preparation fixes, no configs/data",
+  "files": [
+    {
+      "path": "V2/docs/workflows/V2_исправления.md",
+      "sha256": "3b32381f818357c534accd0224e4c9b2a7f14d8d2ae5fc1d168acba6407606a8"
+    },
+    {
+      "path": "V2/docs/workflows/Проверки.json",
+      "sha256": "0b237a74837d27edf66811c34c9ee05b1f047de7e3b9bfc677c7ce241d5733ca"
+    },
+    {
+      "path": "V2/scripts/check_extraction.py",
+      "sha256": "bd4b712c9978df2294f4bb1153fb1221f6ff99d0d92c90a82f515dc2cbca1d6d"
+    },
+    {
+      "path": "V2/scripts/check_preparation.py",
+      "sha256": "f035ff67d1e15c511e00258c2a74009299ef4c34e812b680253e83f7f417cc52"
+    },
+    {
+      "path": "V2/scripts/prepare_chunks.py",
+      "sha256": "f30ceabc4a90fc0b0b8c478ccc19bc91e910d40f0556aa87defe9656a6383ae6"
+    },
+    {
+      "path": "V2/scripts/tests/test_check_extraction.py",
+      "sha256": "58ec625ff651aeba417d6bca9c91e01a42a594ee1ed46f35ec77b9b4029f3f00"
+    },
+    {
+      "path": "V2/scripts/tests/test_preparation.py",
+      "sha256": "6d2262bd1ec048e254e643d7172c9b1bc1d0fdc2ca8e3c389c49a3c065923ae6"
+    },
+    {
+      "path": "V2/src/retrieval_eval/documents.py",
+      "sha256": "ff8de5d526b4d0b3fc3078c968552640588d3d7d0eab205efefae49b1cc70d05"
+    },
+    {
+      "path": "V2/src/retrieval_eval/preparation.py",
+      "sha256": "6fd124783a67c5cfb0ba836131775ed35eb17306df4f3d4e4b603f49a8931330"
+    }
+  ],
+  "note": "This manifest omits its own checksum."
+}

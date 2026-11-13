@@ -1,0 +1,156 @@
+{
+  "commands": [
+    {
+      "command": "python scripts/import_extracted_to_V2/prepare.py",
+      "result": {
+        "operation": "prepare_markdown",
+        "status": "manual_markdown_candidates_prepared",
+        "chapters": [
+          "1.1",
+          "1.2",
+          "1.3",
+          "1.4",
+          "1.5",
+          "1.6",
+          "1.7",
+          "1.8",
+          "1.9"
+        ],
+        "input_markdown_documents": 9,
+        "own_clauses": 456,
+        "structural_context_blocks": 95,
+        "source_policy": "as_supplied_no_normative_rewriting",
+        "schema_version": "manual-markdown-candidate-1",
+        "chunks": 552,
+        "documents": 9,
+        "database_write_performed": false,
+        "ready_for_final_scoring": false,
+        "semantic_or_visual_approval": false,
+        "qrels_rebuild_required": true,
+        "output": "/workspace/md_import_bundle/unpacked_test/data/chunked_manual",
+        "report": "/workspace/md_import_bundle/unpacked_test/data/chunked_manual/_audit/report.json",
+        "console_log": "/workspace/md_import_bundle/unpacked_test/V2/results/import_extracted_to_V2/logs/20261108_210956_693172_prepare.log"
+      }
+    },
+    {
+      "command": "python scripts/import_extracted_to_V2/check.py",
+      "result": {
+        "status": "technical_preservation_passed",
+        "chunks": 552,
+        "input_rows_accounted": 551,
+        "text_and_asset_integrity_verified": true,
+        "database_write_performed": false,
+        "semantic_or_visual_approval": false,
+        "ready_for_final_scoring": false,
+        "markdown_documents_reconstructed": 9,
+        "own_clauses": 456,
+        "markdown_bytes_preserved": true,
+        "output": "/workspace/md_import_bundle/unpacked_test/data/chunked_manual",
+        "report": "/workspace/md_import_bundle/unpacked_test/data/chunked_manual/_audit/report.json",
+        "console_log": "/workspace/md_import_bundle/unpacked_test/V2/results/import_extracted_to_V2/logs/20261108_210956_842070_check.log"
+      }
+    },
+    {
+      "command": "python scripts/import_extracted_to_V2/merge.py",
+      "result": {
+        "operation": "merge_manual_documents",
+        "status": "plan_only_no_active_chunks",
+        "applied": false,
+        "input_manual_rows": 552,
+        "input_v2_rows": 3060,
+        "prefer_manual_chapters": [],
+        "selection_policy": "whole_document",
+        "manual_documents_selected": 0,
+        "v2_documents_retained": 0,
+        "source_policy": "as_supplied_no_normative_rewriting",
+        "archived_rows": 3612,
+        "schema_version": "manual-markdown-candidate-1",
+        "chunks": 0,
+        "documents": 0,
+        "database_write_performed": false,
+        "ready_for_final_scoring": false,
+        "semantic_or_visual_approval": false,
+        "qrels_rebuild_required": true,
+        "output": "/workspace/md_import_bundle/unpacked_test/V2/results/import_extracted_to_V2/plan",
+        "report": "/workspace/md_import_bundle/unpacked_test/V2/results/import_extracted_to_V2/plan/_audit/report.json",
+        "console_log": "/workspace/md_import_bundle/unpacked_test/V2/results/import_extracted_to_V2/logs/20261108_210957_543447_merge.log"
+      }
+    },
+    {
+      "command": "python scripts/import_extracted_to_V2/check.py --output V2/results/import_extracted_to_V2/plan",
+      "result": {
+        "status": "technical_preservation_passed",
+        "chunks": 0,
+        "input_rows_accounted": 3612,
+        "text_and_asset_integrity_verified": true,
+        "database_write_performed": false,
+        "semantic_or_visual_approval": false,
+        "ready_for_final_scoring": false,
+        "whole_document_priority_verified": true,
+        "manual_documents_selected": 0,
+        "output": "/workspace/md_import_bundle/unpacked_test/V2/results/import_extracted_to_V2/plan",
+        "report": "/workspace/md_import_bundle/unpacked_test/V2/results/import_extracted_to_V2/plan/_audit/report.json",
+        "console_log": "/workspace/md_import_bundle/unpacked_test/V2/results/import_extracted_to_V2/logs/20261108_210958_091925_check.log"
+      }
+    },
+    {
+      "command": "python scripts/import_extracted_to_V2/merge.py --apply --prefer-manual-chapters 1.1 1.2 1.3 1.4 1.5 1.6 1.7 1.8 1.9",
+      "result": {
+        "operation": "merge_manual_documents",
+        "status": "merged_manual_candidates_prepared",
+        "applied": true,
+        "input_manual_rows": 552,
+        "input_v2_rows": 3060,
+        "prefer_manual_chapters": [
+          "1.1",
+          "1.2",
+          "1.3",
+          "1.4",
+          "1.5",
+          "1.6",
+          "1.7",
+          "1.8",
+          "1.9"
+        ],
+        "selection_policy": "whole_document",
+        "manual_documents_selected": 9,
+        "v2_documents_retained": 37,
+        "source_policy": "as_supplied_no_normative_rewriting",
+        "manual_active_chunks": 552,
+        "v2_active_chunks": 2594,
+        "archived_rows": 466,
+        "schema_version": "manual-markdown-candidate-1",
+        "chunks": 3146,
+        "documents": 46,
+        "database_write_performed": false,
+        "ready_for_final_scoring": false,
+        "semantic_or_visual_approval": false,
+        "qrels_rebuild_required": true,
+        "output": "/workspace/md_import_bundle/unpacked_test/V2/data/chunked_merged_manual",
+        "report": "/workspace/md_import_bundle/unpacked_test/V2/data/chunked_merged_manual/_audit/report.json",
+        "console_log": "/workspace/md_import_bundle/unpacked_test/V2/results/import_extracted_to_V2/logs/20261108_210959_390597_merge.log"
+      }
+    },
+    {
+      "command": "python scripts/import_extracted_to_V2/check.py --output V2/data/chunked_merged_manual",
+      "result": {
+        "status": "technical_preservation_passed",
+        "chunks": 3146,
+        "input_rows_accounted": 3612,
+        "text_and_asset_integrity_verified": true,
+        "database_write_performed": false,
+        "semantic_or_visual_approval": false,
+        "ready_for_final_scoring": false,
+        "whole_document_priority_verified": true,
+        "manual_documents_selected": 9,
+        "output": "/workspace/md_import_bundle/unpacked_test/V2/data/chunked_merged_manual",
+        "report": "/workspace/md_import_bundle/unpacked_test/V2/data/chunked_merged_manual/_audit/report.json",
+        "console_log": "/workspace/md_import_bundle/unpacked_test/V2/results/import_extracted_to_V2/logs/20261108_211000_436720_check.log"
+      }
+    }
+  ],
+  "all_original_inputs_unchanged": true,
+  "unchanged_input_files": 795,
+  "old_converter_in_zip": false,
+  "python_version": "3.13.5 (main, Aug 10 2026, 12:06:59) [GCC 14.2.0]"
+}

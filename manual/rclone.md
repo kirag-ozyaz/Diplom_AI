@@ -37,7 +37,7 @@ rclone config
 * Нажмите `n` (New remote).
 * **Name:** укажите имя подключения (в проекте используется `gdrive_kirag_3`; для своей настройки подойдёт любое имя, например `gdrive`).
 * **Storage:** напишите `drive` (или найдите номер пункта *Google Drive*).
-* **Client ID / Secret:** нажмите `Enter` (пропустить для использования стандартных ключей).
+* **Client ID / Secret:** у `gdrive_kirag_3` уже стоит свой клиент Google типа **Desktop app** (раздел 7.3). Встроенный клиент rclone — только запасной путь, и Google отключает его в течение 2026 года. На вопросе `Continue using the shared client_id anyway?` ответ `y` **стирает** свой `client_id` и `client_secret`. Пустое значение или одна буква ломают вход: см. раздел 7.1.
 * **Scope:** введите `1` (полный доступ ко всем файлам) и нажмите `Enter`.
 * **Service account file:** нажмите `Enter` (пропустить).
 * **Edit advanced config:** введите `n` (Enter).
@@ -209,4 +209,100 @@ rclone mount gdrive_kirag_3: X: --vfs-cache-mode full
 * **`didn't find section in config file`:** remote не настроен — выполните `rclone config` (раздел 2) и проверьте имя в `RCLONE_REMOTE` в bat.
 * **`malformed rule` в фильтрах:** bat пишет файл фильтров в UTF-8 **без BOM**; при ручном редактировании `filters.txt` сохраняйте в UTF-8 без BOM.
 * **Зависание или крайне низкая скорость на старте:** rclone обходит большие деревья (`node_modules`, `.venv`). Убедитесь, что они в `.gitignore` / фильтрах; при необходимости прервите (`Ctrl + C`) и проверьте `--dry-run`.
-* **Лимиты Google Drive API:** если rclone выдаёт `403 User Rate Limit Exceeded`, создайте персональный Client ID в Google Cloud Console по [официальному руководству Rclone](https://rclone.org/drive/) и обновите подключение через `rclone config`.
+* **Лимиты Google Drive API:** `403 User Rate Limit Exceeded` значит, что кончилась квота запросов. Свой Client ID (раздел 7.3) даёт отдельную квоту. Предупреждение `shared Google Drive client_id is being retired … during 2026` само по себе не ошибка: так rclone говорит, что в конфиге нет своего клиента.
+* **`invalid_client` / 401, занятый порт 53682, `403 access_denied`:** см. разделы 7.1–7.3.
+
+#### 7.1. Восстановление входа: `invalid_client` (401)
+
+Симптомы до начала копирования:
+
+* в консоли: `couldn't fetch token: invalid_client`;
+* в браузере: `The OAuth client was not found` / `Ошибка 401: invalid_client`.
+
+Причина, которая уже встречалась у `gdrive_kirag_3`: в `%APPDATA%\rclone\rclone.conf` у remote стоит мусорный `client_id` (буква `q` или слово `client_secret`). Такого OAuth-клиента у Google нет, поэтому старый `token` в том же файле не помогает. Файлы при этом не копируются и не удаляются.
+
+Проверка без вывода секретов. В выводе не должно быть длинного токена на экране, если вы его никому не пересылаете; смотрите только ключи:
+
+```powershell
+rclone config dump
+```
+
+Для встроенного клиента rclone поля `client_id` быть не должно. Свой клиент выглядит как `….apps.googleusercontent.com` и рядом есть `client_secret`.
+
+Что делать:
+
+1. Если `rclone config` ещё ждёт ввод, нажмите `Ctrl+C`.
+2. Откройте `C:\Users\kirag\AppData\Roaming\rclone\rclone.conf` и удалите строки `client_id = …` и `client_secret = …`, если значения не настоящие. Строку `token` руками не меняйте.
+3. В PowerShell **не** очищайте поля пустыми кавычками:
+
+```powershell
+rclone config update gdrive_kirag_3 client_id "" client_secret ""
+```
+
+PowerShell выбрасывает аргументы `""`, и rclone записывает `client_id = client_secret`. После этого 401 остаётся.
+
+4. Заново получите токен:
+
+```powershell
+rclone config reconnect gdrive_kirag_3:
+```
+
+Дальше два разных входа.
+
+**Запасной, общий клиент rclone** — только если строк `client_id` и `client_secret` в конфиге уже нет:
+
+| Вопрос | Ответ |
+| --- | --- |
+| `Continue using the shared client_id anyway?` | `y` |
+| `Token already configured - replace it?` | `y` |
+| `Use web browser to automatically authenticate?` | `y` |
+| `Configure this as a Shared Drive (Team Drive)?` | `n` |
+
+**Свой клиент** (как сейчас у `gdrive_kirag_3`) — раздел 7.3. Ответ `y` на общий клиент удаляет свой id и secret. Ответ `n` на браузер включает режим без браузера (`config_token>`): ничего туда не вставляйте, нажмите `Ctrl+C`.
+
+Проверка любого входа: `rclone lsd gdrive_kirag_3:` — список папок в корне, среди них `project_rag`. Строка `Skipping unexportable google document "application/vnd.google-apps.project"` на копирование не влияет. После списка снова `rclone-backup.bat`, `rclone-sync.bat` или `rclone-sync-16.bat`.
+
+#### 7.2. Порт авторизации занят (`127.0.0.1:53682`)
+
+```text
+listen tcp 127.0.0.1:53682: bind: Only one usage of each socket address
+```
+
+Так бывает, если предыдущий `rclone config reconnect` не завершился и всё ещё слушает порт, на который браузер возвращает код. Новый вход из-за этого не стартует. Часто это оставшийся `rclone.exe`.
+
+Найдите процесс и завершите его (номер PID — последняя колонка `netstat`), затем повторите reconnect из раздела 7.3:
+
+```powershell
+netstat -ano | findstr ":53682"
+taskkill /PID НОМЕР_PID /F
+rclone config reconnect gdrive_kirag_3:
+```
+
+#### 7.3. Свой Client ID (текущая настройка `gdrive_kirag_3`)
+
+Общий клиент rclone Google отключает в течение 2026 года, и на него же общая квота запросов. Для этого remote создан отдельный OAuth-клиент в проекте Google Cloud `rclone`.
+
+1. В [Google Cloud Console](https://console.cloud.google.com/) включите **Google Drive API**.
+2. **Google Auth platform:** имя приложения `rclone`, аудитория **External**, статус оставьте **Testing**. Проверку бренда ([brand verification](https://developers.google.com/identity/protocols/oauth2/production-readiness/brand-verification#projects-used-in-dev-test-stage)) для личного бэкапа не проходите: она нужна только опубликованному приложению для любых аккаунтов Google.
+3. **Data Access:** scope `https://www.googleapis.com/auth/drive`.
+4. **Clients → Create client:** тип **Desktop app**, имя `rclone`. Пункт про AI-агента не включайте.
+5. Скачайте JSON со страницы создания. В `rclone.conf` переносите `client_id` и `client_secret` **из этого файла**, не со скриншота окна: пропуск цифры или путаница `i`/`l` дают `401 invalid_client`, хотя клиент в консоли есть. JSON не кладите в каталог проекта: секрет попадёт в бэкап и в git.
+6. **Audience → Test users:** добавьте тот же Gmail, которым входите в Диск. Без этого браузер отвечает `403 access_denied`.
+7. Строки пишутся в `C:\Users\kirag\AppData\Roaming\rclone\rclone.conf` (поле `token` руками не менять). В PowerShell пустые `""` в `rclone config update` не передаются: rclone записывает `client_id = client_secret`.
+
+Повторный вход:
+
+```powershell
+rclone config reconnect gdrive_kirag_3:
+```
+
+| Вопрос | Ответ |
+| --- | --- |
+| `Continue using the shared client_id anyway?` | вопроса быть не должно; если он есть, свой id уже стёрт — `Ctrl+C`, верните строки из JSON |
+| `Token already configured - replace it?` | `y` |
+| `Use web browser to automatically authenticate?` | `y` |
+| `Configure this as a Shared Drive (Team Drive)?` | `n` |
+
+Если Google пишет, что приложение не проверено: **Дополнительно** → **Перейти на страницу rclone** → разрешить доступ. Успех в консоли: `Got code`, затем приглашение командной строки.
+
+Пока статус **Testing**, Google ограничивает срок токена примерно семью днями. Когда копирование снова откажется брать токен, повторите `rclone config reconnect gdrive_kirag_3:` с теми же ответами. Публиковать приложение не нужно.

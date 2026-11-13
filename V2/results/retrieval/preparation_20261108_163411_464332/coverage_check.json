@@ -1,0 +1,11 @@
+{
+  "status": "technical_coverage_passed",
+  "documents": 46,
+  "chunks": 3060,
+  "documents_skipped": 0,
+  "semantic_or_visual_approval": false,
+  "database_write_performed": false,
+  "normalization_deletions_verified": true,
+  "removed_control_tokens": 621,
+  "preparation_report": "X:\\Учеба_УИИ\\Итоговы_Проект\\V2\\results\\retrieval\\preparation_20261108_163411_464332\\preparation.json"
+}

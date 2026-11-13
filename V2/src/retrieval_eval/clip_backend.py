@@ -73,6 +73,10 @@ def load_clip(config, chunks, locations, manifest, allow_db_write=False):
     indexes.add_index(field_name='vector',index_type='AUTOINDEX',metric_type='COSINE')
     client.create_collection(collection_name=name,schema=schema,index_params=indexes,consistency_level='Strong')
     inserted=0
+    import time
+    from .common import progress
+    started,n_batches=time.monotonic(),(len(ids)+config['batch_size']-1)//config['batch_size']
+    progress(f'загрузка {name}',0,n_batches,started)
     for start in range(0,len(ids),config['batch_size']):
         group=ids[start:start+config['batch_size']]
         vs=first_vectors if start==0 else vectors(group)
@@ -80,6 +84,7 @@ def load_clip(config, chunks, locations, manifest, allow_db_write=False):
         result=client.insert(collection_name=name,data=entities)
         ensure(result.get('insert_count')==len(entities),'Неполная CLIP-вставка; коллекция не удаляется')
         inserted+=len(entities)
+        progress(f'загрузка {name}',start//config['batch_size']+1,n_batches,started)
     client.flush(collection_name=name)
     client.load_collection(collection_name=name)
     ensure(int(client.get_collection_stats(collection_name=name)['row_count'])==len(ids),'Неполный CLIP-индекс')

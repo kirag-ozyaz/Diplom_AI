@@ -1,0 +1,115 @@
+1. проверим существующие чанки, без моделей и Milvus:
+python V2/scripts/run_pipeline.py validate --corpus-only
+
+2. первые пять предупреждений — выполните:
+python -c "import json; d=json.load(open('V2/results/retrieval/20261108_140601_120036/validation.json',encoding='utf-8')); print(json.dumps(d['warnings'][:5],ensure_ascii=False,indent=2))"
+
+3. Сначала выполняем только извлечение, **без создания чанков**
+python V2/scripts/run_pipeline.py prepare-documents --from-raw data/raw
+
+
+4. Отдельная проверка извлечения
+python V2/scripts/check_extraction.py
+создрются `audit.json` и `audit.md` в новой папке `V2/results/extraction_audit/`
+и выводится отчет
+{
+  "report": "X:\\Учеба_УИИ\\Итоговы_Проект\\V2\\results\\extraction_audit\\20261108_144525_961542\\audit.json",
+  "input": "X:\\Учеба_УИИ\\Итоговы_Проект\\V2\\results\\retrieval\\documents_20261108_141723_743877",
+  "selection": "latest_completed_by_folder_timestamp",
+  "ignored_incomplete": [],
+  "status": "failed",
+  "documents": 46,
+  "errors": 1,
+  "review": 24
+}
+
+Проверка ошибок аудита в папке 20261108_144525_961542, 20261108_145853_712170
+а. Выбираем error
+python -c "import json; d=json.load(open('V2/results/extraction_audit/20261108_145853_712170/audit.json',encoding='utf-8')); e=[{'source': 'общая проверка', **f} for f in d['global_findings'] if f['level']=='error']; e += [{'source': x['source_file'], **f} for x in d['documents'] for f in x['findings'] if f['level']=='error']; print(json.dumps(e,ensure_ascii=False,indent=2))"
+
+b. Выбираем review
+python -c "import json; d=json.load(open('V2/results/extraction_audit/20261108_145853_712170/audit.json',encoding='utf-8')); e=[{'document': 'общая проверка', **f} for f in d['global_findings'] if f['level']=='review']; e += [{'document': x['source_file'], **f} for x in d['documents'] for f in x['findings'] if f['level']=='review']; print(json.dumps(e,ensure_ascii=False,indent=2))"
+
+с. python -c "import json; from collections import Counter; d=json.load(open('V2/results/extraction_audit/20261108_144525_961542/audit.json',encoding='utf-8')); print(json.dumps([{'document': x['source_file'], 'missing': dict(Counter(f['source'])-Counter(f['extracted'])), 'extra': dict(Counter(f['extracted'])-Counter(f['source']))} for x in d['documents'] for f in x['findings'] if f['code']=='image_content_or_occurrences_differ'],ensure_ascii=False,indent=2))"
+
+в. $r = Get-ChildItem V2/results/extraction_audit/*/audit.json | Sort-Object FullName | Select-Object -Last 1
+(Get-Content $r.FullName -Raw -Encoding UTF8 | ConvertFrom-Json).issue_counts
+
+5. 
+извлекает документы в Markdown и сохраняет ресурсы. 
+python V2/scripts/run_pipeline.py prepare-documents --from-raw data/raw
+сверяет извлечение с исходниками.
+python V2/scripts/check_extraction.py
+
+6. 
+Первые две команды сохранят прежние чанки в резервную папку и создадут пустую папку для новых
+Rename-Item -LiteralPath "V2/data/chunked" -NewName ("chunked_backup_" + (Get-Date -Format "yyyyMMdd_HHmmss_fff"))
+New-Item -ItemType Directory -Path "V2/data/chunked" | Out-Null
+
+берёт последнее завершённое извлечение и создаёт кандидаты чанков. Перед этим повторно проверяет извлечение.
+python V2/scripts/prepare_chunks.py
+проверяет покрытие Markdown записанными чанками и сохранность ресурсов.
+python V2/scripts/check_preparation.py
+*************************************************************************
+Для объединения со старыми чанками 
+python scripts/import_extracted_to_V2/prepare.py
+python scripts/import_extracted_to_V2/check.py
+python scripts/import_extracted_to_V2/merge.py --apply --prefer-manual-chapters 1.1 1.2 1.3 1.4 1.5 1.6 1.7 1.8 1.9
+python scripts/import_extracted_to_V2/check.py --output V2/data/chunked_merged_manual
+**************************************************
+отделим рабочие чанки от архива.
+& {
+    $ErrorActionPreference = "Stop"
+    $src = "V2/data/chunked_merged_manual"
+    $dst = "V2/data/chunked_active_manual"
+    if (Test-Path $dst) { throw "Папка уже существует: $dst" }
+    New-Item -ItemType Directory -Path $dst | Out-Null
+    Copy-Item "$src/*.jsonl" -Destination $dst
+    Copy-Item "$src/assets" -Destination "$dst/assets" -Recurse
+    (Get-ChildItem $dst -Filter *.jsonl).Count
+    (Get-ChildItem $dst -Filter *.jsonl | Get-Content | Measure-Object -Line).Lines
+}
+Создаём отдельный конфиг для нового корпуса — основной `pipeline.json` не меняем. Выполните из корня проекта:
+& {
+    $ErrorActionPreference = "Stop"
+    $newConfig = "V2/configs/pipeline_manual.json"
+    if (Test-Path $newConfig) { throw "Файл уже существует: $newConfig" }
+    $config = Get-Content "V2/configs/pipeline.json" -Raw -Encoding UTF8 | ConvertFrom-Json
+    $config.paths.chunks = "V2/data/chunked_active_manual"
+    $config | ConvertTo-Json -Depth 50 | Set-Content $newConfig -Encoding UTF8
+    python V2/scripts/run_pipeline.py validate --corpus-only --config V2/configs/pipeline_manual.json
+}
+Это проверит совместимость корпуса с V2 **без подключения к базе и загрузки моделей**.
+******************************************************************
+Первая команда создаст отдельный конфиг для прямого чтения `chunked_merged_manual`
+python V2/scripts/configure_manual_corpus.py
+python V2/scripts/run_pipeline.py validate --corpus-only --config V2/configs/pipeline_manual_merged.json
+******************************************************************
+сначала подготовим `qrels` под обновлённые чанки
+Команда создаст отдельный файл кандидатов, не заменяя прежний `retrieval_qrels.json`
+python V2/scripts/prepare_retrieval_qrels.py generate --project-root . --chunks V2/data/chunked_merged_manual --questions V2/data/rag_eval_questions/eval_questions.json --output V2/data/rag_eval_questions/retrieval_qrels.manual_merged.candidates.json
+***************************************************************************
+python V2/scripts/build_split_eval/build.py --project-root .
+python V2/scripts/run_pipeline.py validate --config V2/configs/pipeline_manual_merged_split.json
+*************************************************************************
+Теперь проверим поиск на новом наборе. Нужен запущенный Milvus, коллекции те же, что для manual_merged:
+python V2/scripts/run_pipeline.py search --config V2/configs/pipeline_manual_merged_split.json --mode base
+python V2/scripts/run_pipeline.py evaluate --config V2/configs/pipeline_manual_merged_split.json --mode base --input V2/results/retrieval/split/<папка из вывода search>/retrieval.json
+***************************************************************************
+создаёт коллекцию `diplom_v2_base` и загружает в неё эмбеддинги e5-base для всех чанков. Затем ищет по 720 вопросам и считает метрики.
+python V2/scripts/run_pipeline.py all --config V2/configs/pipeline_manual_merged_split.json --mode base --allow-db-write
+делает то же самое для коллекции `diplom_v2_e5`. Настройки у неё как у `base`, поэтому результат совпадёт. Команда нужна только как основа для режима `rerank`
+python V2/scripts/run_pipeline.py all --config V2/configs/pipeline_manual_merged_split.json --mode e5 --allow-db-write
+делает то же самое для коллекции `diplom_v2_rerank`
+python V2/scripts/run_pipeline.py all --config V2/configs/pipeline_manual_merged_split.json --mode rerank --allow-db-write 2>&1 | Tee-Object -FilePath V2\results\logs\3_rerank.log
+
+ничего не загружает, а ищет в `diplom_v2_e5` 50 кандидатов. Модель bge-reranker пересортировывает их, и по этой выдаче считаются метрики
+python V2/scripts/run_pipeline.py all --config V2/configs/pipeline_manual_merged_split.json --mode rerank --reuse-collection
+создаёт коллекцию `diplom_v2_clip` с CLIP-эмбеддингами изображений из корпуса. Поиска и метрик в этом шаге нет.
+python V2/scripts/run_pipeline.py load-clip --config V2/configs/pipeline_manual_merged_split.json --allow-db-write
+повторяет шаг 3, но добавляет к выдаче найденное через CLIP и объединяет результаты. Так видно, помогает ли поиск по картинкам.
+python V2/scripts/run_pipeline.py all --config V2/configs/pipeline_manual_merged_split.json --mode rerank --reuse-collection --with-clip
+
+***************************************************************************
+7. Подготовим новые чанки из исходников:
+python V2/scripts/run_pipeline.py prepare --from-raw data/raw

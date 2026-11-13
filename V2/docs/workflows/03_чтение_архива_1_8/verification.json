@@ -1,0 +1,47 @@
+[
+  {
+    "command": "python V2/scripts/configure_manual_corpus.py",
+    "result": {
+      "status": "new_config_created",
+      "config": "/workspace/v2_audit_reader_fix/project/V2/configs/pipeline_manual_merged.json",
+      "chunks_folder": "V2/data/chunked_merged_manual",
+      "documents_jsonl": 46,
+      "chunks": 3146,
+      "audit_excluded": true,
+      "old_config_unchanged": true,
+      "database_write_performed": false,
+      "note": "Новые коллекции и совместимые qrels настраиваются отдельно до поиска/оценки."
+    }
+  },
+  {
+    "command": "python V2/scripts/run_pipeline.py validate --corpus-only --config V2/configs/pipeline_manual_merged.json",
+    "result": {
+      "report": "/workspace/v2_audit_reader_fix/project/V2/results/retrieval/20261108_214811_121392/validation.json",
+      "status": "passed_with_warnings",
+      "warnings": 3451,
+      "live_db_checked": false
+    }
+  },
+  {
+    "command": "python V2/scripts/prepare_retrieval_qrels.py generate --project-root . --chunks V2/data/chunked_merged_manual --output V2/data/rag_eval_questions/retrieval_qrels.candidates.manual_merged.json",
+    "result": {
+      "written": "/workspace/v2_audit_reader_fix/project/V2/data/rag_eval_questions/retrieval_qrels.candidates.manual_merged.json",
+      "questions": 268,
+      "candidate_pairs": 925,
+      "questions_without_candidates": 0,
+      "structural_validation": "passed",
+      "semantic_acceptance": "not_performed",
+      "live_retrieval_run": false,
+      "candidate_file": true,
+      "question_count": 268,
+      "chunk_count": 3146,
+      "referenced_chunk_count": 746,
+      "note": "Это проверка структуры/совместимости, не истинности эталонов."
+    }
+  },
+  {
+    "all_corpus_and_audit_files_unchanged": true,
+    "corpus_files_checked": 1388,
+    "milvus_not_used": true
+  }
+]

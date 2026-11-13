@@ -110,3 +110,15 @@ def load_config(v2, project_root=None, config=None):
              'passage_prefix':'passage: ' if 'e5' in model_name.lower() else ''})
     c['_root'], c['_v2'], c['_config_path'] = root, v2, p
     return c
+
+
+def progress(label, done, total, started, unit='батч'):
+    """Строка прогресса в stderr: сделано/всего, прошло, осталось (оценка)."""
+    import sys
+    import time
+    from datetime import timedelta
+    spent = time.monotonic() - started
+    left = spent / done * (total - done) if done else 0
+    fmt = lambda s: str(timedelta(seconds=int(s)))
+    print(f'[{datetime.now():%H:%M:%S}] {label}: {unit} {done}/{total} ({done*100//max(total,1)}%), '
+          f'прошло {fmt(spent)}, осталось ~{fmt(left)}', file=sys.stderr, flush=True)

@@ -7,6 +7,7 @@
       --qrels V2/data/rag_eval_questions/retrieval_qrels.json
   python V2/scripts/prepare_retrieval_qrels.py self-test
 
+Архивные каталоги _audit исключаются из корпуса, индекса и кандидатов.
 По умолчанию читаются data/chunked и
 V2/data/rag_eval_questions/eval_questions.json. Для новых чанков добавьте
 --chunks V2/data/chunked. Все относительные пути заданы от --project-root.
@@ -32,6 +33,7 @@ validate проверяет кандидаты ЭТОГО скрипта либ�
 import argparse
 import hashlib
 import json
+import os
 import re
 import sys
 import tempfile
@@ -40,6 +42,9 @@ import unittest
 from collections import defaultdict
 from datetime import datetime
 from pathlib import Path
+
+
+EXCLUDES_AUDIT = True  # Используется безопасной настройкой конфига V2.
 
 
 class Invalid(ValueError):
@@ -111,8 +116,26 @@ def load_questions(path):
 
 
 def load_corpus(root, folder):
+    root, folder = root.resolve(), folder.resolve()
+    require(within(root, folder), f'Папка чанков вне проекта: {folder}')
     require(folder.is_dir(), f'Нет папки чанков: {folder}')
-    paths = sorted(folder.rglob('*.jsonl'), key=lambda p: relative(root, p))
+    require(not any(part.casefold() == '_audit' for part in folder.relative_to(root).parts),
+            'Нельзя использовать архив _audit как активный корпус')
+    # _audit содержит исходные и заменённые варианты JSONL, НЕ рабочие чанки.
+    # Исключаем каталог ДО обхода, чтобы архив не попадал ни в индекс, ни в qrels.
+    # Обычные вложенные каталоги документов по-прежнему поддерживаются.
+    paths = []
+    for directory, subdirs, filenames in os.walk(folder, followlinks=False):
+        subdirs[:] = sorted(d for d in subdirs if d.casefold() != '_audit')
+        for name in sorted(filenames):
+            if not name.lower().endswith('.jsonl'):
+                continue
+            path = Path(directory) / name
+            require(within(root, path), f'Ссылка за пределы проекта: {path}')
+            require(not any(part.casefold() == '_audit' for part in path.resolve().relative_to(root).parts),
+                    f'Ссылка из рабочего корпуса на архив _audit: {path}')
+            paths.append(path)
+    paths.sort(key=lambda p: relative(root, p))
     require(bool(paths), f'Нет JSONL: {folder}')
     chunks, locations, files, order = {}, {}, [], defaultdict(list)
     for path in paths:

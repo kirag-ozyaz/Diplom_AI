@@ -1,0 +1,48 @@
+V2: генерация ответов и LLM-судья (ZIP 1_11)
+============================================
+Что внутри: V2/scripts/generation/gen_common.py, generate.py, judge.py.
+Распаковать в корень проекта (рядом с папкой V2). Ничего существующего не заменяется,
+результаты пишутся в новую папку V2/results/generation/... (старые файлы не трогаются).
+Нужны: Ollama с моделью qwen2.5:14b-instruct-q4_K_M. Milvus НЕ нужен. Дополнительные пакеты Python не нужны.
+
+0. Кодировка консоли и проверка Ollama (PowerShell, корень проекта)
+$env:PYTHONIOENCODING='utf-8'; [Console]::OutputEncoding=[Text.Encoding]::UTF8
+ollama list
+# если Ollama не запущена: python scripts/infra_start_system/start_ollama.py
+
+1. Найти retrieval.json опыта 4 (реранкер, 50 кандидатов) — самый поздний в split_extra (11.11 00:25)
+$R = (Get-ChildItem V2\results\retrieval\split_extra -Recurse -Filter retrieval.json | Sort-Object LastWriteTime | Select-Object -Last 1).FullName
+$R
+Select-String -Path $R -Pattern '"candidate_depth": 50' -List   # должна найтись строка; если нет — это не тот прогон
+
+2. Пробный запуск на 5 вопросах (1–2 минуты)
+python V2/scripts/generation/generate.py --input $R --label probe --limit 5
+# посмотреть ответы: Get-Content (Get-ChildItem V2\results\generation\answers -Directory | Sort-Object Name | Select-Object -Last 1).FullName\answers.jsonl -Encoding utf8
+
+3. Полная генерация, 720 вопросов (~1,5–2 ч)
+New-Item -ItemType Directory -Force -Path V2\results\logs | Out-Null
+python V2/scripts/generation/generate.py --input $R --label rerank50 2>&1 | Tee-Object -FilePath V2\results\logs\8_generate.log
+# если прервалось — продолжить с того же места (папку взять из лога, строка "Папка:"):
+# python V2/scripts/generation/generate.py --input $R --resume V2/results/generation/answers/<папка>
+
+# Окно будет ждать, пока генерация завершится, и после этого выключит компьютер
+$p = Get-CimInstance Win32_Process -Filter "Name='python.exe'" | Where-Object CommandLine -like '*generate.py*'
+$p.ProcessId
+Wait-Process -Id $p.ProcessId; Stop-Computer -Force
+
+4. LLM-судья (та же qwen2.5:14b), ~1,5–2 ч
+$A = (Get-ChildItem V2\results\generation\answers -Directory -Filter *_rerank50 | Sort-Object Name | Select-Object -Last 1).FullName + '\answers.jsonl'
+python V2/scripts/generation/judge.py --answers $A --label rerank50 2>&1 | Tee-Object -FilePath V2\results\logs\9_judge.log
+# продолжить прерванную оценку: python V2/scripts/generation/judge.py --answers $A --resume V2/results/generation/judge/<папка>
+
+5. Что прислать мне
+V2/results/generation/answers/<папка>_rerank50/run.json и answers.jsonl
+V2/results/generation/judge/<папка>_rerank50/run.json, judgments.jsonl и judge_metrics.json
+логи 8_generate.log и 9_judge.log
+
+Параметры (как в первом проекте): системная подсказка PUE_SYSTEM из src/rag/rag_service.py без изменений,
+temperature 0.2, num_predict 512, в модель идут только вопрос и 5 первых фрагментов выдачи.
+Отличие от первого проекта: явно задано окно num_ctx = 8192 (в первом проекте использовалось окно Ollama по умолчанию),
+фрагмент длиннее 4000 символов обрезается (таких в корпусе около 1 %); в answers.jsonl отмечается, если
+контекст или ответ упёрлись в лимит. Судья: temperature 0, ответ в формате JSON, 5 критериев набора по 0/1/2.
+Ограничение: судья — та же модель, что отвечала; оценки судьи вспомогательные.

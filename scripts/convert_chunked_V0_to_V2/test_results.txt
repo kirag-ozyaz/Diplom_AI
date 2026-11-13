@@ -1,0 +1,44 @@
+test_ambiguous_document_rejected (test_conversion.MigrationTests.test_ambiguous_document_rejected) ... ok
+test_ambiguous_scope_not_guessed (test_conversion.MigrationTests.test_ambiguous_scope_not_guessed) ... ok
+test_apply_requires_explicit_priority (test_conversion.MigrationTests.test_apply_requires_explicit_priority) ... ok
+test_changed_reference_v2_rejected (test_conversion.MigrationTests.test_changed_reference_v2_rejected) ... ok
+test_chapter_filter_cannot_hide_rows_in_mixed_file (test_conversion.MigrationTests.test_chapter_filter_cannot_hide_rows_in_mixed_file) ... ok
+test_chapter_selection_missing_fails (test_conversion.MigrationTests.test_chapter_selection_missing_fails) ... ok
+test_convert_preserves_formula_and_provenance (test_conversion.MigrationTests.test_convert_preserves_formula_and_provenance) ... ok
+test_deterministic_ids_and_rows (test_conversion.MigrationTests.test_deterministic_ids_and_rows) ... ok
+test_duplicate_id_rejected (test_conversion.MigrationTests.test_duplicate_id_rejected) ... ok
+test_explicit_document_map (test_conversion.MigrationTests.test_explicit_document_map) ... ok
+test_external_link_not_fetched (test_conversion.MigrationTests.test_external_link_not_fetched) ... ok
+test_extra_file_detected (test_conversion.MigrationTests.test_extra_file_detected) ... ok
+test_file_uri_not_treated_as_web_url (test_conversion.MigrationTests.test_file_uri_not_treated_as_web_url) ... ok
+test_html_img_preserved_and_relinked (test_conversion.MigrationTests.test_html_img_preserved_and_relinked) ... ok
+test_inputs_unchanged (test_conversion.MigrationTests.test_inputs_unchanged) ... ok
+test_invalid_json_rejected (test_conversion.MigrationTests.test_invalid_json_rejected) ... ok
+test_large_conversion (test_conversion.MigrationTests.test_large_conversion) ... ok
+test_manual_only_clause_retained (test_conversion.MigrationTests.test_manual_only_clause_retained) ... ok
+test_math_warning_does_not_autocorrect_content (test_conversion.MigrationTests.test_math_warning_does_not_autocorrect_content) ... ok
+test_merge_checks_v0_audit_before_use (test_conversion.MigrationTests.test_merge_checks_v0_audit_before_use) ... ok
+test_merge_multipart_preserves_all_parts (test_conversion.MigrationTests.test_merge_multipart_preserves_all_parts) ... ok
+test_merge_plan_emits_no_active_chunks (test_conversion.MigrationTests.test_merge_plan_emits_no_active_chunks) ... ok
+test_merge_prefers_manual_without_losing_alternative (test_conversion.MigrationTests.test_merge_prefers_manual_without_losing_alternative) ... ok
+test_merge_prefers_v2_explicitly (test_conversion.MigrationTests.test_merge_prefers_v2_explicitly) ... ok
+test_missing_asset_no_partial_output (test_conversion.MigrationTests.test_missing_asset_no_partial_output) ... ok
+test_modified_archive_detected (test_conversion.MigrationTests.test_modified_archive_detected) ... ok
+test_modified_asset_detected (test_conversion.MigrationTests.test_modified_asset_detected) ... ok
+test_modified_content_detected (test_conversion.MigrationTests.test_modified_content_detected) ... ok
+test_path_traversal_rejected (test_conversion.MigrationTests.test_path_traversal_rejected) ... ok
+test_reject_existing_output (test_conversion.MigrationTests.test_reject_existing_output) ... ok
+test_reject_output_inside_input (test_conversion.MigrationTests.test_reject_output_inside_input) ... ok
+test_reject_output_parent_of_input (test_conversion.MigrationTests.test_reject_output_parent_of_input) ... ok
+test_short_clause_not_promoted (test_conversion.MigrationTests.test_short_clause_not_promoted) ... ok
+test_unassigned_manual_archived_not_duplicate_active (test_conversion.MigrationTests.test_unassigned_manual_archived_not_duplicate_active) ... ok
+test_unknown_document_rejected (test_conversion.MigrationTests.test_unknown_document_rejected) ... ok
+test_unknown_priority_chapter_rejected (test_conversion.MigrationTests.test_unknown_priority_chapter_rejected) ... ok
+test_utf8_lossless_split (test_conversion.MigrationTests.test_utf8_lossless_split) ... ok
+test_v2_only_document_retained (test_conversion.MigrationTests.test_v2_only_document_retained) ... ok
+test_windows_absolute_link_rejected (test_conversion.MigrationTests.test_windows_absolute_link_rejected) ... ok
+
+----------------------------------------------------------------------
+Ran 39 tests in 0.116s
+
+OK

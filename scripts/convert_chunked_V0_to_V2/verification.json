@@ -1,0 +1,206 @@
+{
+  "conversion": {
+    "input_rows": 2912,
+    "chunks": 2913,
+    "documents": 43
+  },
+  "conversion_check": {
+    "status": "technical_preservation_passed",
+    "chunks": 2913,
+    "input_rows_accounted": 2912,
+    "text_and_asset_integrity_verified": true,
+    "database_write_performed": false,
+    "semantic_or_visual_approval": false,
+    "ready_for_final_scoring": false
+  },
+  "plan": {
+    "input_v0_rows": 2913,
+    "input_v2_rows": 3060,
+    "chunks": 0,
+    "conflicts": 2838,
+    "archived_rows": 5973
+  },
+  "plan_check": {
+    "status": "technical_preservation_passed",
+    "chunks": 0,
+    "input_rows_accounted": 5973,
+    "text_and_asset_integrity_verified": true,
+    "database_write_performed": false,
+    "semantic_or_visual_approval": false,
+    "ready_for_final_scoring": false
+  },
+  "merge": {
+    "input_v0_rows": 2913,
+    "input_v2_rows": 3060,
+    "chunks": 3060,
+    "documents": 46,
+    "conflicts": 2838,
+    "archived_rows": 2913
+  },
+  "merge_check": {
+    "status": "technical_preservation_passed",
+    "chunks": 3060,
+    "input_rows_accounted": 5973,
+    "text_and_asset_integrity_verified": true,
+    "database_write_performed": false,
+    "semantic_or_visual_approval": false,
+    "ready_for_final_scoring": false
+  },
+  "numbered_v2_groups_preserved": true,
+  "selected_source_counts": {
+    "v0": 457,
+    "v2": 2603
+  },
+  "archived_manual_unassigned": 74,
+  "active_assets": 473,
+  "deterministic_repeat": true,
+  "unit_tests": {
+    "passed": 39,
+    "failed": 0,
+    "log": "test_results.txt"
+  },
+  "cli_commands": [
+    {
+      "command": "python scripts/convert_chunked_V0_to_V2/convert.py",
+      "status": "manual_import_candidates_require_review",
+      "chunks": 2913
+    },
+    {
+      "command": "python scripts/convert_chunked_V0_to_V2/check.py",
+      "status": "technical_preservation_passed",
+      "chunks": 2913
+    },
+    {
+      "command": "python scripts/convert_chunked_V0_to_V2/merge.py",
+      "status": "plan_only_no_active_chunks",
+      "chunks": 0
+    },
+    {
+      "command": "python scripts/convert_chunked_V0_to_V2/merge.py --apply --prefer-v0-chapters 1.1 1.2 1.3 1.4 1.5 1.6 1.7 1.8 1.9",
+      "status": "merged_candidates_require_review",
+      "chunks": 3060
+    },
+    {
+      "command": "python scripts/convert_chunked_V0_to_V2/check.py --output V2/data/chunked_merged",
+      "status": "technical_preservation_passed",
+      "chunks": 3060
+    }
+  ],
+  "environment": {
+    "python": "3.13.5",
+    "platform": "Linux",
+    "windows_execution_performed": false
+  },
+  "source_scope": {
+    "description": "Isolated copies obtained previously; the first nine original chapters were additionally compared as parsed JSON against fresh Drive downloads in this session. Other old chapters were not downloaded again in this session.",
+    "old_documents": 43,
+    "v2_documents": 46,
+    "fresh_old_chapters": [
+      "1.1",
+      "1.2",
+      "1.3",
+      "1.4",
+      "1.5",
+      "1.6",
+      "1.7",
+      "1.8",
+      "1.9"
+    ]
+  },
+  "input_jsonl_sha256": {
+    "old": {
+      "1.1.chunked.jsonl": "c2d2c329f1c52ace900703b2fed402d063ff8456d997083a0bc4b1550bb8ad64",
+      "1.2.chunked.jsonl": "ff8c4922657e2d2358d07035f1c4057d5924d50e2e005656640efcaf04b59e38",
+      "1.3.chunked.jsonl": "1ae6b090832a70364eb6904f034c54dfa15bf3eb6b73858b1028b2a9d59aa48f",
+      "1.4.chunked.jsonl": "fbbccb255efb708d9e53c08eb9e9a8f0b41aa0ec5493603e186dc6b97e6909ab",
+      "1.5.chunked.jsonl": "da31c1c2b7ba94b4df04bb1f2a8c6f0b5d3d110cac19ef4075bea5ec598816bc",
+      "1.6.chunked.jsonl": "61d69ba9f44501ca804a63e7a2268c7e05445716c658ba6a5ed2f1d1b7e42b44",
+      "1.7.chunked.jsonl": "aec163ea403ef2eba53fdc95583490ec16d6103f17fafbccb635a288fa15077a",
+      "1.8.chunked.jsonl": "ec0014af93b6d2c41b16955b8c8aa56f21cff8aa79fc356fee966a771bb3e51a",
+      "1.9.chunked.jsonl": "a92c2798d9d97fc36cda4b9ebf0295412c7027a7c8ced679e1c2e9b2c1a2bae8",
+      "2.1.chunked.jsonl": "412c9d3d46fdb65f70ee5878f848310dbcbb3b81f11b8c12d7f757d2a548131b",
+      "2.2.chunked.jsonl": "4f22ff435027b1b41a8ac5480f73ede97f5252a4e918fd7b1d98f97ae8ab5d61",
+      "2.3.chunked.jsonl": "95b35003d15fcbab3753f6db9b8a16e1a102c3f08b32d2188b11fc05e181e78c",
+      "2.4.chunked.jsonl": "699d14aaa8b3528ee1c086b239f1ea3cd84d1a06c00ea6b3632f4e6426ca08ed",
+      "2.5.chunked.jsonl": "b713ef95a282441ec85b8943c076758ce59706f9abdf6a97559005e4de6a8ba0",
+      "3.1.chunked.jsonl": "1c67bc5ce2834b017848440194e5613c23332c1923d60e29ec762f689de7b414",
+      "3.2.chunked.jsonl": "994dfa4edc32b2ee5aab085f7f91013508f765288047ae089d1a49585847e32c",
+      "3.3.chunked.jsonl": "b6dbc83573e5189227650dad842e8455b806e5dbe434cca91a408e0e1ba0c0e3",
+      "3.4.chunked.jsonl": "ceaba925945df0c946e333832ee6a9473e65e62ea3bcf92ab945f3f3444e737f",
+      "4.1.chunked.jsonl": "bebb036403e5025c772b221a0d9153d2dfdee352f2d31d6bbc3acf34a6f69852",
+      "4.2.chunked.jsonl": "039929270b875dccd3dfddfb0ee4eb30a27f183e911c4bc68e0e0061789c0f07",
+      "4.3.chunked.jsonl": "a3137f3a5cc4660de91aa85ee66d90081c82b63921f46eb0e4117c11656d48ed",
+      "4.4.chunked.jsonl": "1f8f77f1d35970a5428fa3744fcb2b80391401b40a6522df37be8a8bd57cd32d",
+      "5.1.chunked.jsonl": "1a357013577657f35033fbcadd49636a0b5ac2c27a2a8ccf8af29385586be472",
+      "5.2.chunked.jsonl": "64be334b184c01b81163e4d2511840d7b2b71c028f6fdda44184fdccef2c7231",
+      "5.3.chunked.jsonl": "8ab42cf176d3dfda8231b5c22831c8f31b2d9906458e727d47ab33ce32733c1b",
+      "5.4.chunked.jsonl": "18479f10f92fc00c7cfa968e317df4f3fb93280aadb806f2fdff704599139478",
+      "5.5.chunked.jsonl": "5848138712e1d81e65a702d98100c8abc49e3b724fd40b9b7d273c6690fefc44",
+      "5.6.chunked.jsonl": "9c94d8d94ad3e9c2207cb24936eaabd6912ff9a58dda2880c4d51a57f11f72b3",
+      "6.1.chunked.jsonl": "b7b04830126b29c675e3bbfdb0d04b043eec7f387481974a445a1fb1c05465ce",
+      "6.2.chunked.jsonl": "196cbe6dc4222027c7c353f3255bbc3ac04347744e5913d72c5a72b7d7550d51",
+      "6.3.chunked.jsonl": "67224fcd9ac8fd8aa0a6cb288268d5b8a1fe120ba879390b5ed0f892c7d40f1f",
+      "6.4.chunked.jsonl": "f3002cbadb95453d668cefd97178d82f4f7e186e13588eec79207a141697a849",
+      "6.5.chunked.jsonl": "aac1f6de0eacd1e88b7506ca72179ea904e44b2ff52b6e631169f5f2574d0f0d",
+      "6.6.chunked.jsonl": "4440d7e27d0e8516c60829905d0ccc0cbab288ab4e11f4158c57d424118da971",
+      "7.1.chunked.jsonl": "2c1bbddf4601ad31e0a0a08ed257add1260e2eaef038daae6f097394bfdba11c",
+      "7.10.chunked.jsonl": "68eeaabfdedf4f12c15352f539237ea6fb0156519ba01c4139b224c3f9358287",
+      "7.2.chunked.jsonl": "9cd5f1b0e67f828ab6bfbb9e72c7a38d903b8fd7d9decda823663931a5d66f36",
+      "7.3.chunked.jsonl": "3ce34def73600c536b008efe5421e3f83887f7d8be91f607a596dd0693dae419",
+      "7.4.chunked.jsonl": "a0f61da70e77fa964269d5b1642f7ea27d2c0e271826cce3b38587c9fe89b352",
+      "7.5.chunked.jsonl": "7897582559db50f9ab997a12b1e7d0a6ae097ffc2518db0a8796e86ffe9539fb",
+      "7.6.chunked.jsonl": "c85de51b118b03b89c06824c96708ddb009ce7f97f30dc9b5ae93c80f9d00406",
+      "7.7.chunked.jsonl": "5047fd006cdb102af24fc1f27fc9e11e6eaee432345e5e1413b57c6c030f0626",
+      "ПРИЛОЖЕНИЯ.chunked.jsonl": "efcd63f76e825bb27bb0d580862199a02afc613a184d400eb8020f0adb4f4ecd"
+    },
+    "v2": {
+      "01b2b85502608557.chunked.jsonl": "69a777ac436a035c71dfc439cf7d731e8850005e9a3015776a7725b40de3dbf7",
+      "028e13be67bda0e0.chunked.jsonl": "8cc5b81b927e16bffe876adaa762ed84971aa43ffcb8d53cefa9ce4dd6c79901",
+      "070e9674d38d885c.chunked.jsonl": "4fa6c1e3bb15f6e4b37530ee9d94b7a98677eadfea2af922cc96d29760314b4b",
+      "0d9736ba6db05e11.chunked.jsonl": "debd4eb9b8689c65bfb5530d1411946c367f85f09c1a77d68fde19e707e635d3",
+      "10e501879e40aeb0.chunked.jsonl": "0dd0510d57b7aeee3577a6203ef04e1f343d0c4fe49b4db7a006b66133c37f66",
+      "1334ade19d478de0.chunked.jsonl": "9612acc152b6c28ad23321f8c86d5f65759935340e2882251d2445b5a7bbaf24",
+      "186f932b90a8dd06.chunked.jsonl": "98b006d29830791aa178dab2f5ad2f3ef722f43523bd90a229ae87413d45f107",
+      "33c6c66ef593b13a.chunked.jsonl": "d885692311b38437eb475f88713b4ad1a66c675226381efb9ae070ea07214bf9",
+      "41757616714e4aed.chunked.jsonl": "e4918235706f6d427b4ff9f93f6322a7c64df5907180f656ac64709bd3bd6044",
+      "429ca226ce891f0c.chunked.jsonl": "190c94bedeb6a8213ef6ab144612c59c5b60b8f2d693a1257319af8ee240abc5",
+      "43f2bed937b27d3a.chunked.jsonl": "bcc35f82e3bab7fd973a4ee56d7d10988f5d71eb3d699a7cfcc7512125eb6d8a",
+      "4950f7060f822810.chunked.jsonl": "e480c14c6270c1763fd4a9b0a280a8364054aca646c75f950c7ad30a67be7079",
+      "5140b64e1bb4a805.chunked.jsonl": "f11890dffc7367e97f08df36c83957d9537d5f5a1818e01ce597c13095b4ec53",
+      "55f5c9a51b81aeb7.chunked.jsonl": "7e7e8229808359cce2383fa0992ebfd79c7f6977fc32774f73e82eb504ce3553",
+      "611be5dd8e831342.chunked.jsonl": "7a1e6d25f99628183c3a040e60b47a69282db28045f37e0635f75be9a1c26c32",
+      "640b0e1cf49435bb.chunked.jsonl": "3c53e339427f65a6aebf17b78b059d2fcd67d4377439b85df739246d32ad372a",
+      "6568e01eba0ca3d6.chunked.jsonl": "c6aacc5bf56fa583585a08030dccbf3d019013a2b998e4f5647be6bab36096f9",
+      "693aaf59fd358b05.chunked.jsonl": "9c07650a40b73be17823c00bc66cee425851f7dbdaf711f1dda1251a80a650f3",
+      "6a4abfad50198f50.chunked.jsonl": "e7e9d56dee0b94a0e41a22925fc90e092a696cfe0ebd21f5f1b5ef425509d5a6",
+      "7096171776c952b3.chunked.jsonl": "831ea698f01a62b379396ce99c77c4aeb8ece7f939c15d690beb1191fad7bbe5",
+      "78c46da71a5e1df2.chunked.jsonl": "efc5d2ed4451a374fad93483a7a065f401cb137497309eb925d84d05d5b5e0b7",
+      "7f9d8fa9af0d750e.chunked.jsonl": "40cc882aee8289e30203ae4d07c42cf1107e287dcb1858ab1708ccf59c57961c",
+      "8225f53d54784638.chunked.jsonl": "27d5d2607cc6212076a180d9f2a1a8c956e893e54f3de5fb4dc795e9bccada20",
+      "8371e09ad108ed08.chunked.jsonl": "6af908dc3d31bb657f48cccbafb93686d3d466d1106bd7aec2a413b1e0ef0e9f",
+      "86443aaaf33003ff.chunked.jsonl": "5b326ce177906b4aedbc33c9954376cbbec4e93f603f8f1c0237bfa996f86797",
+      "87410937aac87df4.chunked.jsonl": "58a04c1db3b2f9f204e22ed3dea1d6d77d813b2b94e438dfe16fc1f9276fb6d5",
+      "8a5279dd4f98f726.chunked.jsonl": "00d369e0132411a676aaef3a67817976dc49ccaea17402c2b813c176e1861207",
+      "8c591a96cb787b83.chunked.jsonl": "069c23b1a5f6c1f0572ee6415ccd26836c6219fa19e555a7e9eaaa05a9c7ac66",
+      "8e20b94c342824fb.chunked.jsonl": "4c03524c7309dbe960e22460add0498f79cbf4871f9bf946d97be829bfe94da9",
+      "95fb63f16a09c916.chunked.jsonl": "502764a3d63b87d7b55ae13e6eefbbf6453f56c3d96e64ede2f921ad9b66d100",
+      "99f528353d315193.chunked.jsonl": "d6c5455726b11a3df3025d5670f5f5e4a542de0518e6b088fff47b170fdc92e0",
+      "9a902d47cc7e7d1f.chunked.jsonl": "a1a35eedcc869099d5c3fd4c32acc40e693375821164616c2d1e8fec192639b8",
+      "a030e8467f909e5a.chunked.jsonl": "afbb3b81b7ace5019b5cf415f9950cb380bd7d96730934ebd80135134d0a51b3",
+      "ac3f3543e5ef311a.chunked.jsonl": "a50560a9d5d960a703ea760bca53fd76f3b63645aeb2486172df79ec82801668",
+      "b62e201ebbb74be0.chunked.jsonl": "590b70073dfc9c4468aec9e31975fa1cde9b806995cca7f151311e8618708e47",
+      "b8aed9f0479ca280.chunked.jsonl": "d016a284bb0abefec344a0ec0a9f7e0634ee227b2046fc4fdc67e47c13d8c62c",
+      "ba658df4f4e2a15b.chunked.jsonl": "af4958028d0fbda24e15a37d8c3b9e514f24c9df80a91b2b77f0a4536de078ae",
+      "bfcdf445b3f85c9e.chunked.jsonl": "59b84722dab8460b7bf130fb8d55bcc78ee0aaf03d4ddd0aa5127646d4f84ed2",
+      "c391f3429f746c04.chunked.jsonl": "cced16b169114ea1287ceb130feb9ee28ec8ff30e0baa31a9aeb96dc20199a60",
+      "c3fd1ace48cae28d.chunked.jsonl": "90f6b8478867a904f34025b00e40878c6d19102bd757c5d5fa443a1cea4c0295",
+      "c5e4961942a99034.chunked.jsonl": "8fee7ab4fe6bd8a4538fc27f017e8487b3a7bd45bbae1f289c28328053abfc32",
+      "d1388d332d4c30de.chunked.jsonl": "cae754e5720f1255920f2577f94719bf0548cb6a9d9cadcfa8d5cb3008e738d8",
+      "d5ebdccda7c34288.chunked.jsonl": "2e401eec5681806bdb3dbef2b691ff994dc84ac200ce30f037ac55bb163ceef2",
+      "f606a39ec7ce5f1e.chunked.jsonl": "876b793cb9b1ce5c2ab85678dd0c05dd1428eaecd6edf457fe8428b5f28fa1d2",
+      "fc5fb57746deebd8.chunked.jsonl": "d99598ae293b76c1a9e55c2565ee5bcccd16626583d5ca857863666aa062d7e0",
+      "ffb3bc0542e4f331.chunked.jsonl": "15bc115ad3a2bdb6d6bca711195773fc8b0766fdd2505a4f4bb82cd4acba9aa6"
+    }
+  },
+  "input_source_and_resource_files_unchanged": true
+}

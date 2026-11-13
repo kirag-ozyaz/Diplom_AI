@@ -1,0 +1,14 @@
+{
+  "report": "X:\\Учеба_УИИ\\Итоговы_Проект\\V2\\results\\retrieval\\preparation_20261108_160203_727566\\preparation.json",
+  "input": "X:\\Учеба_УИИ\\Итоговы_Проект\\V2\\results\\retrieval\\documents_20261108_152653_863842",
+  "output": "V2/data/chunked",
+  "status": "structural_candidates_require_review",
+  "documents_input": 46,
+  "documents_prepared": 46,
+  "documents_skipped": 0,
+  "chunks": 3056,
+  "assets_copied": 665,
+  "extraction_review": 22,
+  "database_write_performed": false,
+  "ready_for_final_scoring": false
+}

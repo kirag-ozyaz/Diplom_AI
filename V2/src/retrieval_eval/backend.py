@@ -2,7 +2,9 @@
 import hashlib
 import json
 import math
-from .common import ensure, digest
+import time
+
+from .common import digest, ensure, progress
 from .corpus_manifest import index_signature
 
 
@@ -66,6 +68,8 @@ def load(config, mode_name, chunks, manifest, allow_db_write=False, client=None,
     client.create_collection(collection_name=name, schema=schema, index_params=indexes,
                              consistency_level='Strong')
     total = 0
+    started, n_batches = time.monotonic(), (len(ids) + batch - 1) // batch
+    progress(f'загрузка {name}', 0, n_batches, started)
     for start in range(0, len(ids), batch):
         group = ids[start:start+batch]
         vectors = first if start == 0 else _vectors(encoder, [mode['passage_prefix']+chunks[c]['content'] for c in group], mode, batch)
@@ -76,6 +80,7 @@ def load(config, mode_name, chunks, manifest, allow_db_write=False, client=None,
         result = client.insert(collection_name=name, data=entities)
         ensure(result.get('insert_count') == len(entities), 'Неполная вставка в Milvus')
         total += len(entities)
+        progress(f'загрузка {name}', start // batch + 1, n_batches, started)
     client.flush(collection_name=name)
     client.load_collection(collection_name=name)
     count = int(client.get_collection_stats(collection_name=name)['row_count'])
@@ -100,12 +105,15 @@ def search(config, mode_name, questions, chunks, manifest, client=None, encoder=
     if mode.get('rerank_model') and reranker is None:
         from sentence_transformers import CrossEncoder
         reranker = CrossEncoder(mode['rerank_model'], device=config['device'],
-                                local_files_only=config['local_files_only'])
+                                local_files_only=config['local_files_only'], max_length=512)
     depth = config['search_depth']
     candidate_depth = max(depth, mode.get('candidate_depth', depth))
     ensure(candidate_depth <= 1000, 'Слишком большая глубина кандидатов')
     runs = []
-    for q in questions:
+    started = time.monotonic()
+    for qi, q in enumerate(questions, 1):
+        if (qi - 1) % 20 == 0:
+            progress(f'поиск {name}' + (' + rerank' if reranker is not None else ''), qi - 1, len(questions), started, 'вопрос готов')
         vectors = _vectors(encoder, [mode['query_prefix']+q['query']], mode, 1)
         data = client.search(collection_name=name, data=vectors, anns_field='vector',
                              search_params={'metric_type': 'COSINE', 'params': {}},
@@ -147,6 +155,7 @@ def search_extended(config, mode_name, questions, chunks, locations, manifest, w
     if not with_clip:
         return search(config,mode_name,questions,chunks,manifest)
     from copy import deepcopy
+
     from .clip_backend import fuse
     temporary=deepcopy(config)
     mode=temporary['modes'][mode_name]
@@ -157,8 +166,10 @@ def search_extended(config, mode_name, questions, chunks, locations, manifest, w
     reranker=None
     if rerank_model:
         from sentence_transformers import CrossEncoder
-        reranker=CrossEncoder(rerank_model,device=config['device'],local_files_only=config['local_files_only'])
-    for run in runs:
+        reranker=CrossEncoder(rerank_model,device=config['device'],local_files_only=config['local_files_only'],max_length=512)
+    started=time.monotonic()
+    for qi, run in enumerate(runs, 1):
+        if (qi-1) % 20 == 0: progress('rerank + CLIP', qi-1, len(runs), started, 'вопрос готов')
         if reranker is not None and run['results']:
             scores=reranker.predict([(run['query'],r['content']) for r in run['results']])
             ensure(len(scores)==len(run['results']),'Неполное финальное переранжирование')

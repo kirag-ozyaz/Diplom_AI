@@ -1,0 +1,9 @@
+{
+  "status": "technical_coverage_passed",
+  "documents": 46,
+  "chunks": 3056,
+  "documents_skipped": 0,
+  "semantic_or_visual_approval": false,
+  "database_write_performed": false,
+  "preparation_report": "X:\\Учеба_УИИ\\Итоговы_Проект\\V2\\results\\retrieval\\preparation_20261108_160203_727566\\preparation.json"
+}

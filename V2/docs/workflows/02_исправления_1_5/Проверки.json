@@ -1,0 +1,35 @@
+{
+  "supply_version": "1_5",
+  "environment": "Linux/Python 3.13; Windows/GPU/Milvus not tested",
+  "preparation_regression_tests_passed": 42,
+  "extraction_regression_tests_passed": 27,
+  "real_document_copy": {
+    "documents": 46,
+    "chunks": 3060,
+    "assets": 665,
+    "raw_sha256_matches_manifest": 46,
+    "source_markdown_and_assets_unchanged": true,
+    "numbered_clause_multisets_equal_to_live_previous_report": true,
+    "repeated_runs_identical_file_hashes": true,
+    "nonempty_corpus_refused_and_unchanged": true,
+    "coverage": {
+      "status": "technical_coverage_passed",
+      "documents": 46,
+      "chunks": 3060,
+      "documents_skipped": 0,
+      "semantic_or_visual_approval": false,
+      "database_write_performed": false,
+      "normalization_deletions_verified": true,
+      "removed_control_tokens": 621
+    },
+    "removed_control_tokens": 621,
+    "unresolved_markup_tokens": 5
+  },
+  "limitations": [
+    "22 original extraction review findings retained",
+    "Table ownership is not semantically approved",
+    "Two numeric legacy links and one orphan closing token retained",
+    "Qrels must be remapped after final acceptance",
+    "No database write or model execution"
+  ]
+}
