@@ -1,0 +1,30 @@
+{
+  "schema_version": "v3-pipeline-1",
+  "project_root": "../..",
+  "v2_config": "V2/configs/pipeline_manual_merged_split.json",
+  "device": "cuda",
+  "clip_device": "cuda",
+  "results_dir": "results",
+  "search_depth": 20,
+  "candidate_depth": 50,
+  "rrf_k": 60,
+  "weights": {
+    "bm25": 1.0,
+    "e5": 1.0,
+    "clip": 1.0
+  },
+  "bm25": {
+    "k1": 1.5,
+    "b": 0.75,
+    "stemmer": "snowball"
+  },
+  "exact_clause": {
+    "enabled": true
+  },
+  "rerank": {
+    "model": "BAAI/bge-reranker-v2-m3",
+    "window_chars": 1500,
+    "window_overlap": 300,
+    "batch_size": 16
+  }
+}
